@@ -194,14 +194,12 @@
         </select>
     </div>
 
+    <!-- [중요] 여기에 분리된 js 파일을 연결해야 합니다! -->
+    <script src="./js/data.js"></script>
+
     <script>
         let currentLang = 'ko';
 
-        /* 
-           [주의] 이미지 파일명에 쉼표(,)나 띄어쓰기가 있으면 
-           일부 브라우저나 GitHub Pages에서 엑박이 뜰 수 있습니다.
-           가능하면 파일명을 "daihatsu_yanmar.jpg" 처럼 영어+언더바로 바꾸는 게 좋습니다.
-        */
         const staticTranslations = {
             ko: { 
                 heroTitle: "최고의 선박 부품 솔루션",
@@ -233,19 +231,23 @@
             const listContainer = document.getElementById('productList');
             listContainer.innerHTML = '';
 
-            if (items.length === 0) { /* ... */ return; }
+            // [수정] 검색 결과 없을 때 메시지 표시 기능 살림
+            if (items.length === 0) { 
+                listContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #888; padding: 50px;">검색 결과가 없습니다.<br>No results found.</p>';
+                return; 
+            }
 
             items.forEach(product => {
                 const html = `
                     <div class="product-card">
                         <!-- 클릭 시 detail.html로 이동하며 id를 넘겨줌 -->
                         <a href="detail.html?id=${product.id}" style="text-decoration:none; color:inherit;">
-                            <img src="${product.image}" class="product-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/300'">
+                            <img src="${product.image}" class="product-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/300?text=No+Image'">
                             <div class="product-info">
                                 <span class="part-badge">${product.partNo}</span>
                                 <h3>${product.name[currentLang]}</h3>
                                 <p class="product-desc">${product.desc[currentLang]}</p>
-                                <span class="price">${product.price}원</span>
+                                <span class="price">${product.price}${product.price !== "문의 (Contact Us)" ? "원" : ""}</span>
                                 <button class="btn">상세보기</button>
                             </div>
                         </a>
@@ -282,7 +284,13 @@
         }
 
         window.onload = function() {
-            renderProducts(products);
+            // [안전장치] 혹시나 data.js 로딩이 늦거나 안 됐을 때를 대비
+            if (typeof products !== 'undefined') {
+                renderProducts(products);
+            } else {
+                console.error("data.js가 로드되지 않았습니다.");
+                document.getElementById('productList').innerHTML = '<p style="text-align:center; padding:50px; grid-column:1/-1;">상품 데이터를 불러오는데 실패했습니다.<br>js/data.js 파일 경로를 확인해주세요.</p>';
+            }
         }
     </script>
 </body>
