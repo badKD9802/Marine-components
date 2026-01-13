@@ -72,41 +72,41 @@
             {
                 id: 1,
                 image: "./parts_image/YANMAR CON BOD BEARING(4TNV98 129900-23600).jpg", // 여기에 실제 파일명 입력
-                partNo: "6H4-44352-02",
-                price: "35,000",
-                name: { ko: "야마하 임펠러", en: "Yamaha Impeller", cn: "雅马哈 叶轮" },
+                partNo: "4TNV98 129900-23600",
+                price: "2,000",
+                name: { ko: "YANMAR CON ROD BEARING", en: "YANMAR CON ROD BEARING", cn: "YANMAR CON ROD BEARING" },
                 desc: { ko: "40-60마력 호환", en: "Compatible with 40-60HP", cn: "兼容 40-60HP" }
             },
             {
                 id: 2,
-                image: "./parts_image/YANMAR CON BOD BEARING(4TNV98 129900-23600).jpg",
-                partNo: "8692305",
-                price: "22,000",
-                name: { ko: "볼보 오일필터", en: "Volvo Oil Filter", cn: "沃尔沃 机油滤清器" },
+                image: "./parts_image/YANMAR EY18AL.jpg",
+                partNo: "AL-SERIES(PB1002)/AL-PLUS(PB1003)",
+                price: "400,000",
+                name: { ko: "마린 디젤 엔진 플린저 베럴", en: "YANMAR EY18AL", cn: "YANMAR EY18AL" },
                 desc: { ko: "D4/D6 엔진용", en: "For D4/D6 Engines", cn: "适用于 D4/D6 发动机" }
             },
             {
                 id: 3,
-                image: "./parts_image/YANMAR CON BOD BEARING(4TNV98 129900-23600).jpg",
+                image: "./parts_image/DAIHATSU,KASAKA,YAN MAR,HANSHIN MAN,Etc.jpg",
                 partNo: "33-8M01",
                 price: "8,000",
-                name: { ko: "머큐리 점화플러그", en: "Mercury Spark Plug", cn: "水星 火花塞" },
-                desc: { ko: "4행정 전용", en: "4-Stroke Only", cn: "仅限四冲程" }
+                name: { ko: "마린 디젤 엔진 용 선박 예비 부품", en: "DAIHATSU, AKASAKA, YAN MAR, HANSHIN MAN, Etc", cn: "DAIHATSU, AKASAKA, YAN MAR, HANSHIN MAN, Etc" },
+                desc: { ko: "DAIHATSU, AKASAKA, YAN MAR, HANSHIN MAN, Etc", en: "DAIHATSU, AKASAKA, YAN MAR, HANSHIN MAN, Etc", cn: "仅限四冲程" }
             },
             {
                 id: 4,
-                image: "./parts_image/YANMAR CON BOD BEARING(4TNV98 129900-23600).jpg",
-                partNo: "6E5-12411",
-                price: "15,000",
-                name: { ko: "야마하 서모스탯", en: "Yamaha Thermostat", cn: "雅马哈 恒温器" },
+                image: "./parts_image/E205250040Z.jpg",
+                partNo: "E205250040Z",
+                price: "100,000",
+                name: { ko: "해양 엔진 부품 피스톤 핀 부시", en: "E205250040Z", cn: "E205250040Z" },
                 desc: { ko: "냉각수 조절 장치", en: "Cooling Control", cn: "冷却控制" }
             },
              {
                 id: 5,
-                image: "./parts_image/YANMAR CON BOD BEARING(4TNV98 129900-23600).jpg",
-                partNo: "12-191833",
-                price: "45,000",
-                name: { ko: "연료 필터", en: "Fuel Filter", cn: "燃油滤清器" },
+                image: "./parts_image/Daihatsu_DL22.jpg",
+                partNo: "DL22",
+                price: "2,600",
+                name: { ko: "선박 마린 엔진 용 벨브 스템 씰", en: "Daihatsu DL22", cn: "Daihatsu DL22" },
                 desc: { ko: "수분 분리기 포함", en: "Water Separator Inc.", cn: "含水分离器" }
             }
         ];
@@ -131,7 +131,7 @@
                 const html = `
                     <div class="product-card">
                         <img src="${product.image}" alt="${product.name.en}" class="product-img" 
-                             onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/300?text=No+Image'">
                         <div class="product-info">
                             <span class="part-no">${product.partNo}</span>
                             <h3>${product.name[currentLang]}</h3>
