@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마린파츠 - 선박 부품 전문</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+        header { background: #0056b3; color: white; padding: 1rem; text-align: center; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .search-box { width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .btn { background: #0056b3; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚓ 마린파츠 (Marine Parts)</h1>
+    </header>
+    <div class="container">
+        <!-- 검색창 -->
+        <input type="text" class="search-box" placeholder="부품 번호 또는 모델명을 검색하세요 (예: 6E5-44352)">
+        
+        <!-- 상품 목록 예시 -->
+        <div class="product-list">
+            <div class="product-card">
+                <h3>야마하 임펠러</h3>
+                <p>40-60마력 호환</p>
+                <p><strong>35,000원</strong></p>
+                <button class="btn">구매하기</button>
+            </div>
+            <div class="product-card">
+                <h3>볼보 오일필터</h3>
+                <p>D4/D6 엔진용</p>
+                <p><strong>22,000원</strong></p>
+                <button class="btn">구매하기</button>
+            </div>
+             <div class="product-card">
+                <h3>머큐리 점화플러그</h3>
+                <p>4행정 전용</p>
+                <p><strong>8,000원</strong></p>
+                <button class="btn">구매하기</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
