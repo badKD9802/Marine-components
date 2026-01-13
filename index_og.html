@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마린파츠 - Marine Parts</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+        header { background: #0056b3; color: white; padding: 1rem; text-align: center; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .search-box { width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;}
+        .product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .btn { background: #0056b3; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;}
+        .btn:hover { background: #004494; }
+
+        /* [추가됨] 우측 하단 언어 선택 버튼 스타일 */
+        .lang-switcher {
+            position: fixed; /* 화면에 고정 */
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000; /* 다른 요소보다 위에 뜨게 */
+            background: white;
+            padding: 10px;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .lang-switcher select {
+            border: none;
+            outline: none;
+            font-size: 14px;
+            cursor: pointer;
+            background: transparent;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <!-- data-i18n 속성이 추가되었습니다 -->
+        <h1 data-i18n="pageTitle">⚓ 영마린테크 (Young Marine Tech)</h1>
+    </header>
+
+    <div class="container">
+        <!-- 검색창 -->
+        <input type="text" class="search-box" data-i18n="searchPlaceholder" placeholder="부품 번호 또는 모델명을 검색하세요..." >
+        
+        <!-- 상품 목록 -->
+        <div class="product-list">
+            <div class="product-card">
+                <!-- 상품명과 설명에도 태그 추가 -->
+                <h3 data-i18n="prod1_title">야마하 임펠러</h3>
+                <p data-i18n="prod1_desc">40-60마력 호환</p>
+                <p><strong>35,000원</strong></p>
+                <button class="btn" data-i18n="btnBuy">구매하기</button>
+            </div>
+            <div class="product-card">
+                <h3 data-i18n="prod2_title">볼보 오일필터</h3>
+                <p data-i18n="prod2_desc">D4/D6 엔진용</p>
+                <p><strong>22,000원</strong></p>
+                <button class="btn" data-i18n="btnBuy">구매하기</button>
+            </div>
+             <div class="product-card">
+                <h3 data-i18n="prod3_title">머큐리 점화플러그</h3>
+                <p data-i18n="prod3_desc">4행정 전용</p>
+                <p><strong>8,000원</strong></p>
+                <button class="btn" data-i18n="btnBuy">구매하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [추가됨] 언어 선택 UI -->
+    <div class="lang-switcher">
+        <span>🌐</span>
+        <select id="languageSelect" onchange="changeLanguage(this.value)">
+            <option value="ko">한국어</option>
+            <option value="en">English</option>
+            <option value="cn">中文</option>
+        </select>
+    </div>
+
+    <!-- [추가됨] 언어 변경 기능을 담당하는 자바스크립트 -->
+    <script>
+        // 1. 번역 데이터 사전 (Dictionary)
+        const translations = {
+            ko: {
+                pageTitle: "⚓ 마린파츠 (Marine Parts)",
+                searchPlaceholder: "부품 번호 또는 모델명을 검색하세요...",
+                btnBuy: "구매하기",
+                prod1_title: "야마하 임펠러",
+                prod1_desc: "40-60마력 호환",
+                prod2_title: "볼보 오일필터",
+                prod2_desc: "D4/D6 엔진용",
+                prod3_title: "머큐리 점화플러그",
+                prod3_desc: "4행정 전용"
+            },
+            en: {
+                pageTitle: "⚓ Marine Parts Shop",
+                searchPlaceholder: "Search by Part Number or Model...",
+                btnBuy: "Buy Now",
+                prod1_title: "Yamaha Impeller",
+                prod1_desc: "Compatible with 40-60HP",
+                prod2_title: "Volvo Oil Filter",
+                prod2_desc: "For D4/D6 Engines",
+                prod3_title: "Mercury Spark Plug",
+                prod3_desc: "4-Stroke Only"
+            },
+            cn: {
+                pageTitle: "⚓ 船舶配件商店",
+                searchPlaceholder: "按零件编号或型号搜索...",
+                btnBuy: "立即购买",
+                prod1_title: "雅马哈 叶轮",
+                prod1_desc: "兼容 40-60HP",
+                prod2_title: "沃尔沃 机油滤清器",
+                prod2_desc: "适用于 D4/D6 发动机",
+                prod3_title: "水星 火花塞",
+                prod3_desc: "仅限四冲程"
+            }
+        };
+
+        // 2. 언어 변경 함수
+        function changeLanguage(lang) {
+            // 모든 data-i18n 속성을 가진 요소를 찾음
+            const elements = document.querySelectorAll('[data-i18n]');
+            
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n'); // 예: 'btnBuy'
+                
+                // 번역 데이터가 있으면 교체
+                if (translations[lang] && translations[lang][key]) {
+                    // input 태그는 placeholder를 바꾸고, 나머지는 텍스트를 바꿈
+                    if (element.tagName === 'INPUT') {
+                        element.placeholder = translations[lang][key];
+                    } else {
+                        element.innerText = translations[lang][key];
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
