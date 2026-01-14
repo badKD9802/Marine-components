@@ -5,15 +5,14 @@ import google.generativeai as genai
 
 # 1. 앱 생성
 app = FastAPI()
-
-# 2. CORS 설정 (보안 해제)
-# HTML(127.0.0.1:5500)에서 이 서버(127.0.0.1:8000)로 접속할 수 있게 허용
+# 2. CORS 설정 (이 부분이 '보안 문지기'에게 허락 맡는 부분입니다)
+# 반드시 app = FastAPI() 바로 밑에 있어야 합니다!
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 모든 곳에서 접속 허용 (배포 시에는 실제 주소로 바꾸는 게 좋음)
+    allow_origins=["*"],      # 모든 주소에서 접속 허용 (가장 중요)
     allow_credentials=True,
-    allow_methods=["*"],  # 모든 HTTP 메서드 허용 (GET, POST 등)
-    allow_headers=["*"],  # 모든 헤더 허용
+    allow_methods=["*"],      # GET, POST 다 허용
+    allow_headers=["*"],      # 모든 헤더 허용
 )
 
 # 3. 데이터 형식 정의 (이게 FastAPI의 장점! - Pydantic)
@@ -76,7 +75,6 @@ def get_ai_response(user_message: str):
 async def chat(request: ChatRequest):
     # request.message 로 바로 데이터를 꺼낼 수 있음 (검증 완료된 상태)
     print(f"유저 질문: {request.message}")
-    print(f"유저 질문: {request}")
 
     ai_reply = get_ai_response(request.message)
     print(f"AI 답변: {ai_reply}")
