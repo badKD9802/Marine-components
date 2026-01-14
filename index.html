@@ -293,5 +293,116 @@
             }
         }
     </script>
+
+    <!-- [추가됨] 챗봇 UI HTML -->
+    <div class="chat-widget">
+        <!-- 1. 둥둥 떠있는 채팅 버튼 -->
+        <button id="chatBtn" class="chat-btn" onclick="toggleChat()">🤖 AI 문의</button>
+        
+        <!-- 2. 숨겨진 채팅창 본체 -->
+        <div id="chatWindow" class="chat-window hidden">
+            <div class="chat-header">
+                <span>AI 상담원</span>
+                <button onclick="toggleChat()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;">&times;</button>
+            </div>
+            <div id="chatMessages" class="chat-messages">
+                <div class="message bot-msg">안녕하세요! 무엇을 도와드릴까요?</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="userInput" placeholder="질문을 입력하세요..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* [추가됨] 챗봇 스타일 */
+        .chat-widget { position: fixed; bottom: 80px; right: 20px; z-index: 2000; font-family: 'Noto Sans KR', sans-serif; }
+        
+        /* 채팅 버튼 (FAB) */
+        .chat-btn {
+            background: var(--primary-color); color: white; border: none;
+            padding: 15px 25px; border-radius: 50px; font-size: 1rem; font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: 0.3s;
+        }
+        .chat-btn:hover { transform: scale(1.05); background: var(--secondary-color); }
+
+        /* 채팅창 본체 */
+        .chat-window {
+            width: 350px; height: 450px; background: white;
+            border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; overflow: hidden;
+            position: absolute; bottom: 60px; right: 0;
+            transition: 0.3s;
+        }
+        .chat-window.hidden { display: none; } /* 숨김 처리 */
+
+        .chat-header { background: var(--primary-color); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* 말풍선 스타일 */
+        .message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word;}
+        .bot-msg { background: #e9ecef; color: #333; align-self: flex-start; border-bottom-left-radius: 0; }
+        .user-msg { background: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+
+        .chat-input-area { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 10px; background: white; }
+        .chat-input-area input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        .chat-input-area button { background: var(--primary-color); color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; }
+    </style>
+
+    <script>
+        // [추가됨] 챗봇 동작 스크립트
+        function toggleChat() {
+            const window = document.getElementById('chatWindow');
+            window.classList.toggle('hidden');
+            if (!window.classList.contains('hidden')) {
+                document.getElementById('userInput').focus();
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') sendMessage();
+        }
+
+        async function sendMessage() {
+            const inputField = document.getElementById('userInput');
+            const message = inputField.value.trim();
+            if (!message) return;
+
+            // 1. 내 메시지 화면에 추가
+            appendMessage(message, 'user-msg');
+            inputField.value = '';
+
+            // 2. 파이썬 서버로 전송 (Fetch API)
+            try {
+                // 주의: 실제 배포시에는 localhost 대신 실제 서버 주소를 써야 함
+                const response = await fetch('http://127.0.0.1:8000/chat', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // 3. AI 응답 화면에 추가
+                appendMessage(data.reply, 'bot-msg');
+            } catch (error) {
+                console.error('Error:', error);
+                appendMessage("죄송합니다. 서버와 연결할 수 없습니다.", 'bot-msg');
+            }
+        }
+
+        function appendMessage(text, className) {
+            const chatMessages = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `message ${className}`;
+            div.innerText = text;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // 스크롤 내리기
+        }
+    </script>
+
+
 </body>
 </html>
