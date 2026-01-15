@@ -31,10 +31,13 @@ class ChatRequest(BaseModel):
 def model_answer(api_key, model_name, system_prompt, user_message):
     # 1. System Prompt (시스템 지시문) - 모델을 만들 때 '딱 한 번' 주입합니다.
     # 여기에 "너는 ~야", "JSON으로만 대답해" 같은 절대 규칙을 넣습니다.
+    print("모델에 프롬프트 전달 중...")
     client = genai.Client(api_key=api_key)
 
     # 2. User Prompt (사용자 질문) - 대화할 때 사용합니다.
     user_prompt = user_message
+
+    print(f"사용자 질문 전달 중...{user_prompt}")
 
     response = client.models.generate_content(
         model=model_name, 
@@ -45,6 +48,8 @@ def model_answer(api_key, model_name, system_prompt, user_message):
         )
     )
     
+    print(f"답변 생성 완료")
+
     return response.text
 
 # --- [AI 로직 (여기에 파이썬 코드 작성)] ---
