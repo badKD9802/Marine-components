@@ -44,7 +44,7 @@ def model_answer(api_key, model_name, system_prompt, user_message):
 def get_ai_response(user_message: str):
     user_message = user_message.strip() # 공백 제거
     ## config
-    api_key = 'AIzaSyAvDPbTyvHawAl3_WYE0xSMPWpO7ZX3cAA'
+    api_key = 'AIzaSyAojnAjnI9w5v-lhvggehghYhBH_uM0yxo'
     model_name = 'gemini-2.5-flash'
     system_prompt = """
     당신은 사용자의 질문에 대답을 하는 AI 비서입니다. 질문에 알맞는 답변을 생성하여 주세요.

@@ -11,6 +11,7 @@ async function sendMessage() {
 
     // 2. 로딩 애니메이션 표시
     const loadingId = showLoading();
+    
 
     try {
         // 3. FastAPI 서버로 전송http://127.0.0.1:8000
@@ -33,7 +34,7 @@ async function sendMessage() {
     } catch (error) {
         console.error('Error:', error);
         removeLoading(loadingId);
-        appendMessage("죄송합니다. 서버 연결에 실패했습니다.", 'bot-msg', false);
+        appendMessage(error, 'bot-msg', false);
     }
 }
 
