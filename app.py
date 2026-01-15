@@ -65,8 +65,6 @@ def get_ai_response(user_message: str):
 
     print(f"✅ API Key 로드 성공: {api_key[:5]}...", flush=True)
 
-    genai.configure(api_key=api_key)
-
     model_name = 'gemini-2.5-flash'
     system_prompt = """
     당신은 사용자의 질문에 대답을 하는 AI 비서입니다. 질문에 알맞는 답변을 생성하여 주세요.
