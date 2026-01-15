@@ -61,8 +61,6 @@ def get_ai_response(user_message: str):
     api_key = os.environ.get("GOOGLE_API_KEY")
 
     if not api_key:
-        raise ValueError("API Key가 없습니다! Railway Variables에 설정해주세요.")
-    else:
         api_key = 'AIzaSyA_KZt7XVoZV9k2ZYz6DFGTmuRvKRLbpOU'
 
     print(f"✅ API Key 로드 성공: {api_key[:5]}...", flush=True)
