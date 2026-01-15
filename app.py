@@ -106,3 +106,14 @@ async def chat(request: ChatRequest):
 
 # 실행 방법 주석:
 # 터미널에서: uvicorn app:app --reload
+
+
+if __name__ == "__main__":
+    import uvicorn
+    # Railway가 제공하는 포트 번호를 가져옴 (없으면 기본값 8000)
+    port = int(os.environ.get("PORT", 8000))
+    
+    print(f"🚀 서버를 시작합니다! 포트: {port}")
+    
+    # 0.0.0.0으로 실행 (중요!)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
