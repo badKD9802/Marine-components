@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-import google.generativeai as genai
+import google.genai as genai
+from google.genai import types
 import os
 
 # 1. 앱 생성
@@ -24,20 +25,21 @@ class ChatRequest(BaseModel):
 
 ### AI 모델 답변 생성 함수 ### 
 def model_answer(api_key, model_name, system_prompt, user_message):
-    genai.configure(api_key=api_key)
-    
     # 1. System Prompt (시스템 지시문) - 모델을 만들 때 '딱 한 번' 주입합니다.
     # 여기에 "너는 ~야", "JSON으로만 대답해" 같은 절대 규칙을 넣습니다.
-    
-    model = genai.GenerativeModel(
-        model_name=model_name,
-        system_instruction=system_prompt  
-    )
-    
+    client = genai.Client(api_key=api_key)
+
     # 2. User Prompt (사용자 질문) - 대화할 때 사용합니다.
     user_prompt = user_message
-    response = model.generate_content(user_prompt)
-    print(response.text)
+
+    response = client.models.generate_content(
+        model=model_name, 
+        contents=user_prompt,
+        config=types.GenerateContentConfig(
+        system_instruction=system_prompt, # 여기에 시스템 프롬프트가 들어갑니다
+        temperature=0.7, # 창의성 조절 (0.0: 정확함 ~ 1.0: 창의적임)
+        )
+    )
     
     return response.text
 
