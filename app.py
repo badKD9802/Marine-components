@@ -6,9 +6,12 @@ from google.genai import types
 import os
 
 # 1. 앱 생성
+print("app 생성 중...")
 app = FastAPI()
 # 2. CORS 설정 (이 부분이 '보안 문지기'에게 허락 맡는 부분입니다)
 # 반드시 app = FastAPI() 바로 밑에 있어야 합니다!
+print("app 생성 중...2")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],      # 모든 주소에서 접속 허용 (가장 중요)
@@ -16,6 +19,7 @@ app.add_middleware(
     allow_methods=["*"],      # GET, POST 다 허용
     allow_headers=["*"],      # 모든 헤더 허용
 )
+print("app 생성완료")
 
 # 3. 데이터 형식 정의 (이게 FastAPI의 장점! - Pydantic)
 # 유저가 보낼 JSON 데이터는 무조건 "message"라는 문자열이 있어야 한다고 선언
@@ -53,6 +57,9 @@ def get_ai_response(user_message: str):
 
     if not api_key:
         raise ValueError("API Key가 없습니다! Railway Variables에 설정해주세요.")
+
+    if api_key:
+        print("API Key가 정상적으로 로드되었습니다.")
 
     genai.configure(api_key=api_key)
 
