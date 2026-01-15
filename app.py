@@ -5,6 +5,7 @@ import google.genai as genai
 from google.genai import types
 import os
 
+
 # 1. 앱 생성
 print("app 생성 중...")
 app = FastAPI()
@@ -60,8 +61,10 @@ def get_ai_response(user_message: str):
     # Railway가 관리하는 비밀금고(환경변수)에서 키를 가져오는 코드
     api_key = os.environ.get("GOOGLE_API_KEY")
 
+    load_dotenv() # .env 파일에서 환경변수 로드
+
     if not api_key:
-        api_key = 'AIzaSyA_KZt7XVoZV9k2ZYz6DFGTmuRvKRLbpOU'
+        print("⚠️ API Key를 환경변수에서 찾지 못했습니다. .env 파일을 확인하세요.", flush=True)
 
     print(f"✅ API Key 로드 성공: {api_key[:5]}...", flush=True)
 
