@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import google.genai as genai
 from google.genai import types
 import os
-
+from dotenv import load_dotenv
 
 # 1. 앱 생성
 print("app 생성 중...")
