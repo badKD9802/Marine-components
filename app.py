@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
+import os
 
 # 1. 앱 생성
 app = FastAPI()
@@ -44,7 +45,15 @@ def model_answer(api_key, model_name, system_prompt, user_message):
 def get_ai_response(user_message: str):
     user_message = user_message.strip() # 공백 제거
     ## config
-    api_key = 'AIzaSyAojnAjnI9w5v-lhvggehghYhBH_uM0yxo'
+
+    # Railway가 관리하는 비밀금고(환경변수)에서 키를 가져오는 코드
+    api_key = os.environ.get("GOOGLE_API_KEY")
+
+    if not api_key:
+        raise ValueError("API Key가 없습니다! Railway Variables에 설정해주세요.")
+
+    genai.configure(api_key=api_key)
+
     model_name = 'gemini-2.5-flash'
     system_prompt = """
     당신은 사용자의 질문에 대답을 하는 AI 비서입니다. 질문에 알맞는 답변을 생성하여 주세요.
