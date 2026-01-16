@@ -60,7 +60,9 @@ def get_ai_response(user_message: str):
 
     # Railway가 관리하는 비밀금고(환경변수)에서 키를 가져오는 코드
     # load_dotenv() # .env 파일에서 환경변수 로드
-    raw_key = os.environ.get("GOOGLE_API_KEY", "")
+    # raw_key = os.environ.get("GOOGLE_API_KEY", "")
+    raw_key = os.getenv("GOOGLE_API_KEY", "")
+
     api_key = raw_key.strip()
     
     # api_key = os.getenv("GOOGLE_API_KEY") # .env파일에서 api_key 가져오기 
@@ -94,7 +96,7 @@ def get_ai_response(user_message: str):
     else:
         print("⚠️ API Key를 환경변수에서 찾지 못했습니다. .env 파일을 확인하세요.", flush=True)
 
-        return "안녕하세요! 영마린테크 AI 상담원입니다."
+        return "API Key를 환경변수에서 찾지 못했습니다"
 
     
 # -------------------------------------------
