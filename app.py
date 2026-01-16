@@ -59,14 +59,15 @@ def get_ai_response(user_message: str):
     ## config
 
     # Railway가 관리하는 비밀금고(환경변수)에서 키를 가져오는 코드
-    load_dotenv() # .env 파일에서 환경변수 로드
-
-    api_key = os.getenv("GOOGLE_API_KEY")
+    # load_dotenv() # .env 파일에서 환경변수 로드
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    
+    # api_key = os.getenv("GOOGLE_API_KEY") # .env파일에서 api_key 가져오기 
 
     if not api_key:
         print("⚠️ API Key를 환경변수에서 찾지 못했습니다. .env 파일을 확인하세요.", flush=True)
 
-    print(f"✅ API Key 로드 성공: {api_key[:5]}...", flush=True)
+    print(f"✅ API Key 로드 성공", flush=True)
 
     model_name = 'gemini-2.5-flash'
     system_prompt = """
@@ -111,7 +112,7 @@ async def chat(request: ChatRequest):
 if __name__ == "__main__":
     import uvicorn
     # Railway가 제공하는 포트 번호를 가져옴 (없으면 기본값 8000)
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", 8080))
     
     print(f"🚀 서버를 시작합니다! 포트: {port}")
     
