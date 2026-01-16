@@ -60,38 +60,43 @@ def get_ai_response(user_message: str):
 
     # Railway가 관리하는 비밀금고(환경변수)에서 키를 가져오는 코드
     # load_dotenv() # .env 파일에서 환경변수 로드
-    api_key = os.environ.get("GOOGLE_API_KEY")
+    raw_key = os.environ.get("GOOGLE_API_KEY", "")
+    api_key = raw_key.strip()
     
     # api_key = os.getenv("GOOGLE_API_KEY") # .env파일에서 api_key 가져오기 
 
-    if not api_key:
+    if api_key:
+        print(f"✅ API Key 로드 성공 {len(api_key)}", flush=True)
+
+        model_name = 'gemini-2.5-flash'
+        system_prompt = """
+        당신은 사용자의 질문에 대답을 하는 AI 비서입니다. 질문에 알맞는 답변을 생성하여 주세요.
+        당신은 영마린테크 AI 상담원입니다.
+        영마린테크는 선박 엔진 및 부품을 판매하는 회사입니다.
+        아래는 영마린테크에서 판매하는 제품들의 가격 설명입니다.
+
+        제품에 대해 물어보면 해당 주어진 정보로 답변을 하고 이외의 질문이 들어오면 일반적인 질문에 대한 답변을 생성하세요.
+        
+        ## 제품 가격 설명
+        얀마 커넥팅 로드 베어링 : 2,000원
+        마린 디젤 엔진 플린저 베럴 : 400,000원
+        선박 엔진 예비 부품 모음 : 문의 바람
+        피스톤 핀 부시 : 100,000원
+        다이하츠 밸브 스템 씰: 2,600원
+
+        자세한 내용은 추천 부품 목록을 참고하세요.
+        """
+        
+        if "안녕" in user_message:
+            return "안녕하세요! 영마린테크 AI 상담원입니다."
+        else:
+            return model_answer(api_key, model_name, system_prompt, user_message)
+    else:
         print("⚠️ API Key를 환경변수에서 찾지 못했습니다. .env 파일을 확인하세요.", flush=True)
 
-    print(f"✅ API Key 로드 성공", flush=True)
-
-    model_name = 'gemini-2.5-flash'
-    system_prompt = """
-    당신은 사용자의 질문에 대답을 하는 AI 비서입니다. 질문에 알맞는 답변을 생성하여 주세요.
-    당신은 영마린테크 AI 상담원입니다.
-    영마린테크는 선박 엔진 및 부품을 판매하는 회사입니다.
-    아래는 영마린테크에서 판매하는 제품들의 가격 설명입니다.
-
-    제품에 대해 물어보면 해당 주어진 정보로 답변을 하고 이외의 질문이 들어오면 일반적인 질문에 대한 답변을 생성하세요.
-    
-    ## 제품 가격 설명
-    얀마 커넥팅 로드 베어링 : 2,000원
-    마린 디젤 엔진 플린저 베럴 : 400,000원
-    선박 엔진 예비 부품 모음 : 문의 바람
-    피스톤 핀 부시 : 100,000원
-    다이하츠 밸브 스템 씰: 2,600원
-
-    자세한 내용은 추천 부품 목록을 참고하세요.
-    """
-
-    if "안녕" in user_message:
         return "안녕하세요! 영마린테크 AI 상담원입니다."
-    else:
-        return model_answer(api_key, model_name, system_prompt, user_message)
+
+    
 # -------------------------------------------
 
 # 4. API 엔드포인트 만들기
