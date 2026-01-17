@@ -62,24 +62,24 @@ def get_ai_response(user_message: str):
     ## config
 
     # Railway가 관리하는 비밀금고(환경변수)에서 키를 가져오는 코드
-    # load_dotenv() # .env 파일에서 환경변수 로드
+    load_dotenv() # .env 파일에서 환경변수 로드
 
-    raw_key = os.getenv("GOOGLE_API_KEY", "")
-    api_key = raw_key.strip()
+    # raw_key = os.getenv("GOOGLE_API_KEY", "")
+    # api_key = raw_key.strip()
     
-    try:
-        api_key2 = os.environ["GOOGLE_API_KEY"]
-        print("api_key2")
-        print(len(api_key2))
-    except Exception as e:
-        print(e)
-        print("api_key2는 실패")
+    # try:
+    #     api_key2 = os.environ["GOOGLE_API_KEY"]
+    #     print("api_key2")
+    #     print(len(api_key2))
+    # except Exception as e:
+    #     print(e)
+    #     print("api_key2는 실패")
 
-    api_key = os.environ.get("GOOGLE_API_KEY", "")
-    print("api_key3")
-    print(len(api_key3))
+    # api_key = os.environ.get("GOOGLE_API_KEY", "")
+    # print("api_key3")
+    # print(len(api_key3))
 
-    # api_key = os.getenv("GOOGLE_API_KEY") # .env파일에서 api_key 가져오기 
+    api_key = os.getenv("GOOGLE_API_KEY") # .env파일에서 api_key 가져오기 
 
     if api_key:
         print(f"✅ API Key 로드 성공 {len(api_key)}", flush=True)
