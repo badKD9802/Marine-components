@@ -75,7 +75,7 @@ def get_ai_response(user_message: str):
         print(e)
         print("api_key2는 실패")
 
-    api_key3 = os.environ.get("GOOGLE_API_KEY", "")
+    api_key = os.environ.get("GOOGLE_API_KEY", "")
     print("api_key3")
     print(len(api_key3))
 
@@ -133,7 +133,7 @@ async def chat(request: ChatRequest):
 if __name__ == "__main__":
     import uvicorn
     # Railway가 제공하는 포트 번호를 가져옴 (없으면 기본값 8000)
-    port = int(os.environ.get("PORT", 7777))
+    port = int(os.environ.get("PORT", 8000))
     
     print(f"🚀 서버를 시작합니다! 포트: {port}")
     
