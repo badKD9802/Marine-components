@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 # 1. 앱 생성
 print("app 생성 중...")
 app = FastAPI()
+print("ENV HAS GOOGLE_API_KEY?:", "GOOGLE_API_KEY" in os.environ, flush=True)
+print("ENV KEY LENGTH:", len((os.getenv("GOOGLE_API_KEY") or "").strip()), flush=True)
+
 # 2. CORS 설정 (이 부분이 '보안 문지기'에게 허락 맡는 부분입니다)
 # 반드시 app = FastAPI() 바로 밑에 있어야 합니다!
 print("app 생성 중...2")
