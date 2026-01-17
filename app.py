@@ -11,8 +11,6 @@ from dotenv import load_dotenv
 # 1. 앱 생성
 print("app 생성 중...")
 app = FastAPI()
-print("ENV HAS GOOGLE_API_KEY?:", "GOOGLE_API_KEY" in os.environ, flush=True)
-print("ENV KEY LENGTH:", len((os.getenv("GOOGLE_API_KEY") or "").strip()), flush=True)
 
 # 2. CORS 설정 (이 부분이 '보안 문지기'에게 허락 맡는 부분입니다)
 # 반드시 app = FastAPI() 바로 밑에 있어야 합니다!
@@ -120,10 +118,14 @@ async def chat(request: ChatRequest):
 
 if __name__ == "__main__":
     import uvicorn
+    from decouple import config
+
     # Railway가 제공하는 포트 번호를 가져옴 (없으면 기본값 8000)
     port = int(os.environ.get("PORT", 8000))
+    api_key = config("GOOGLE_API_KEY")
     
     print(f"🚀 서버를 시작합니다! 포트: {port}")
+    print(f"🚀 api_key를 확인합니다.! 포트: {api_key[:5]}")
     
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
 
