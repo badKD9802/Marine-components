@@ -1,10 +1,12 @@
 from fastapi import FastAPI
+from decouple import config
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import google.genai as genai
 from google.genai import types
 import os
 from dotenv import load_dotenv
+
 
 # 1. 앱 생성
 print("app 생성 중...")
@@ -62,24 +64,8 @@ def get_ai_response(user_message: str):
     ## config
 
     # Railway가 관리하는 비밀금고(환경변수)에서 키를 가져오는 코드
-    load_dotenv() # .env 파일에서 환경변수 로드
 
-    # raw_key = os.getenv("GOOGLE_API_KEY", "")
-    # api_key = raw_key.strip()
-    
-    # try:
-    #     api_key2 = os.environ["GOOGLE_API_KEY"]
-    #     print("api_key2")
-    #     print(len(api_key2))
-    # except Exception as e:
-    #     print(e)
-    #     print("api_key2는 실패")
-
-    # api_key = os.environ.get("GOOGLE_API_KEY", "")
-    # print("api_key3")
-    # print(len(api_key3))
-
-    api_key = os.getenv("GOOGLE_API_KEY") # .env파일에서 api_key 가져오기 
+    api_key = config("GOOGLE_API_KEY")
     print(len(api_key))
     print(api_key[:3])
 
@@ -140,3 +126,4 @@ if __name__ == "__main__":
     print(f"🚀 서버를 시작합니다! 포트: {port}")
     
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+
