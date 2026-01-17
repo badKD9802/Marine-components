@@ -125,7 +125,8 @@ if __name__ == "__main__":
 
     # Railway가 제공하는 포트 번호를 가져옴 (없으면 기본값 8000)
     port = int(os.environ.get("PORT", 8000))
-    api_key = config("GOOGLE_API_KEY")
+    # api_key = config("GOOGLE_API_KEY")
+    api_key="${{shared.API_KEY}}"
     
     print(f"🚀 서버를 시작합니다! 포트: {port}")
     print(f"🚀 api_key를 확인합니다.! 포트: {api_key[:5]}")
