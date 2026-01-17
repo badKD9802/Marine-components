@@ -80,6 +80,8 @@ def get_ai_response(user_message: str):
     # print(len(api_key3))
 
     api_key = os.getenv("GOOGLE_API_KEY") # .env파일에서 api_key 가져오기 
+    print(len(api_key))
+    print(api_key[:5])
 
     if api_key:
         print(f"✅ API Key 로드 성공 {len(api_key)}", flush=True)
