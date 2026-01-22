@@ -102,8 +102,8 @@ async def translate(request: TranslationRequest):
 
 @app.get("/get-emails")
 async def get_emails():
-    gmail_user = "qorudemr92@gmail.com" # os.getenv("GMAIL_USER")
-    gmail_password = "b!18031227" # os.getenv("GMAIL_PASSWORD")
+    gmail_user = os.getenv("GMAIL_USER")
+    gmail_password = os.getenv("GMAIL_PASSWORD")
 
     if not gmail_user or not gmail_password:
         return {"error": "Railway 환경변수에 이메일 설정이 없습니다."}
