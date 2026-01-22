@@ -74,7 +74,7 @@
             try {
                 // ★ 배포 후 Railway 주소로 꼭 변경하세요! (마지막에 /translate)
                 // 예: https://your-app.up.railway.app/translate
-                const response = await fetch('http://127.0.0.1:8000/translate', {
+                const response = await fetch('translation-production-ec85.up.railway.app/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: input })
