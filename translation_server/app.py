@@ -6,6 +6,7 @@ from google.genai import types
 import os
 from dotenv import load_dotenv
 import uvicorn
+from decouple import config
 
 # 1. 앱 생성
 print("app 생성 중...")
