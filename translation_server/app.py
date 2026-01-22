@@ -28,8 +28,9 @@ class TranslationRequest(BaseModel):
 ### AI 번역 함수 ### 
 def get_translation(user_text):
     # 환경변수 로드
-    load_dotenv()
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = config("GOOGLE_API_KEY")
+    print(len(api_key))
+    print(api_key[:3])
 
     if not api_key:
         return "오류: API Key가 없습니다. Railway 환경변수를 확인해주세요."
@@ -47,7 +48,7 @@ def get_translation(user_text):
     문장이 어색하면 한국어 어순으로만 자연스럽게 다듬되 내용 추가/삭제는 금지합니다.
     줄바꿈과 목록 형식은 가능한 유지하세요.
     번역 결과만 출력하고, 설명이나 추가 질문은 하지 마세요.
-    
+
     예시)
     [원문] Please send me a quote for 10 units of model X123 by next Friday.
     [번역] 다음 주 금요일까지 모델 X123 10대에 대한 견적서를 보내주시기 바랍니다.
