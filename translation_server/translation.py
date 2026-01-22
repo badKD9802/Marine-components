@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import uvicorn
 
 # 1. 앱 생성
+print("app 생성 중...")
 app = FastAPI()
 
 # 2. CORS 설정 (보안 문지기)
@@ -18,6 +19,7 @@ app.add_middleware(
     allow_methods=["*"],      # 모든 방식(GET, POST) 허용
     allow_headers=["*"],      # 모든 헤더 허용
 )
+print("app 생성완료")
 
 # 3. 데이터 형식 정의 (번역할 텍스트 받기)
 class TranslationRequest(BaseModel):
