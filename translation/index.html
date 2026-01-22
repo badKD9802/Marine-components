@@ -39,6 +39,14 @@
 
     <div class="container">
         <h1>✨ AI 번역기</h1>
+    
+        <!-- ▼ 메일 가져오기 버튼과 목록 영역 추가 -->
+        <div style="margin-bottom: 20px;">
+            <button onclick="fetchEmails()" style="background: #ff9800;">📩 내 메일함 가져오기 (최신 5개)</button>
+            <div id="emailList" style="margin-top: 10px; display: none; flex-direction: column; gap: 10px;">
+                <!-- 여기에 메일 목록이 생깁니다 -->
+            </div>
+        </div>
         
         <div class="translation-box">
             <div class="box">
@@ -95,6 +103,59 @@
                 btn.innerText = "번역하기";
                 btn.disabled = false;
             }
+        }
+    </script>
+
+    <script>
+        // ... (기존 번역 함수 doTranslate 등) ...
+
+        // 1. 메일 가져오는 함수
+        async function fetchEmails() {
+            const listDiv = document.getElementById('emailList');
+            listDiv.style.display = 'block';
+            listDiv.innerHTML = "<p>메일함을 뒤지는 중... 📬</p>";
+
+            try {
+                // Railway 주소로 변경 필수!
+                const res = await fetch('https://translation-production-ec85.up.railway.app/get-emails');
+                const data = await res.json();
+
+                if (data.error) {
+                    listDiv.innerHTML = `<p style="color:red;">에러: ${data.error}</p>`;
+                    return;
+                }
+
+                // 목록 만들기
+                let html = "";
+                data.emails.forEach((mail, index) => {
+                    // 카드 형태로 디자인
+                    html += `
+                    <div onclick="selectEmail(${index})" style="background: #f1f1f1; padding: 15px; border-radius: 10px; cursor: pointer; border: 1px solid #ddd; transition: 0.2s;">
+                        <div style="font-weight: bold; color: #333;">${mail.subject}</div>
+                        <div style="font-size: 0.9em; color: #666;">보낸이: ${mail.sender}</div>
+                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">${mail.body.substring(0, 60)}...</div>
+                        
+                        <!-- 숨겨진 전체 본문 데이터 -->
+                        <input type="hidden" id="mail-body-${index}" value="${encodeURIComponent(mail.body)}">
+                    </div>`;
+                });
+                listDiv.innerHTML = html;
+
+            } catch (e) {
+                listDiv.innerHTML = "<p>서버 연결 실패!</p>";
+            }
+        }
+
+        // 2. 메일 클릭하면 입력창에 넣는 함수
+        function selectEmail(index) {
+            const bodyInput = document.getElementById(`mail-body-${index}`).value;
+            const decodedBody = decodeURIComponent(bodyInput);
+            
+            // 입력창에 값 넣기
+            document.getElementById('inputText').value = decodedBody;
+            
+            // 알림
+            alert("메일 내용을 입력창에 복사했습니다! '번역하기'를 누르세요.");
         }
     </script>
 </body>

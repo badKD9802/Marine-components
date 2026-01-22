@@ -8,6 +8,82 @@ from dotenv import load_dotenv
 import uvicorn
 from decouple import config
 
+## 메일 가져오기 ##
+
+# 기존 import 아래에 추가
+import imaplib
+import email
+from email.header import decode_header
+
+def clean_text(text, encoding):
+    if isinstance(text, bytes):
+        if encoding:
+            return text.decode(encoding)
+        else:
+            return text.decode('utf-8', errors='ignore')
+    return text
+
+@app.get("/get-emails")
+async def get_emails():
+    gmail_user = os.getenv("GMAIL_USER")
+    gmail_password = os.getenv("GMAIL_PASSWORD")
+
+    if not gmail_user or not gmail_password:
+        return {"error": "Railway 환경변수에 이메일 설정이 없습니다."}
+
+    try:
+        # 1. 지메일 서버 접속 (IMAP)
+        mail = imaplib.IMAP4_SSL("imap.gmail.com")
+        mail.login(gmail_user, gmail_password)
+        mail.select("inbox") # 받은편지함 선택
+
+        # 2. 최신 메일 검색 (검색 조건을 'ALL'로 하면 다 가져옴)
+        status, messages = mail.search(None, "ALL")
+        mail_ids = messages[0].split()
+        
+        # 최신 5개만 가져오기 (뒤에서부터 자름)
+        latest_email_ids = mail_ids[-5:] 
+        
+        email_list = []
+
+        for i in reversed(latest_email_ids):
+            res, msg = mail.fetch(i, "(RFC822)")
+            for response in msg:
+                if isinstance(response, tuple):
+                    # 메일 파싱
+                    msg = email.message_from_bytes(response[1])
+                    
+                    # 제목 추출
+                    subject, encoding = decode_header(msg["Subject"])[0]
+                    subject = clean_text(subject, encoding)
+
+                    # 보낸사람 추출
+                    sender, encoding = decode_header(msg["From"])[0]
+                    sender = clean_text(sender, encoding)
+
+                    # 본문 추출 (텍스트만)
+                    body = ""
+                    if msg.is_multipart():
+                        for part in msg.walk():
+                            if part.get_content_type() == "text/plain":
+                                body = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')
+                                break
+                    else:
+                        body = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8', errors='ignore')
+
+                    email_list.append({
+                        "subject": subject,
+                        "sender": sender,
+                        "body": body[:500] + "..." # 너무 길면 자름
+                    })
+
+        mail.logout()
+        return {"emails": email_list}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+
 # 1. 앱 생성
 print("app 생성 중...")
 app = FastAPI()
