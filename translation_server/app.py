@@ -23,7 +23,18 @@ def clean_text(text, encoding):
             return text.decode('utf-8', errors='ignore')
     return text
 
+# 1. 메일 가져오기용 데이터 모델 (ID, 비번 받기 위함)
+class FetchMailRequest(BaseModel):
+    gmail_id: str
+    gmail_pw: str
 
+# 2. 메일 보내기용 데이터 모델 (ID, 비번 추가)
+class SendMailRequest(BaseModel):
+    gmail_id: str
+    gmail_pw: str
+    to_email: str
+    subject: str
+    content: str
 
 # 1. 앱 생성
 print("app 생성 중...")
@@ -159,6 +170,79 @@ async def get_emails():
 
     except Exception as e:
         return {"error": str(e)}
+
+# 3. 메일 가져오기 (POST로 변경!)
+@app.post("/get-emails")  # <--- GET에서 POST로 변경됨
+async def get_emails(request: FetchMailRequest):
+    # 이제 환경변수가 아니라, 유저가 보낸 request에서 꺼내 씁니다.
+    user = request.gmail_id
+    pwd = request.gmail_pw
+
+    if not user or not pwd:
+        return {"error": "아이디와 앱 비밀번호를 입력해주세요."}
+
+    try:
+        # 로직은 그대로인데 변수만 바뀜 (gmail_user -> user)
+        mail = imaplib.IMAP4_SSL("imap.gmail.com")
+        mail.login(user, pwd) # <--- 여기서 유저 입력값으로 로그인
+        mail.select("inbox")
+
+        status, messages = mail.search(None, "ALL")
+        mail_ids = messages[0].split()
+        latest_email_ids = mail_ids[-5:] 
+        
+        email_list = []
+
+        for i in reversed(latest_email_ids):
+            res, msg = mail.fetch(i, "(RFC822)")
+            for response in msg:
+                if isinstance(response, tuple):
+                    msg = email.message_from_bytes(response[1])
+                    subject, encoding = decode_header(msg["Subject"])[0]
+                    subject = clean_text(subject, encoding)
+                    sender, encoding = decode_header(msg["From"])[0]
+                    sender = clean_text(sender, encoding)
+                    
+                    body = ""
+                    if msg.is_multipart():
+                        for part in msg.walk():
+                            if part.get_content_type() == "text/plain":
+                                body = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')
+                                break
+                    else:
+                        body = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8', errors='ignore')
+
+                    email_list.append({
+                        "subject": subject,
+                        "sender": sender,
+                        "body": body[:500] + "..."
+                    })
+
+        mail.logout()
+        return {"emails": email_list}
+
+    except Exception as e:
+        return {"error": "로그인 실패! 앱 비밀번호가 맞나요? (" + str(e) + ")"}
+
+
+# 4. 메일 보내기 (입력받은 정보로 전송)
+@app.post("/send-email")
+async def send_email(request: SendMailRequest):
+    try:
+        msg = MIMEText(request.content)
+        msg['Subject'] = request.subject
+        msg['From'] = request.gmail_id
+        msg['To'] = request.to_email
+
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            # 유저가 입력한 ID/PW로 로그인
+            server.login(request.gmail_id, request.gmail_pw)
+            server.send_message(msg)
+            
+        return {"status": "이메일 전송 성공! 🚀"}
+    except Exception as e:
+        return {"status": f"전송 실패: {str(e)}"}
 
 
 if __name__ == "__main__":
