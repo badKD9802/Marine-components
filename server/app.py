@@ -22,7 +22,7 @@ print("app 생성 중...2")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],      # 모든 주소에서 접속 허용 (가장 중요)
-    allow_credentials=True,
+    allow_credentials=True, 
     allow_methods=["*"],      # GET, POST 다 허용
     allow_headers=["*"],      # 모든 헤더 허용
 )
@@ -129,7 +129,6 @@ if __name__ == "__main__":
     api_key = os.environ
     
     print(f"🚀 서버를 시작합니다! 포트: {port}")
-    print(f"🚀 api_key를 확인합니다.! 포트: {api_key}")
     
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
 

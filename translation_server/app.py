@@ -117,6 +117,9 @@ async def get_emails(request: FetchMailRequest):
     user = request.gmail_id
     pwd = request.gmail_pw
 
+    print(user)
+    print(pwd)
+
     if not user or not pwd:
         return {"error": "아이디와 앱 비밀번호를 입력해주세요."}
 
