@@ -3,69 +3,1357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상품 상세정보</title>
-    <!-- 스타일은 index.html과 비슷하게 가져오거나 style.css로 분리하는 게 좋음 -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>상품 상세정보 - 영마린테크</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-        .back-btn { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #eee; border-radius: 5px; text-decoration: none; color: #333; }
-        .detail-container { display: flex; flex-wrap: wrap; gap: 30px; }
-        .detail-img { max-width: 100%; width: 400px; border-radius: 10px; }
-        .detail-info { flex: 1; }
-        .part-no { background: #e3f2fd; color: #0056b3; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
-        h1 { margin: 15px 0; }
-        .price { font-size: 1.5rem; font-weight: bold; color: #d32f2f; }
-        .desc { margin-top: 20px; line-height: 1.6; color: #555; border-top: 1px solid #eee; padding-top: 20px; }
-        .buy-btn { display: block; width: 100%; background: #0056b3; color: white; text-align: center; padding: 15px; margin-top: 30px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; border: none; }
+        /* ===== CSS 변수 (디자인 시스템) ===== */
+        :root {
+            --primary: #003366;
+            --primary-dark: #001f3f;
+            --primary-light: #e6f2ff;
+            --accent: #0099cc;
+            --success: #28a745;
+            --warning: #ff9800;
+            --danger: #dc3545;
+            --text-dark: #1a1a1a;
+            --text-regular: #333333;
+            --text-light: #666666;
+            --text-muted: #999999;
+            --bg-white: #ffffff;
+            --bg-gray-50: #f8f9fa;
+            --bg-gray-100: #f1f3f5;
+            --bg-gray-200: #e9ecef;
+            --bg-dark-navy: #1a2a3a;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 2px 8px rgba(0,0,0,0.12);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.15);
+            --shadow-xl: 0 8px 24px rgba(0,0,0,0.18);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-full: 9999px;
+            --font-primary: 'Noto Sans KR', 'Segoe UI', sans-serif;
+        }
+
+        /* ===== 기본 리셋 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            color: var(--text-regular);
+            background: var(--bg-gray-50);
+            line-height: 1.6;
+        }
+
+        /* ===== 상단 네비게이션 ===== */
+        .navbar {
+            background: var(--bg-white);
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            padding: 0.5rem 1rem;
+            background: var(--bg-gray-100);
+            color: var(--text-regular);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-gray-200);
+        }
+
+        .lang-select {
+            padding: 0.5rem;
+            border: 1px solid var(--bg-gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            cursor: pointer;
+            background: var(--bg-white);
+        }
+
+        /* ===== Breadcrumb ===== */
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            margin: 0 0.5rem;
+        }
+
+        /* ===== 메인 컨테이너 ===== */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ===== 상품 메인 영역 (2열) ===== */
+        .product-main {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        /* 좌측: 이미지 영역 */
+        .product-image-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-image-wrapper {
+            position: relative;
+            cursor: pointer;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .product-image-wrapper:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .zoom-hint {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* 우측: 상품 정보 */
+        .product-info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .brand-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 600;
+            width: fit-content;
+        }
+
+        .part-no-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: var(--bg-gray-100);
+            color: var(--text-dark);
+            border-radius: var(--radius-md);
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            width: fit-content;
+            margin-top: 0.5rem;
+        }
+
+        .product-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-top: 0.5rem;
+        }
+
+        .product-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .product-desc {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--bg-gray-200);
+            margin: 1.5rem 0;
+        }
+
+        /* 견적 요청 영역 */
+        .quote-section {
+            padding: 1.5rem;
+            background: var(--bg-gray-50);
+            border-radius: var(--radius-md);
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .quantity-label {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quantity-btn {
+            width: 2rem;
+            height: 2rem;
+            border: 1px solid var(--bg-gray-200);
+            background: var(--bg-white);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .quantity-btn:hover {
+            background: var(--bg-gray-100);
+            border-color: var(--accent);
+        }
+
+        .quantity-input {
+            width: 4rem;
+            height: 2rem;
+            text-align: center;
+            border: 1px solid var(--bg-gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+        }
+
+        .quote-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: var(--bg-white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .quote-btn:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .contact-link {
+            display: block;
+            text-align: center;
+            padding: 0.75rem;
+            border: 1px solid var(--bg-gray-200);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--text-regular);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .contact-link:hover {
+            background: var(--bg-gray-100);
+            border-color: var(--accent);
+        }
+
+        /* ===== 탭 섹션 ===== */
+        .tabs-section {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 2px solid var(--bg-gray-200);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-gray-50);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 탭 1: 상세 정보 */
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+
+        .specs-table th,
+        .specs-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-gray-200);
+        }
+
+        .specs-table th {
+            background: var(--bg-gray-50);
+            font-weight: 600;
+            color: var(--text-dark);
+            width: 30%;
+        }
+
+        .specs-table td {
+            color: var(--text-regular);
+        }
+
+        .detail-text {
+            line-height: 1.8;
+            color: var(--text-light);
+        }
+
+        /* 탭 2: 호환 정보 */
+        .compatibility-list {
+            list-style: none;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .compatibility-item {
+            padding: 0.875rem 1rem;
+            background: var(--bg-gray-50);
+            border-left: 3px solid var(--accent);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+        }
+
+        .no-info-message {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            background: var(--bg-gray-50);
+            border-radius: var(--radius-md);
+        }
+
+        /* 탭 3: 문의하기 */
+        .inquiry-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .form-input,
+        .form-textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--bg-gray-200);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-family: var(--font-primary);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 153, 204, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-submit-btn {
+            padding: 1rem;
+            background: var(--primary);
+            color: var(--bg-white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .form-submit-btn:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ===== 관련 상품 섹션 ===== */
+        .related-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+        }
+
+        .related-products {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .related-products::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .related-products::-webkit-scrollbar-track {
+            background: var(--bg-gray-100);
+            border-radius: var(--radius-full);
+        }
+
+        .related-products::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: var(--radius-full);
+        }
+
+        .related-card {
+            flex: 0 0 280px;
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .related-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .related-card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .related-card-body {
+            padding: 1rem;
+        }
+
+        .related-part-no {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'Courier New', monospace;
+        }
+
+        .related-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .related-price {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        .related-view-btn {
+            display: block;
+            width: 100%;
+            padding: 0.625rem;
+            margin-top: 0.75rem;
+            background: var(--bg-gray-100);
+            color: var(--text-regular);
+            text-align: center;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .related-card:hover .related-view-btn {
+            background: var(--accent);
+            color: var(--bg-white);
+        }
+
+        /* ===== CTA 배너 ===== */
+        .cta-banner {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--bg-white);
+            padding: 3rem 2rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .cta-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-btn {
+            padding: 1rem 2rem;
+            background: var(--bg-white);
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 1.125rem;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .cta-btn:hover {
+            background: var(--bg-gray-100);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ===== 푸터 ===== */
+        .footer {
+            background: var(--bg-dark-navy);
+            color: var(--bg-gray-200);
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-company {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-contact {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-copyright {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== 이미지 확대 모달 ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-image {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-gray-200);
+            transform: scale(1.1);
+        }
+
+        /* ===== 반응형 ===== */
+        @media (max-width: 768px) {
+            .product-main {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                padding: 1.5rem;
+            }
+
+            .product-image {
+                height: 300px;
+            }
+
+            .product-name {
+                font-size: 1.5rem;
+            }
+
+            .product-price {
+                font-size: 1.75rem;
+            }
+
+            .tabs-header {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                white-space: nowrap;
+                font-size: 0.9rem;
+                padding: 0.875rem;
+            }
+
+            .tab-content {
+                padding: 1.5rem;
+            }
+
+            .specs-table th,
+            .specs-table td {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .related-card {
+                flex: 0 0 240px;
+            }
+
+            .cta-title {
+                font-size: 1.5rem;
+            }
+
+            .cta-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .cta-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .navbar-container {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .navbar-right {
+                justify-content: space-between;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .related-card {
+                flex: 0 0 260px;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .related-products {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                overflow-x: visible;
+            }
+
+            .related-card {
+                flex: 1 1 auto;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 상단 네비게이션 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="logo">⚓ 영마린테크</a>
+            <div class="navbar-right">
+                <a href="index.html" class="back-btn">← 목록으로</a>
+                <select class="lang-select" id="langSelect">
+                    <option value="ko">한국어</option>
+                    <option value="en">English</option>
+                    <option value="cn">中文</option>
+                </select>
+            </div>
+        </div>
+    </nav>
 
-    <a href="index.html" class="back-btn">← 목록으로 돌아가기</a>
-
-    <div id="productDetail" class="detail-container">
-        <!-- 자바스크립트가 여기에 내용을 채웁니다 -->
-        <p>상품 정보를 불러오는 중...</p>
+    <!-- Breadcrumb -->
+    <div class="breadcrumb" id="breadcrumb">
+        <a href="index.html">홈</a>
+        <span>›</span>
+        <a href="index.html">제품목록</a>
+        <span>›</span>
+        <span id="breadcrumbProduct">상품명</span>
     </div>
 
-    <!-- 1. 데이터 파일 불러오기 -->
+    <!-- 메인 컨테이너 -->
+    <div class="main-container">
+        <!-- 상품 메인 영역 -->
+        <div class="product-main">
+            <!-- 좌측: 이미지 영역 -->
+            <div class="product-image-section">
+                <div class="product-image-wrapper" id="imageWrapper">
+                    <img src="" alt="상품 이미지" class="product-image" id="productImage">
+                </div>
+                <p class="zoom-hint" id="zoomHint">클릭하여 확대</p>
+            </div>
+
+            <!-- 우측: 상품 정보 -->
+            <div class="product-info-section" id="productInfo">
+                <!-- JavaScript로 채워질 영역 -->
+            </div>
+        </div>
+
+        <!-- 탭 섹션 -->
+        <div class="tabs-section">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="detail" id="tabDetail">상세 정보</button>
+                <button class="tab-btn" data-tab="compatibility" id="tabCompatibility">호환 정보</button>
+                <button class="tab-btn" data-tab="inquiry" id="tabInquiry">문의하기</button>
+            </div>
+
+            <!-- 탭 1: 상세 정보 -->
+            <div class="tab-content active" id="contentDetail">
+                <!-- JavaScript로 채워질 영역 -->
+            </div>
+
+            <!-- 탭 2: 호환 정보 -->
+            <div class="tab-content" id="contentCompatibility">
+                <!-- JavaScript로 채워질 영역 -->
+            </div>
+
+            <!-- 탭 3: 문의하기 -->
+            <div class="tab-content" id="contentInquiry">
+                <form class="inquiry-form" id="inquiryForm">
+                    <div class="form-group">
+                        <label class="form-label" id="labelCompany">회사명</label>
+                        <input type="text" class="form-input" id="inputCompany" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="labelName">담당자명</label>
+                        <input type="text" class="form-input" id="inputName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="labelPhone">연락처</label>
+                        <input type="tel" class="form-input" id="inputPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="labelEmail">이메일</label>
+                        <input type="email" class="form-input" id="inputEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="labelQuantity">수량</label>
+                        <input type="number" class="form-input" id="inputQuantity" value="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="labelMessage">메시지</label>
+                        <textarea class="form-textarea" id="inputMessage" required></textarea>
+                    </div>
+                    <button type="submit" class="form-submit-btn" id="btnSubmitInquiry">견적 요청 보내기</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 관련 상품 섹션 -->
+        <div class="related-section">
+            <h2 class="section-title" id="relatedTitle">관련 상품</h2>
+            <div class="related-products" id="relatedProducts">
+                <!-- JavaScript로 채워질 영역 -->
+            </div>
+        </div>
+
+        <!-- CTA 배너 -->
+        <div class="cta-banner">
+            <h2 class="cta-title" id="ctaTitle">견적이 필요하신가요?</h2>
+            <div class="cta-actions">
+                <a href="tel:010-4056-2656" class="cta-btn">📞 010-4056-2656</a>
+                <a href="mailto:contact@example.com" class="cta-btn" id="ctaEmail">📧 이메일 문의</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-company">영마린테크</div>
+            <div class="footer-contact">
+                <span id="footerPhone">전화: 010-4056-2656</span> |
+                <span id="footerEmail">이메일: contact@example.com</span>
+            </div>
+            <div class="footer-copyright" id="footerCopyright">Copyright © 2024 영마린테크. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <!-- 이미지 확대 모달 -->
+    <div class="modal" id="imageModal">
+        <button class="modal-close" id="modalClose">×</button>
+        <img src="" alt="확대 이미지" class="modal-image" id="modalImage">
+    </div>
+
+    <!-- 데이터 파일 -->
     <script src="js/data.js"></script>
-    
+
+    <!-- 메인 스크립트 -->
     <script>
-        // 2. URL에서 'id' 값 가져오기 (예: detail.html?id=2 -> 2를 가져옴)
+        // ===== 다국어 텍스트 =====
+        const i18n = {
+            ko: {
+                home: '홈',
+                productList: '제품목록',
+                backToList: '← 목록으로',
+                zoomHint: '클릭하여 확대',
+                brand: '브랜드',
+                partNo: 'Part No',
+                quantity: '수량',
+                requestQuote: '견적 요청하기',
+                phone: '전화 문의: 010-4056-2656',
+                email: '이메일 문의',
+                tabDetail: '상세 정보',
+                tabCompatibility: '호환 정보',
+                tabInquiry: '문의하기',
+                specPartNo: '부품번호',
+                specBrand: '브랜드',
+                specCategory: '카테고리',
+                specMaterial: '재질',
+                specOrigin: '원산지',
+                noCompatibilityInfo: '호환 정보는 전화 문의 바랍니다',
+                formCompany: '회사명',
+                formName: '담당자명',
+                formPhone: '연락처',
+                formEmail: '이메일',
+                formQuantity: '수량',
+                formMessage: '메시지',
+                formSubmit: '견적 요청 보내기',
+                formSubmitAlert: '전화 문의 부탁드립니다: 010-4056-2656',
+                relatedProducts: '관련 상품',
+                viewProduct: '보기',
+                ctaTitle: '견적이 필요하신가요?',
+                ctaEmail: '📧 이메일 문의',
+                footerPhone: '전화: 010-4056-2656',
+                footerEmail: '이메일: contact@example.com',
+                footerCopyright: 'Copyright © 2024 영마린테크. All rights reserved.',
+                categoryBearing: '베어링',
+                categoryPlunger: '플런저',
+                categoryParts: '부품',
+                categoryBush: '부시',
+                categorySeal: '씰',
+                contactUs: '문의',
+                notAvailable: '-'
+            },
+            en: {
+                home: 'Home',
+                productList: 'Products',
+                backToList: '← Back to List',
+                zoomHint: 'Click to zoom',
+                brand: 'Brand',
+                partNo: 'Part No',
+                quantity: 'Quantity',
+                requestQuote: 'Request Quote',
+                phone: 'Phone: 010-4056-2656',
+                email: 'Email Inquiry',
+                tabDetail: 'Details',
+                tabCompatibility: 'Compatibility',
+                tabInquiry: 'Inquiry',
+                specPartNo: 'Part Number',
+                specBrand: 'Brand',
+                specCategory: 'Category',
+                specMaterial: 'Material',
+                specOrigin: 'Origin',
+                noCompatibilityInfo: 'Please contact us for compatibility information',
+                formCompany: 'Company Name',
+                formName: 'Contact Person',
+                formPhone: 'Phone',
+                formEmail: 'Email',
+                formQuantity: 'Quantity',
+                formMessage: 'Message',
+                formSubmit: 'Send Quote Request',
+                formSubmitAlert: 'Please contact us: 010-4056-2656',
+                relatedProducts: 'Related Products',
+                viewProduct: 'View',
+                ctaTitle: 'Need a Quote?',
+                ctaEmail: '📧 Email Inquiry',
+                footerPhone: 'Phone: 010-4056-2656',
+                footerEmail: 'Email: contact@example.com',
+                footerCopyright: 'Copyright © 2024 Young Marine Tech. All rights reserved.',
+                categoryBearing: 'Bearing',
+                categoryPlunger: 'Plunger',
+                categoryParts: 'Parts',
+                categoryBush: 'Bush',
+                categorySeal: 'Seal',
+                contactUs: 'Contact Us',
+                notAvailable: '-'
+            },
+            cn: {
+                home: '首页',
+                productList: '产品列表',
+                backToList: '← 返回列表',
+                zoomHint: '点击放大',
+                brand: '品牌',
+                partNo: '零件号',
+                quantity: '数量',
+                requestQuote: '请求报价',
+                phone: '电话咨询: 010-4056-2656',
+                email: '电子邮件咨询',
+                tabDetail: '详细信息',
+                tabCompatibility: '兼容性信息',
+                tabInquiry: '咨询',
+                specPartNo: '零件号',
+                specBrand: '品牌',
+                specCategory: '分类',
+                specMaterial: '材质',
+                specOrigin: '产地',
+                noCompatibilityInfo: '兼容性信息请电话咨询',
+                formCompany: '公司名称',
+                formName: '负责人姓名',
+                formPhone: '联系电话',
+                formEmail: '电子邮件',
+                formQuantity: '数量',
+                formMessage: '留言',
+                formSubmit: '发送报价请求',
+                formSubmitAlert: '请致电咨询: 010-4056-2656',
+                relatedProducts: '相关产品',
+                viewProduct: '查看',
+                ctaTitle: '需要报价吗?',
+                ctaEmail: '📧 电子邮件咨询',
+                footerPhone: '电话: 010-4056-2656',
+                footerEmail: '电子邮件: contact@example.com',
+                footerCopyright: 'Copyright © 2024 英马林技术. All rights reserved.',
+                categoryBearing: '轴承',
+                categoryPlunger: '柱塞',
+                categoryParts: '零件',
+                categoryBush: '衬套',
+                categorySeal: '密封',
+                contactUs: '联系我们',
+                notAvailable: '-'
+            }
+        };
+
+        // ===== 언어 설정 =====
+        let currentLang = localStorage.getItem('lang') || 'ko';
+        document.getElementById('langSelect').value = currentLang;
+
+        document.getElementById('langSelect').addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            localStorage.setItem('lang', currentLang);
+            renderProduct();
+            updateUILanguage();
+        });
+
+        // ===== URL 파라미터에서 상품 ID 가져오기 =====
         const urlParams = new URLSearchParams(window.location.search);
-        const productId = parseInt(urlParams.get('id')); // 숫자로 변환
-        
-        // 3. 데이터에서 해당 ID의 상품 찾기
+        const productId = parseInt(urlParams.get('id'));
         const product = products.find(p => p.id === productId);
 
-        // 4. 화면에 그리기
-        const container = document.getElementById('productDetail');
-
+        // ===== 상품이 없을 경우 =====
         if (!product) {
-            container.innerHTML = "<h2>상품을 찾을 수 없습니다.</h2>";
+            document.querySelector('.main-container').innerHTML = '<h2 style="text-align:center;padding:3rem;">상품을 찾을 수 없습니다.</h2>';
         } else {
-            // 현재 언어 설정 (일단 ko로 고정, 필요하면 localStorage로 연동 가능)
-            const lang = 'ko'; 
+            renderProduct();
+        }
 
-            container.innerHTML = `
-                <div>
-                    <img src="${product.image}" class="detail-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/400'">
-                </div>
-                <div class="detail-info">
-                    <span class="part-no">Part No: ${product.partNo}</span>
-                    <h1>${product.name[lang]}</h1>
-                    <p class="price">${product.price}원</p>
-                    
-                    <div class="desc">
-                        <h3>상세 설명</h3>
-                        <p>${product.detailInfo ? product.detailInfo[lang] : product.desc[lang]}</p>
+        // ===== 상품 렌더링 함수 =====
+        function renderProduct() {
+            if (!product) return;
+
+            const t = i18n[currentLang];
+
+            // Breadcrumb
+            document.getElementById('breadcrumbProduct').textContent = product.name[currentLang];
+
+            // 이미지
+            const productImage = document.getElementById('productImage');
+            productImage.src = product.image;
+            productImage.onerror = function() {
+                this.src = 'https://via.placeholder.com/400x400?text=No+Image';
+            };
+
+            // 브랜드 추출 (있으면 사용, 없으면 부품번호에서 추출)
+            const brand = product.brand || extractBrand(product.partNo);
+
+            // 카테고리 매핑
+            const categoryMap = {
+                bearing: t.categoryBearing,
+                plunger: t.categoryPlunger,
+                parts: t.categoryParts,
+                bush: t.categoryBush,
+                seal: t.categorySeal
+            };
+            const category = product.category ? categoryMap[product.category] || product.category : t.notAvailable;
+
+            // 상품 정보 렌더링
+            document.getElementById('productInfo').innerHTML = `
+                <span class="brand-badge">${brand}</span>
+                <div class="part-no-badge">${t.partNo}: ${product.partNo}</div>
+                <h1 class="product-name">${product.name[currentLang]}</h1>
+                <div class="product-price">${formatPrice(product.price)}</div>
+                <p class="product-desc">${product.desc[currentLang]}</p>
+                <hr class="divider">
+                <div class="quote-section">
+                    <div class="quantity-selector">
+                        <span class="quantity-label">${t.quantity}:</span>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                            <input type="number" class="quantity-input" id="quantityInput" value="1" min="1">
+                            <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+                        </div>
                     </div>
-
-                    <button class="buy-btn" onclick="alert('전화 문의 부탁드립니다: 010-4056-2656')">구매 문의하기</button>
+                    <button class="quote-btn" onclick="requestQuote()">${t.requestQuote}</button>
+                    <div class="contact-links">
+                        <a href="tel:010-4056-2656" class="contact-link">${t.phone}</a>
+                        <a href="mailto:contact@example.com" class="contact-link">${t.email}</a>
+                    </div>
                 </div>
             `;
+
+            // 탭 1: 상세 정보
+            const detailInfo = product.detailInfo ? product.detailInfo[currentLang] : product.desc[currentLang];
+            const specs = product.specs ? product.specs[currentLang] : {};
+
+            document.getElementById('contentDetail').innerHTML = `
+                <table class="specs-table">
+                    <tbody>
+                        <tr>
+                            <th>${t.specPartNo}</th>
+                            <td>${product.partNo}</td>
+                        </tr>
+                        <tr>
+                            <th>${t.specBrand}</th>
+                            <td>${brand}</td>
+                        </tr>
+                        <tr>
+                            <th>${t.specCategory}</th>
+                            <td>${category}</td>
+                        </tr>
+                        <tr>
+                            <th>${t.specMaterial}</th>
+                            <td>${specs.material || t.notAvailable}</td>
+                        </tr>
+                        <tr>
+                            <th>${t.specOrigin}</th>
+                            <td>${specs.origin || t.notAvailable}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="detail-text">
+                    <p>${detailInfo}</p>
+                </div>
+            `;
+
+            // 탭 2: 호환 정보
+            if (product.compatibility && product.compatibility[currentLang] && product.compatibility[currentLang].length > 0) {
+                const compatibilityItems = product.compatibility[currentLang]
+                    .map(item => `<li class="compatibility-item">${item}</li>`)
+                    .join('');
+                document.getElementById('contentCompatibility').innerHTML = `
+                    <ul class="compatibility-list">
+                        ${compatibilityItems}
+                    </ul>
+                `;
+            } else {
+                document.getElementById('contentCompatibility').innerHTML = `
+                    <div class="no-info-message">${t.noCompatibilityInfo}</div>
+                `;
+            }
+
+            // 관련 상품 렌더링
+            renderRelatedProducts();
         }
+
+        // ===== 관련 상품 렌더링 =====
+        function renderRelatedProducts() {
+            const t = i18n[currentLang];
+            const relatedProducts = products.filter(p => p.id !== productId).slice(0, 4);
+
+            const relatedHTML = relatedProducts.map(p => `
+                <a href="detail.html?id=${p.id}" class="related-card">
+                    <img src="${p.image}" alt="${p.name[currentLang]}" class="related-card-image"
+                         onerror="this.src='https://via.placeholder.com/280x200?text=No+Image'">
+                    <div class="related-card-body">
+                        <div class="related-part-no">${p.partNo}</div>
+                        <div class="related-name">${p.name[currentLang]}</div>
+                        <div class="related-price">${formatPrice(p.price)}</div>
+                        <div class="related-view-btn">${t.viewProduct}</div>
+                    </div>
+                </a>
+            `).join('');
+
+            document.getElementById('relatedProducts').innerHTML = relatedHTML;
+        }
+
+        // ===== UI 언어 업데이트 =====
+        function updateUILanguage() {
+            const t = i18n[currentLang];
+
+            // Breadcrumb
+            document.querySelector('.breadcrumb a:first-child').textContent = t.home;
+            document.querySelectorAll('.breadcrumb a')[1].textContent = t.productList;
+
+            // 힌트
+            document.getElementById('zoomHint').textContent = t.zoomHint;
+
+            // 탭 버튼
+            document.getElementById('tabDetail').textContent = t.tabDetail;
+            document.getElementById('tabCompatibility').textContent = t.tabCompatibility;
+            document.getElementById('tabInquiry').textContent = t.tabInquiry;
+
+            // 폼 레이블
+            document.getElementById('labelCompany').textContent = t.formCompany;
+            document.getElementById('labelName').textContent = t.formName;
+            document.getElementById('labelPhone').textContent = t.formPhone;
+            document.getElementById('labelEmail').textContent = t.formEmail;
+            document.getElementById('labelQuantity').textContent = t.formQuantity;
+            document.getElementById('labelMessage').textContent = t.formMessage;
+            document.getElementById('btnSubmitInquiry').textContent = t.formSubmit;
+
+            // 관련 상품
+            document.getElementById('relatedTitle').textContent = t.relatedProducts;
+
+            // CTA
+            document.getElementById('ctaTitle').textContent = t.ctaTitle;
+            document.getElementById('ctaEmail').textContent = t.ctaEmail;
+
+            // 푸터
+            document.getElementById('footerPhone').textContent = t.footerPhone;
+            document.getElementById('footerEmail').textContent = t.footerEmail;
+            document.getElementById('footerCopyright').textContent = t.footerCopyright;
+
+            // 뒤로가기 버튼
+            document.querySelector('.back-btn').textContent = t.backToList;
+        }
+
+        // ===== 헬퍼 함수 =====
+        function extractBrand(partNo) {
+            // 부품번호에서 브랜드 추출 시도
+            if (partNo.includes('YANMAR') || partNo.includes('4TNV')) return 'YANMAR';
+            if (partNo.includes('DAIHATSU') || partNo.includes('DL')) return 'DAIHATSU';
+            if (partNo.includes('HANSHIN')) return 'HANSHIN';
+            return 'Generic';
+        }
+
+        function formatPrice(price) {
+            if (typeof price === 'string' && price.includes('문의')) {
+                return currentLang === 'ko' ? '가격 문의' :
+                       currentLang === 'en' ? 'Contact Us' : '咨询价格';
+            }
+            return price + (currentLang === 'ko' ? '원' : currentLang === 'en' ? ' KRW' : ' 韩元');
+        }
+
+        // ===== 수량 조절 =====
+        function increaseQuantity() {
+            const input = document.getElementById('quantityInput');
+            input.value = parseInt(input.value) + 1;
+        }
+
+        function decreaseQuantity() {
+            const input = document.getElementById('quantityInput');
+            if (parseInt(input.value) > 1) {
+                input.value = parseInt(input.value) - 1;
+            }
+        }
+
+        // ===== 견적 요청 =====
+        function requestQuote() {
+            const t = i18n[currentLang];
+            alert(t.formSubmitAlert);
+        }
+
+        // ===== 탭 전환 =====
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.dataset.tab;
+
+                // 모든 탭 버튼 비활성화
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                // 모든 탭 컨텐츠 숨기기
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // 선택된 탭 활성화
+                btn.classList.add('active');
+                document.getElementById('content' + targetTab.charAt(0).toUpperCase() + targetTab.slice(1)).classList.add('active');
+            });
+        });
+
+        // ===== 이미지 확대 모달 =====
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalClose = document.getElementById('modalClose');
+
+        document.getElementById('imageWrapper').addEventListener('click', () => {
+            modalImage.src = document.getElementById('productImage').src;
+            imageModal.classList.add('active');
+        });
+
+        modalClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            imageModal.classList.remove('active');
+        });
+
+        imageModal.addEventListener('click', () => {
+            imageModal.classList.remove('active');
+        });
+
+        modalImage.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && imageModal.classList.contains('active')) {
+                imageModal.classList.remove('active');
+            }
+        });
+
+        // ===== 문의 폼 제출 =====
+        document.getElementById('inquiryForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const t = i18n[currentLang];
+            alert(t.formSubmitAlert);
+        });
+
+        // ===== 초기 UI 언어 설정 =====
+        updateUILanguage();
     </script>
 </body>
 </html>
