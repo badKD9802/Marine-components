@@ -143,6 +143,7 @@ async def get_ai_response(user_message: str, history: list[dict]):
             return {"reply": "죄송합니다. AI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.", "suggested_questions": []}
 
         try:
+            print(response_text)
             gemini_response = json.loads(response_text)
             reply = gemini_response.get("reply", "죄송합니다. 답변을 생성하는 데 문제가 발생했습니다.")
             suggested_questions = gemini_response.get("suggested_questions", [])
