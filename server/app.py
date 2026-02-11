@@ -11,7 +11,7 @@ import json
 
 load_dotenv()
 
-from db import init_db, close_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
+from db import init_db, close_db, init_vector_db, close_vector_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
 from admin import router as admin_router
 from rag import search_similar_chunks
 
@@ -20,7 +20,9 @@ from rag import search_similar_chunks
 @asynccontextmanager
 async def lifespan(app):
     await init_db()
+    await init_vector_db()
     yield
+    await close_vector_db()
     await close_db()
 
 
@@ -32,6 +34,7 @@ print(f"  GOOGLE_API_KEY: {'설정됨 (' + os.environ['GOOGLE_API_KEY'][:8] + '.
 print(f"  OPENAI_API_KEY: {'설정됨 (' + os.environ['OPENAI_API_KEY'][:8] + '...)' if os.environ.get('OPENAI_API_KEY') else '미설정'}")
 print(f"  ADMIN_PASSWORD: {'설정됨 (' + str(len(os.environ.get('ADMIN_PASSWORD',''))) + '자)' if os.environ.get('ADMIN_PASSWORD') else '미설정'}")
 print(f"  DATABASE_URL:   {'설정됨' if os.environ.get('DATABASE_URL') else '미설정'}")
+print(f"  PGVECTOR_DB:    {'설정됨' if os.environ.get('PGVECTOR_DATABASE_URL') else '미설정'}")
 print("====================")
 
 

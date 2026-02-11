@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Header
 
-from db import pool
+from db import vector_pool
 from ocr import extract_text
 from rag import chunk_text, store_chunks
 
@@ -56,9 +56,9 @@ async def admin_login(body: dict):
 
 @router.get("/documents")
 async def list_documents(_=Depends(verify_token)):
-    if not pool:
+    if not vector_pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
-    async with pool.acquire() as conn:
+    async with vector_pool.acquire() as conn:
         rows = await conn.fetch(
             "SELECT id, filename, file_type, status, error_msg, created_at FROM documents ORDER BY id DESC"
         )
@@ -79,9 +79,9 @@ async def list_documents(_=Depends(verify_token)):
 
 @router.get("/documents/{doc_id}")
 async def get_document(doc_id: int, _=Depends(verify_token)):
-    if not pool:
+    if not vector_pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
-    async with pool.acquire() as conn:
+    async with vector_pool.acquire() as conn:
         doc = await conn.fetchrow("SELECT * FROM documents WHERE id = $1", doc_id)
         if not doc:
             raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다")
@@ -108,7 +108,7 @@ async def get_document(doc_id: int, _=Depends(verify_token)):
 
 @router.post("/upload")
 async def upload_document(file: UploadFile = File(...), _=Depends(verify_token)):
-    if not pool:
+    if not vector_pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
 
     # 파일 확장자 검증
@@ -119,7 +119,7 @@ async def upload_document(file: UploadFile = File(...), _=Depends(verify_token))
     file_type = _get_file_type(file.filename)
 
     # DB에 문서 레코드 생성 (pending)
-    async with pool.acquire() as conn:
+    async with vector_pool.acquire() as conn:
         row = await conn.fetchrow(
             "INSERT INTO documents (filename, file_type, status) VALUES ($1, $2, 'processing') RETURNING id",
             file.filename,
@@ -146,7 +146,7 @@ async def upload_document(file: UploadFile = File(...), _=Depends(verify_token))
             return {"id": doc_id, "status": "error", "error_msg": "텍스트를 추출할 수 없습니다"}
 
         # 2. raw_text 저장
-        async with pool.acquire() as conn:
+        async with vector_pool.acquire() as conn:
             await conn.execute("UPDATE documents SET raw_text = $1 WHERE id = $2", raw_text, doc_id)
 
         # 3. 청킹
@@ -177,9 +177,9 @@ async def upload_document(file: UploadFile = File(...), _=Depends(verify_token))
 
 @router.delete("/documents/{doc_id}")
 async def delete_document(doc_id: int, _=Depends(verify_token)):
-    if not pool:
+    if not vector_pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
-    async with pool.acquire() as conn:
+    async with vector_pool.acquire() as conn:
         result = await conn.execute("DELETE FROM documents WHERE id = $1", doc_id)
     if result == "DELETE 0":
         raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다")
@@ -189,9 +189,9 @@ async def delete_document(doc_id: int, _=Depends(verify_token)):
 # --- 유틸 ---
 
 async def _update_doc_status(doc_id: int, status: str, error_msg: str | None):
-    if not pool:
+    if not vector_pool:
         return
-    async with pool.acquire() as conn:
+    async with vector_pool.acquire() as conn:
         await conn.execute(
             "UPDATE documents SET status = $1, error_msg = $2 WHERE id = $3",
             status,

@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-pool = None
+pool = None          # 일반 DB (products)
+vector_pool = None   # pgvector DB (documents, chunks, embeddings)
 
 
 async def init_db():
@@ -21,6 +22,19 @@ async def init_db():
     print("DB connection pool initialized")
 
 
+async def init_vector_db():
+    """Initialize the pgvector database connection pool and create RAG tables."""
+    global vector_pool
+    vector_url = os.environ.get("PGVECTOR_DATABASE_URL")
+    if not vector_url:
+        print("WARNING: PGVECTOR_DATABASE_URL not set, RAG features disabled")
+        return
+
+    vector_pool = await asyncpg.create_pool(vector_url, min_size=1, max_size=5)
+    await create_vector_tables()
+    print("pgvector DB connection pool initialized")
+
+
 async def close_db():
     """Close the database connection pool."""
     global pool
@@ -30,8 +44,17 @@ async def close_db():
         print("DB connection pool closed")
 
 
+async def close_vector_db():
+    """Close the pgvector database connection pool."""
+    global vector_pool
+    if vector_pool:
+        await vector_pool.close()
+        vector_pool = None
+        print("pgvector DB connection pool closed")
+
+
 async def create_tables():
-    """Create tables if they don't exist."""
+    """Create product tables in the main DB."""
     if not pool:
         return
     async with pool.acquire() as conn:
@@ -54,10 +77,14 @@ async def create_tables():
             );
         """)
 
-        # pgvector 확장 활성화
+
+async def create_vector_tables():
+    """Create RAG tables in the pgvector DB."""
+    if not vector_pool:
+        return
+    async with vector_pool.acquire() as conn:
         await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
-        # 업로드된 문서 테이블
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS documents (
                 id          SERIAL PRIMARY KEY,
@@ -70,7 +97,6 @@ async def create_tables():
             );
         """)
 
-        # 청크 + 임베딩 테이블
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS document_chunks (
                 id           SERIAL PRIMARY KEY,
@@ -82,11 +108,11 @@ async def create_tables():
             );
         """)
 
-        # 벡터 검색 인덱스 (ivfflat은 데이터가 있어야 생성 가능하므로 HNSW 사용)
         await conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_chunks_embedding
                 ON document_chunks USING hnsw (embedding vector_cosine_ops);
         """)
+        print("pgvector + RAG 테이블 생성 완료")
 
 
 async def get_all_products(category: str = None, search: str = None):

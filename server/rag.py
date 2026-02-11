@@ -4,7 +4,7 @@ import os
 from openai import OpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from db import pool
+from db import vector_pool
 
 # OpenAI 클라이언트 (lazy init)
 _client = None
@@ -41,13 +41,13 @@ def get_embeddings(texts: list[str]) -> list[list[float]]:
 
 
 async def store_chunks(document_id: int, chunks: list[str]):
-    """청크를 임베딩과 함께 DB에 저장한다."""
-    if not pool or not chunks:
+    """청크를 임베딩과 함께 pgvector DB에 저장한다."""
+    if not vector_pool or not chunks:
         return
 
     embeddings = get_embeddings(chunks)
 
-    async with pool.acquire() as conn:
+    async with vector_pool.acquire() as conn:
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
             embedding_str = "[" + ",".join(str(v) for v in embedding) + "]"
             await conn.execute(
@@ -63,14 +63,14 @@ async def store_chunks(document_id: int, chunks: list[str]):
 
 
 async def search_similar_chunks(query: str, top_k: int = 5) -> list[dict]:
-    """쿼리와 유사한 청크를 검색한다."""
-    if not pool:
+    """쿼리와 유사한 청크를 pgvector DB에서 검색한다."""
+    if not vector_pool:
         return []
 
     query_embedding = get_embeddings([query])[0]
     embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
 
-    async with pool.acquire() as conn:
+    async with vector_pool.acquire() as conn:
         rows = await conn.fetch(
             """
             SELECT
