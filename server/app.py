@@ -9,6 +9,8 @@ import os
 from dotenv import load_dotenv
 import json
 
+load_dotenv()
+
 from db import init_db, close_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
 
 

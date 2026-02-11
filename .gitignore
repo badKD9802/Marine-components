@@ -1,5 +1,6 @@
 # 특정 파일 무시
 .env
+server/.env
 server/seed_data.py
 neo4j.ipynb
 
