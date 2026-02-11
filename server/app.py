@@ -183,6 +183,22 @@ def serialize_product(row: dict) -> dict:
     return result
 
 
+@app.get("/api/health")
+async def health_check():
+    from db import pool
+    db_url = os.environ.get("DATABASE_URL", "NOT SET")
+    # 비밀번호 숨기기
+    if ":" in db_url and "@" in db_url:
+        safe_url = db_url[:db_url.index("://") + 3] + "***@" + db_url[db_url.index("@") + 1:]
+    else:
+        safe_url = db_url
+    return {
+        "db_pool": "connected" if pool else "None",
+        "db_url_set": db_url != "NOT SET",
+        "db_url_preview": safe_url[:80]
+    }
+
+
 @app.get("/api/products")
 async def api_get_products(category: str = None, search: str = None):
     products = await get_all_products(category=category, search=search)
