@@ -68,8 +68,8 @@ def model_answer(api_key, model_name, system_prompt, history, user_message):
 
     contents = []
     for turn in history:
-        contents.append({"role": turn["role"], "parts": [turn["parts"]]})
-    contents.append({"role": "user", "parts": [user_message]})
+        contents.append({"role": turn["role"], "parts": [{"text": turn["parts"]}]})
+    contents.append({"role": "user", "parts": [{"text": user_message}]})
 
     print(f"대화 내용 전달 중: {contents}")
 
