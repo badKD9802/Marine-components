@@ -45,6 +45,7 @@ async def verify_token(authorization: str = Header(None)):
 async def admin_login(body: dict):
     password = body.get("password", "")
     admin_pw = os.environ.get("ADMIN_PASSWORD", "")
+    print(admin_pw)
     if not admin_pw or password != admin_pw:
         raise HTTPException(status_code=401, detail="비밀번호가 올바르지 않습니다")
     token = secrets.token_hex(32)
