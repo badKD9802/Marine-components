@@ -1,6 +1,10 @@
 // js/data.js 파일
 
-const products = [
+// API base URL (Railway production server)
+const API_BASE = 'https://marine-parts-production-60a3.up.railway.app';
+
+// Fallback data (used when API is unavailable)
+const fallbackProducts = [
     {
         id: 1,
         image: "./parts_image/YANMAR CON BOD BEARING(4TNV98 129900-23600).jpg",
@@ -17,30 +21,9 @@ const products = [
             cn: "适用于YANMAR 4TNV98发动机的高品质连杆轴承。精密加工确保发动机耐久性和性能，按OEM规格制造。是长期稳定运行的必备更换零件。"
         },
         specs: {
-            ko: {
-                "부품번호": "4TNV98 129900-23600",
-                "브랜드": "YANMAR",
-                "카테고리": "베어링",
-                "호환 엔진": "4TNV98",
-                "상태": "신품",
-                "원산지": "일본"
-            },
-            en: {
-                "Part Number": "4TNV98 129900-23600",
-                "Brand": "YANMAR",
-                "Category": "Bearing",
-                "Compatible Engine": "4TNV98",
-                "Condition": "New",
-                "Origin": "Japan"
-            },
-            cn: {
-                "零件编号": "4TNV98 129900-23600",
-                "品牌": "YANMAR",
-                "类别": "轴承",
-                "兼容发动机": "4TNV98",
-                "状态": "全新",
-                "产地": "日本"
-            }
+            ko: { "부품번호": "4TNV98 129900-23600", "브랜드": "YANMAR", "카테고리": "베어링", "호환 엔진": "4TNV98", "상태": "신품", "원산지": "일본" },
+            en: { "Part Number": "4TNV98 129900-23600", "Brand": "YANMAR", "Category": "Bearing", "Compatible Engine": "4TNV98", "Condition": "New", "Origin": "Japan" },
+            cn: { "零件编号": "4TNV98 129900-23600", "品牌": "YANMAR", "类别": "轴承", "兼容发动机": "4TNV98", "状态": "全新", "产地": "日本" }
         },
         compatibility: {
             ko: ["YANMAR 4TNV98 시리즈", "YANMAR 4TNV98T 터보"],
@@ -64,30 +47,9 @@ const products = [
             cn: "适用于YANMAR EY18AL发动机的燃油喷射柱塞筒。兼容AL-SERIES和AL-PLUS型号，通过精确燃油喷射最大化发动机效率。采用高耐久性材料，长时间使用仍保持稳定性能。"
         },
         specs: {
-            ko: {
-                "부품번호": "PB1002 / PB1003",
-                "브랜드": "YANMAR",
-                "카테고리": "플런저",
-                "호환 모델": "EY18AL, AL-SERIES, AL-PLUS",
-                "상태": "신품",
-                "원산지": "일본"
-            },
-            en: {
-                "Part Number": "PB1002 / PB1003",
-                "Brand": "YANMAR",
-                "Category": "Plunger",
-                "Compatible Model": "EY18AL, AL-SERIES, AL-PLUS",
-                "Condition": "New",
-                "Origin": "Japan"
-            },
-            cn: {
-                "零件编号": "PB1002 / PB1003",
-                "品牌": "YANMAR",
-                "类别": "柱塞",
-                "兼容型号": "EY18AL, AL-SERIES, AL-PLUS",
-                "状态": "全新",
-                "产地": "日本"
-            }
+            ko: { "부품번호": "PB1002 / PB1003", "브랜드": "YANMAR", "카테고리": "플런저", "호환 모델": "EY18AL, AL-SERIES, AL-PLUS", "상태": "신품", "원산지": "일본" },
+            en: { "Part Number": "PB1002 / PB1003", "Brand": "YANMAR", "Category": "Plunger", "Compatible Model": "EY18AL, AL-SERIES, AL-PLUS", "Condition": "New", "Origin": "Japan" },
+            cn: { "零件编号": "PB1002 / PB1003", "品牌": "YANMAR", "类别": "柱塞", "兼容型号": "EY18AL, AL-SERIES, AL-PLUS", "状态": "全新", "产地": "日本" }
         },
         compatibility: {
             ko: ["YANMAR EY18AL", "YANMAR AL-SERIES", "YANMAR AL-PLUS"],
@@ -111,30 +73,9 @@ const products = [
             cn: "综合经营Daihatsu、YANMAR、Hanshin、MAN等多品牌船用发动机备件。库存主要零部件包括活塞、缸套、轴承、阀门、垫片等，大量采购可享受特别价格。"
         },
         specs: {
-            ko: {
-                "부품번호": "Multi-Brand Parts",
-                "브랜드": "Daihatsu, YANMAR, Hanshin, MAN 외",
-                "카테고리": "예비부품 종합",
-                "취급 부품": "피스톤, 라이너, 베어링, 밸브, 가스켓 등",
-                "상태": "신품 / 리빌드",
-                "원산지": "다국적"
-            },
-            en: {
-                "Part Number": "Multi-Brand Parts",
-                "Brand": "Daihatsu, YANMAR, Hanshin, MAN etc.",
-                "Category": "Comprehensive Spare Parts",
-                "Parts Handled": "Pistons, Liners, Bearings, Valves, Gaskets etc.",
-                "Condition": "New / Rebuilt",
-                "Origin": "Multinational"
-            },
-            cn: {
-                "零件编号": "Multi-Brand Parts",
-                "品牌": "Daihatsu, YANMAR, Hanshin, MAN 等",
-                "类别": "综合备件",
-                "经营零件": "活塞、缸套、轴承、阀门、垫片等",
-                "状态": "全新 / 翻新",
-                "产地": "多国"
-            }
+            ko: { "부품번호": "Multi-Brand Parts", "브랜드": "Daihatsu, YANMAR, Hanshin, MAN 외", "카테고리": "예비부품 종합", "취급 부품": "피스톤, 라이너, 베어링, 밸브, 가스켓 등", "상태": "신품 / 리빌드", "원산지": "다국적" },
+            en: { "Part Number": "Multi-Brand Parts", "Brand": "Daihatsu, YANMAR, Hanshin, MAN etc.", "Category": "Comprehensive Spare Parts", "Parts Handled": "Pistons, Liners, Bearings, Valves, Gaskets etc.", "Condition": "New / Rebuilt", "Origin": "Multinational" },
+            cn: { "零件编号": "Multi-Brand Parts", "品牌": "Daihatsu, YANMAR, Hanshin, MAN 等", "类别": "综合备件", "经营零件": "活塞、缸套、轴承、阀门、垫片等", "状态": "全新 / 翻新", "产地": "多国" }
         },
         compatibility: {
             ko: ["Daihatsu 전 시리즈", "YANMAR 전 시리즈", "Hanshin 전 시리즈", "MAN B&W 시리즈"],
@@ -158,30 +99,9 @@ const products = [
             cn: "适用于船用柴油发动机的活塞销衬套。采用高强度合金材料制造，即使在极端环境下也能提供出色的耐磨性和耐热性。按OEM规格精密加工，确保完美兼容。"
         },
         specs: {
-            ko: {
-                "부품번호": "E205250040Z",
-                "브랜드": "OEM",
-                "카테고리": "피스톤 부품",
-                "소재": "고강도 합금",
-                "상태": "신품",
-                "원산지": "한국"
-            },
-            en: {
-                "Part Number": "E205250040Z",
-                "Brand": "OEM",
-                "Category": "Piston Parts",
-                "Material": "High-strength Alloy",
-                "Condition": "New",
-                "Origin": "South Korea"
-            },
-            cn: {
-                "零件编号": "E205250040Z",
-                "品牌": "OEM",
-                "类别": "活塞零件",
-                "材质": "高强度合金",
-                "状态": "全新",
-                "产地": "韩国"
-            }
+            ko: { "부품번호": "E205250040Z", "브랜드": "OEM", "카테고리": "피스톤 부품", "소재": "고강도 합금", "상태": "신품", "원산지": "한국" },
+            en: { "Part Number": "E205250040Z", "Brand": "OEM", "Category": "Piston Parts", "Material": "High-strength Alloy", "Condition": "New", "Origin": "South Korea" },
+            cn: { "零件编号": "E205250040Z", "品牌": "OEM", "类别": "活塞零件", "材质": "高强度合金", "状态": "全新", "产地": "韩国" }
         },
         compatibility: {
             ko: ["다양한 해양 디젤 엔진 호환", "상세 호환 정보는 전화 문의"],
@@ -205,30 +125,9 @@ const products = [
             cn: "Daihatsu DL22发动机专用气门杆密封。防止发动机漏油，确保最佳阀门运行。采用耐热橡胶材料制造，即使在高温环境下也能保持稳定的密封性能。"
         },
         specs: {
-            ko: {
-                "부품번호": "DL22",
-                "브랜드": "DAIHATSU",
-                "카테고리": "밸브 부품",
-                "호환 엔진": "DL22, DL-22 시리즈",
-                "상태": "신품",
-                "원산지": "일본"
-            },
-            en: {
-                "Part Number": "DL22",
-                "Brand": "DAIHATSU",
-                "Category": "Valve Parts",
-                "Compatible Engine": "DL22, DL-22 Series",
-                "Condition": "New",
-                "Origin": "Japan"
-            },
-            cn: {
-                "零件编号": "DL22",
-                "品牌": "DAIHATSU",
-                "类别": "阀门零件",
-                "兼容发动机": "DL22, DL-22 系列",
-                "状态": "全新",
-                "产地": "日本"
-            }
+            ko: { "부품번호": "DL22", "브랜드": "DAIHATSU", "카테고리": "밸브 부품", "호환 엔진": "DL22, DL-22 시리즈", "상태": "신품", "원산지": "일본" },
+            en: { "Part Number": "DL22", "Brand": "DAIHATSU", "Category": "Valve Parts", "Compatible Engine": "DL22, DL-22 Series", "Condition": "New", "Origin": "Japan" },
+            cn: { "零件编号": "DL22", "品牌": "DAIHATSU", "类别": "阀门零件", "兼容发动机": "DL22, DL-22 系列", "状态": "全新", "产地": "日本" }
         },
         compatibility: {
             ko: ["Daihatsu DL22", "Daihatsu DL-22 시리즈"],
@@ -237,3 +136,48 @@ const products = [
         }
     }
 ];
+
+// Current products array (will be populated by API or fallback)
+let products = [...fallbackProducts];
+
+/**
+ * Map DB snake_case row to JS camelCase object.
+ */
+function mapProductFromAPI(item) {
+    return {
+        id: item.id,
+        image: item.image,
+        partNo: item.part_no,
+        price: item.price,
+        name: item.name,
+        desc: item.description,
+        brand: item.brand || '',
+        category: item.category || '',
+        categoryName: item.category_name || {},
+        detailInfo: item.detail_info || {},
+        specs: item.specs || {},
+        compatibility: item.compatibility || {}
+    };
+}
+
+/**
+ * Fetch products from API. Falls back to hardcoded data on failure.
+ */
+async function fetchProducts() {
+    try {
+        const response = await fetch(API_BASE + '/api/products');
+        if (!response.ok) throw new Error('API response not ok');
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+            products = data.map(mapProductFromAPI);
+            console.log(`Loaded ${products.length} products from API`);
+        } else {
+            console.warn('API returned empty data, using fallback');
+            products = [...fallbackProducts];
+        }
+    } catch (error) {
+        console.warn('API fetch failed, using fallback data:', error.message);
+        products = [...fallbackProducts];
+    }
+    return products;
+}

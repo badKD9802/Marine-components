@@ -1084,14 +1084,23 @@
         // ===== URL 파라미터에서 상품 ID 가져오기 =====
         const urlParams = new URLSearchParams(window.location.search);
         const productId = parseInt(urlParams.get('id'));
-        const product = products.find(p => p.id === productId);
+        let product = null;
 
-        // ===== 상품이 없을 경우 =====
-        if (!product) {
-            document.querySelector('.main-container').innerHTML = '<h2 style="text-align:center;padding:3rem;">상품을 찾을 수 없습니다.</h2>';
-        } else {
-            renderProduct();
-        }
+        // ===== Async 초기화: API에서 제품 로딩 후 렌더링 =====
+        (async function init() {
+            try {
+                await fetchProducts();
+            } catch (e) {
+                console.warn('fetchProducts failed, using fallback:', e);
+            }
+            product = products.find(p => p.id === productId);
+
+            if (!product) {
+                document.querySelector('.main-container').innerHTML = '<h2 style="text-align:center;padding:3rem;">상품을 찾을 수 없습니다.</h2>';
+            } else {
+                renderProduct();
+            }
+        })();
 
         // ===== 상품 렌더링 함수 =====
         function renderProduct() {

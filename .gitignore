@@ -1,0 +1,16 @@
+# 특정 파일 무시
+.env
+server/seed_data.py
+neo4j.ipynb
+
+# 특정 폴더 전체 무시
+venv/
+__pycache__/
+node_modules/
+translation_server/
+translations/
+
+
+# 특정 확장자 전체 무시
+*.log
+*.sqlite3

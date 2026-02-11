@@ -1799,8 +1799,14 @@
         }
 
         // ==================== INITIALIZATION ====================
-        window.addEventListener('DOMContentLoaded', function() {
-            if (typeof products !== 'undefined') {
+        window.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await fetchProducts();
+            } catch (e) {
+                console.warn('fetchProducts failed, using fallback:', e);
+            }
+
+            if (typeof products !== 'undefined' && products.length > 0) {
                 filteredProducts = products;
                 renderProducts(products);
                 initScrollAnimations();
