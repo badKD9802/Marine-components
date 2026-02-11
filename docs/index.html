@@ -840,6 +840,30 @@
             display: flex;
             gap: 10px;
         }
+        /* Suggested Questions Styles */
+        .suggested-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--bg-gray-50);
+            border-top: 1px solid var(--bg-gray-200);
+        }
+        .suggested-btn {
+            padding: 8px 12px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .suggested-btn:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
         .chat-input {
             flex: 1;
             padding: 10px 16px;
@@ -1328,10 +1352,10 @@
                 <div class="message bot-msg" data-i18n="chatWelcome">안녕하세요! 무엇을 도와드릴까요?</div>
             </div>
 
-            <div class="quick-questions">
-                <button class="quick-btn" onclick="sendQuickMessage('부품 추천해줘')" data-i18n="quick1">부품 추천해줘</button>
-                <button class="quick-btn" onclick="sendQuickMessage('배송비 얼마예요?')" data-i18n="quick2">배송비 얼마예요?</button>
-                <button class="quick-btn" onclick="sendQuickMessage('견적 요청')" data-i18n="quick3">견적 요청</button>
+            <div class="quick-questions" id="quickQuestionsContainer">
+                <button class="quick-btn" onclick="sendQuickMessage('부품 추천해줘'); hideQuickQuestions();" data-i18n="quick1">부품 추천해줘</button>
+                <button class="quick-btn" onclick="sendQuickMessage('배송비 얼마예요?'); hideQuickQuestions();" data-i18n="quick2">배송비 얼마예요?</button>
+                <button class="quick-btn" onclick="sendQuickMessage('견적 요청'); hideQuickQuestions();" data-i18n="quick3">견적 요청</button>
             </div>
 
             <div class="chat-input-area">
@@ -1342,7 +1366,7 @@
                     data-i18n-placeholder="chatPlaceholder"
                     placeholder="질문을 입력하세요..."
                     onkeypress="handleKeyPress(event)">
-                <button class="chat-send" onclick="sendMessage()" data-i18n="chatSend">전송</button>
+                <button class="chat-send" onclick="sendMessage(); hideQuickQuestions();" data-i18n="chatSend">전송</button>
             </div>
         </div>
     </div>
@@ -1710,6 +1734,25 @@
 
             if (chatWindow.classList.contains('open')) {
                 document.getElementById('userInput').focus();
+                // Chat opened
+                if (chatHistory.length === 0) {
+                    showQuickQuestions();
+                } else {
+                    hideQuickQuestions(); // Hide if there's history
+                }
+            } else {
+                // Chat closed
+                chatHistory = [];
+                document.getElementById('chatMessages').innerHTML = `<div class="message bot-msg" data-i18n="chatWelcome">${staticTranslations[currentLang].chatWelcome}</div>`;
+                showQuickQuestions(); // Show quick questions again on close
+                clearSuggestedQuestions(); // Also clear any suggested questions
+            }
+        }
+
+        function hideQuickQuestions() {
+            const quickQuestionsContainer = document.getElementById('quickQuestionsContainer');
+            if (quickQuestionsContainer) {
+                quickQuestionsContainer.style.display = 'none';
             }
         }
 
