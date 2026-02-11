@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from decouple import config
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 import google.genai as genai
 from google.genai import types
@@ -63,22 +63,32 @@ class ProductCreate(BaseModel):
 
 ### AI 모델 답변 생성 함수 ###
 def model_answer(api_key, model_name, system_prompt, history, user_message):
+    class MarineTechResponse(BaseModel):
+        reply: str = Field(description="사용자의 질문에 대한 영마린테크 상담원의 메인 답변")
+        suggested_questions: list[str] = Field(description="사용자가 이어서 물어볼 만한 추천 질문 1~3개 (없으면 빈 배열)")
+
+
     print("모델에 프롬프트 전달 중...")
     client = genai.Client(api_key=api_key)
 
     contents = []
     for turn in history:
+        # history 형식이 호환되도록 조정 (필요 시)
         contents.append({"role": turn["role"], "parts": [{"text": turn["parts"]}]})
     contents.append({"role": "user", "parts": [{"text": user_message}]})
 
     print(f"대화 내용 전달 중: {contents}")
 
+    # 2. GenerateContentConfig에 response_mime_type과 response_schema를 추가합니다.
     response = client.models.generate_content(
         model=model_name,
         contents=contents,
         config=types.GenerateContentConfig(
-        system_instruction=system_prompt,
-        temperature=0.7,
+            system_instruction=system_prompt,
+            temperature=0.7,
+            # [핵심 변경 사항] JSON 출력을 강제합니다.
+            response_mime_type="application/json", 
+            response_schema=MarineTechResponse 
         )
     )
 
