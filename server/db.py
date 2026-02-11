@@ -93,8 +93,22 @@ async def create_vector_tables():
                 raw_text    TEXT,
                 status      TEXT DEFAULT 'pending',
                 error_msg   TEXT,
+                purpose     TEXT DEFAULT 'consultant',
                 created_at  TIMESTAMPTZ DEFAULT NOW()
             );
+        """)
+
+        # 기존 테이블에 purpose 컬럼이 없으면 추가
+        await conn.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'documents' AND column_name = 'purpose'
+                ) THEN
+                    ALTER TABLE documents ADD COLUMN purpose TEXT DEFAULT 'consultant';
+                END IF;
+            END $$;
         """)
 
         await conn.execute("""
@@ -112,6 +126,29 @@ async def create_vector_tables():
             CREATE INDEX IF NOT EXISTS idx_chunks_embedding
                 ON document_chunks USING hnsw (embedding vector_cosine_ops);
         """)
+
+        # RAG 대화 세션 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS rag_conversations (
+                id          SERIAL PRIMARY KEY,
+                title       TEXT NOT NULL DEFAULT '새 대화',
+                created_at  TIMESTAMPTZ DEFAULT NOW(),
+                updated_at  TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        # RAG 대화 메시지 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS rag_messages (
+                id              SERIAL PRIMARY KEY,
+                conversation_id INTEGER REFERENCES rag_conversations(id) ON DELETE CASCADE,
+                role            TEXT NOT NULL,
+                content         TEXT NOT NULL,
+                refs            JSONB DEFAULT '[]',
+                created_at      TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
         print("pgvector + RAG 테이블 생성 완료")
 
 

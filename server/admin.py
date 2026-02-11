@@ -5,7 +5,7 @@ import secrets
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Header
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Header
 
 import db
 from ocr import extract_text
@@ -55,13 +55,19 @@ async def admin_login(body: dict):
 # --- 문서 목록 ---
 
 @router.get("/documents")
-async def list_documents(_=Depends(verify_token)):
+async def list_documents(purpose: str = None, _=Depends(verify_token)):
     if not db.vector_pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
     async with db.vector_pool.acquire() as conn:
-        rows = await conn.fetch(
-            "SELECT id, filename, file_type, status, error_msg, created_at FROM documents ORDER BY id DESC"
-        )
+        if purpose:
+            rows = await conn.fetch(
+                "SELECT id, filename, file_type, status, error_msg, purpose, created_at FROM documents WHERE purpose = $1 ORDER BY id DESC",
+                purpose,
+            )
+        else:
+            rows = await conn.fetch(
+                "SELECT id, filename, file_type, status, error_msg, purpose, created_at FROM documents ORDER BY id DESC"
+            )
     return [
         {
             "id": row["id"],
@@ -69,6 +75,7 @@ async def list_documents(_=Depends(verify_token)):
             "file_type": row["file_type"],
             "status": row["status"],
             "error_msg": row["error_msg"],
+            "purpose": row["purpose"],
             "created_at": row["created_at"].isoformat() if row["created_at"] else None,
         }
         for row in rows
@@ -107,9 +114,16 @@ async def get_document(doc_id: int, _=Depends(verify_token)):
 # --- 파일 업로드 + 자동 처리 ---
 
 @router.post("/upload")
-async def upload_document(file: UploadFile = File(...), _=Depends(verify_token)):
+async def upload_document(
+    file: UploadFile = File(...),
+    purpose: str = Form("consultant"),
+    _=Depends(verify_token),
+):
     if not db.vector_pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    if purpose not in ("consultant", "rag_session"):
+        raise HTTPException(status_code=400, detail="purpose는 'consultant' 또는 'rag_session'이어야 합니다")
 
     # 파일 확장자 검증
     ext = Path(file.filename).suffix.lower()
@@ -118,12 +132,13 @@ async def upload_document(file: UploadFile = File(...), _=Depends(verify_token))
 
     file_type = _get_file_type(file.filename)
 
-    # DB에 문서 레코드 생성 (pending)
+    # DB에 문서 레코드 생성 (processing)
     async with db.vector_pool.acquire() as conn:
         row = await conn.fetchrow(
-            "INSERT INTO documents (filename, file_type, status) VALUES ($1, $2, 'processing') RETURNING id",
+            "INSERT INTO documents (filename, file_type, status, purpose) VALUES ($1, $2, 'processing', $3) RETURNING id",
             file.filename,
             file_type,
+            purpose,
         )
     doc_id = row["id"]
 

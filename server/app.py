@@ -13,6 +13,7 @@ load_dotenv()
 
 from db import init_db, close_db, init_vector_db, close_vector_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
 from admin import router as admin_router
+from rag_chat import router as rag_chat_router
 from rag import search_similar_chunks
 
 
@@ -49,6 +50,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(admin_router)
+app.include_router(rag_chat_router)
 print("app 생성완료")
 
 
@@ -130,7 +132,7 @@ async def get_ai_response(user_message: str, history: list[dict]):
         # RAG: 업로드된 문서에서 관련 청크 검색
         rag_context = ""
         try:
-            rag_chunks = await search_similar_chunks(user_message, top_k=5)
+            rag_chunks = await search_similar_chunks(user_message, top_k=5, purpose="consultant")
             if rag_chunks:
                 rag_lines = []
                 for chunk in rag_chunks:

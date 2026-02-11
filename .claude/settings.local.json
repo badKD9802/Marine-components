@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(iconv:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(python3 -c \"\nimport asyncio, asyncpg\n\nasync def check\\(\\):\n    conn = await asyncpg.connect\\(''postgresql://postgres:nb60xg31qnu4rm04v4zvv24htz5580o6@nozomi.proxy.rlwy.net:51615/railway''\\)\n\n    # 문서 목록\n    docs = await conn.fetch\\(''SELECT id, filename, status, created_at FROM documents''\\)\n    print\\(''=== 문서 목록 ===''\\)\n    for d in docs:\n        print\\(f''  id={d[\"\"id\"\"]} | {d[\"\"filename\"\"]} | status={d[\"\"status\"\"]} | {d[\"\"created_at\"\"]}''\\)\n\n    # 청크 수\n    chunks = await conn.fetch\\(''SELECT document_id, COUNT\\(*\\) as cnt FROM document_chunks GROUP BY document_id''\\)\n    print\\(''\\\\n=== 청크 수 ===''\\)\n    for c in chunks:\n        print\\(f''  document_id={c[\"\"document_id\"\"]} → {c[\"\"cnt\"\"]}개 청크''\\)\n\n    # 청크 미리보기\n    samples = await conn.fetch\\(''SELECT document_id, chunk_index, LEFT\\(chunk_text, 80\\) as preview FROM document_chunks ORDER BY document_id, chunk_index LIMIT 5''\\)\n    print\\(''\\\\n=== 청크 미리보기 ===''\\)\n    for s in samples:\n        print\\(f''  [{s[\"\"document_id\"\"]}-{s[\"\"chunk_index\"\"]}] {s[\"\"preview\"\"]}...''\\)\n\n    # 임베딩 확인\n    emb = await conn.fetchrow\\(''SELECT COUNT\\(*\\) as total, COUNT\\(embedding\\) as with_emb FROM document_chunks''\\)\n    print\\(f''\\\\n=== 임베딩 ===''\\)\n    print\\(f''  전체 청크: {emb[\"\"total\"\"]}개 | 임베딩 있음: {emb[\"\"with_emb\"\"]}개''\\)\n\n    await conn.close\\(\\)\n\nasyncio.run\\(check\\(\\)\\)\n\")",
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -m pip install:*)",
+      "Bash(/usr/bin/python3 -c \"\nimport socket, ssl\n\n# 간단한 PostgreSQL 쿼리 \\(asyncpg 없이 raw socket으로는 복잡하므로 psycopg2-binary 대안 확인\\)\n# pip 없으니 순수 파이썬으로 HTTP API 호출\nimport urllib.request, json\n\nurl = ''https://marine-parts-production-60a3.up.railway.app/admin/login''\ndata = json.dumps\\({''password'': ''''}\\).encode\\(\\)\n\n# 일단 서버 health check\nhealth_url = ''https://marine-parts-production-60a3.up.railway.app/api/health''\nreq = urllib.request.Request\\(health_url\\)\nresp = urllib.request.urlopen\\(req\\)\nprint\\(''Health:'', json.loads\\(resp.read\\(\\)\\)\\)\n\")",
+      "Bash(/usr/bin/python3:*)"
     ]
   }
 }

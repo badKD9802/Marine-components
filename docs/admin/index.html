@@ -113,30 +113,75 @@
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-danger { background: var(--error); color: white; font-size: 0.8rem; padding: 6px 12px; }
         .btn-danger:hover { background: #c82333; }
+        .btn-sm { font-size: 0.8rem; padding: 6px 14px; }
 
         /* 대시보드 */
         .dashboard { display: none; }
+
+        /* 탭 네비게이션 */
+        .tab-nav {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            padding: 0 24px;
+        }
+        .tab-nav button {
+            background: none;
+            border: none;
+            padding: 14px 24px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .tab-nav button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-nav button:hover { color: var(--primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         .content { max-width: 960px; margin: 0 auto; padding: 24px; }
 
         /* 업로드 영역 */
-        .upload-area {
+        .upload-section {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .upload-card {
+            flex: 1;
             background: white;
             border: 2px dashed var(--border);
             border-radius: 12px;
-            padding: 40px 24px;
+            padding: 30px 20px;
             text-align: center;
-            margin-bottom: 24px;
             transition: border-color 0.2s, background 0.2s;
             cursor: pointer;
         }
-        .upload-area.dragover {
+        .upload-card.dragover {
             border-color: var(--accent);
             background: var(--primary-light);
         }
-        .upload-area .icon { font-size: 2.5rem; margin-bottom: 12px; }
-        .upload-area .title { font-size: 1rem; font-weight: 500; color: var(--text-dark); margin-bottom: 4px; }
-        .upload-area .subtitle { font-size: 0.8rem; color: var(--text-muted); }
-        .upload-area input[type="file"] { display: none; }
+        .upload-card .icon { font-size: 2rem; margin-bottom: 8px; }
+        .upload-card .title { font-size: 0.95rem; font-weight: 500; color: var(--text-dark); margin-bottom: 4px; }
+        .upload-card .subtitle { font-size: 0.75rem; color: var(--text-muted); }
+        .upload-card input[type="file"] { display: none; }
+        .upload-card .purpose-label {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .purpose-consultant { background: #d4edda; color: #155724; }
+        .purpose-rag_session { background: #cce5ff; color: #004085; }
 
         /* 업로드 진행 */
         .upload-progress {
@@ -264,6 +309,212 @@
             color: var(--text-muted);
         }
 
+        /* ===== RAG 채팅 탭 ===== */
+        .rag-chat-layout {
+            display: flex;
+            height: calc(100vh - 110px);
+            background: white;
+        }
+
+        /* 왼쪽: 대화 목록 */
+        .conv-sidebar {
+            width: 240px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-gray);
+        }
+        .conv-sidebar .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .conv-sidebar .sidebar-header button {
+            width: 100%;
+        }
+        .conv-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .conv-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            color: var(--text-regular);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s;
+        }
+        .conv-item:hover { background: var(--bg-gray-100); }
+        .conv-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+        .conv-item .conv-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .conv-item .conv-delete {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+        }
+        .conv-item:hover .conv-delete { opacity: 1; }
+
+        /* 가운데: 채팅 영역 */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        .chat-empty {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .chat-msg {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-msg.user { align-items: flex-end; }
+        .chat-msg.assistant { align-items: flex-start; }
+        .chat-msg .msg-role {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .chat-msg .msg-bubble {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .chat-msg.user .msg-bubble {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-msg.assistant .msg-bubble {
+            background: var(--bg-gray);
+            color: var(--text-regular);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-msg .msg-refs {
+            max-width: 75%;
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            cursor: pointer;
+        }
+        .chat-msg .msg-refs:hover { text-decoration: underline; }
+
+        .chat-input-area {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .chat-input-area input:focus { border-color: var(--accent); }
+        .chat-input-area button { white-space: nowrap; }
+
+        /* 오른쪽: 참조 문서 패널 */
+        .ref-sidebar {
+            width: 280px;
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-gray);
+        }
+        .ref-sidebar .sidebar-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+        .ref-doc-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .ref-doc-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--text-regular);
+            margin-bottom: 4px;
+        }
+        .ref-doc-item:hover { background: var(--bg-gray-100); }
+        .ref-doc-item input[type="checkbox"] { margin: 0; }
+        .ref-doc-item label { cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .ref-chunks-panel {
+            border-top: 1px solid var(--border);
+            max-height: 40%;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .ref-chunks-panel h4 {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        .ref-chunk-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .ref-chunk-item .ref-filename {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 4px;
+            font-size: 0.7rem;
+        }
+        .ref-chunk-item .ref-similarity {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        @media (max-width: 900px) {
+            .rag-chat-layout { flex-direction: column; height: auto; }
+            .conv-sidebar, .ref-sidebar { width: 100%; height: auto; max-height: 200px; }
+            .ref-sidebar { border-left: none; border-top: 1px solid var(--border); }
+            .conv-sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+            .upload-section { flex-direction: column; }
+        }
         @media (max-width: 600px) {
             .content { padding: 16px; }
             .docs-table { overflow-x: auto; }
@@ -289,28 +540,86 @@
             <h1>Young Marine Tech 관리자</h1>
             <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
         </div>
-        <div class="content">
-            <!-- 업로드 영역 -->
-            <div class="upload-area" id="uploadArea">
-                <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" multiple />
-                <div class="icon">&#128206;</div>
-                <div class="title">파일을 드래그하거나 클릭하여 업로드</div>
-                <div class="subtitle">PDF, JPG, PNG (최대 50MB)</div>
-            </div>
 
-            <!-- 업로드 진행 표시 -->
-            <div class="upload-progress" id="uploadProgress">
-                <div class="file-name" id="uploadFileName">업로드 중...</div>
-                <div class="progress-bar"><div class="fill"></div></div>
-            </div>
+        <!-- 탭 네비게이션 -->
+        <div class="tab-nav">
+            <button class="active" onclick="switchTab('docs')">문서 관리</button>
+            <button onclick="switchTab('rag')">RAG 채팅</button>
+        </div>
 
-            <!-- 문서 목록 -->
-            <div class="docs-section">
-                <h2>업로드된 문서</h2>
-                <div class="docs-table" id="docsTable">
-                    <div class="empty-state">
-                        <div class="icon">&#128196;</div>
-                        <div>아직 업로드된 문서가 없습니다</div>
+        <!-- 문서 관리 탭 -->
+        <div id="tabDocs" class="tab-content active">
+            <div class="content">
+                <!-- 업로드 영역 2개 -->
+                <div class="upload-section">
+                    <div class="upload-card" id="uploadConsultant">
+                        <input type="file" id="fileInputConsultant" accept=".pdf,.jpg,.jpeg,.png" multiple />
+                        <span class="purpose-label purpose-consultant">AI 상담사용</span>
+                        <div class="icon">&#128206;</div>
+                        <div class="title">AI 상담사 문서 업로드</div>
+                        <div class="subtitle">랜딩 페이지 채팅에서 참조</div>
+                    </div>
+                    <div class="upload-card" id="uploadRag">
+                        <input type="file" id="fileInputRag" accept=".pdf,.jpg,.jpeg,.png" multiple />
+                        <span class="purpose-label purpose-rag_session">RAG 세션용</span>
+                        <div class="icon">&#128218;</div>
+                        <div class="title">RAG 세션 문서 업로드</div>
+                        <div class="subtitle">관리자 RAG 채팅에서 참조</div>
+                    </div>
+                </div>
+
+                <!-- 업로드 진행 표시 -->
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="file-name" id="uploadFileName">업로드 중...</div>
+                    <div class="progress-bar"><div class="fill"></div></div>
+                </div>
+
+                <!-- 문서 목록 -->
+                <div class="docs-section">
+                    <h2>업로드된 문서</h2>
+                    <div class="docs-table" id="docsTable">
+                        <div class="empty-state">
+                            <div class="icon">&#128196;</div>
+                            <div>아직 업로드된 문서가 없습니다</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RAG 채팅 탭 -->
+        <div id="tabRag" class="tab-content">
+            <div class="rag-chat-layout">
+                <!-- 왼쪽: 대화 목록 -->
+                <div class="conv-sidebar">
+                    <div class="sidebar-header">
+                        <button class="btn btn-primary btn-sm" style="width:100%" onclick="createConversation()">+ 새 대화</button>
+                    </div>
+                    <div class="conv-list" id="convList">
+                        <div class="empty-state" style="padding:24px 12px;font-size:0.8rem">대화가 없습니다</div>
+                    </div>
+                </div>
+
+                <!-- 가운데: 채팅 영역 -->
+                <div class="chat-main">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-empty">대화를 선택하거나 새 대화를 시작하세요</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="ragInput" placeholder="질문을 입력하세요..." disabled />
+                        <button class="btn btn-primary btn-sm" id="ragSendBtn" onclick="sendRagMessage()" disabled>전송</button>
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 참조 문서 패널 -->
+                <div class="ref-sidebar">
+                    <div class="sidebar-header">참조 문서 선택</div>
+                    <div class="ref-doc-list" id="refDocList">
+                        <div class="empty-state" style="padding:16px;font-size:0.8rem">문서 로드 중...</div>
+                    </div>
+                    <div class="ref-chunks-panel" id="refChunksPanel">
+                        <h4>참조된 청크</h4>
+                        <div style="font-size:0.75rem;color:var(--text-muted)">메시지를 보내면 참조 청크가 표시됩니다</div>
                     </div>
                 </div>
             </div>
@@ -330,7 +639,11 @@
     const API_BASE = 'https://marine-parts-production-60a3.up.railway.app';
     let authToken = sessionStorage.getItem('admin_token') || '';
 
-    // 초기화
+    // === RAG 채팅 상태 ===
+    let currentConvId = null;
+    let ragDocuments = [];
+
+    // === 초기화 ===
     document.addEventListener('DOMContentLoaded', () => {
         if (authToken) {
             showDashboard();
@@ -341,23 +654,51 @@
             if (e.key === 'Enter') handleLogin();
         });
 
-        // 드래그 & 드롭
-        const area = document.getElementById('uploadArea');
-        area.addEventListener('click', () => document.getElementById('fileInput').click());
-        area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('dragover'); });
-        area.addEventListener('dragleave', () => area.classList.remove('dragover'));
-        area.addEventListener('drop', (e) => {
-            e.preventDefault();
-            area.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-            e.target.value = '';
+        // 업로드 카드: AI 상담사용
+        setupUploadCard('uploadConsultant', 'fileInputConsultant', 'consultant');
+        // 업로드 카드: RAG 세션용
+        setupUploadCard('uploadRag', 'fileInputRag', 'rag_session');
+
+        // RAG 채팅 입력 엔터
+        document.getElementById('ragInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendRagMessage();
         });
     });
 
-    // API 호출 헬퍼
+    function setupUploadCard(cardId, inputId, purpose) {
+        const card = document.getElementById(cardId);
+        const input = document.getElementById(inputId);
+        card.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT') input.click();
+        });
+        card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('dragover'); });
+        card.addEventListener('dragleave', () => card.classList.remove('dragover'));
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            card.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files, purpose);
+        });
+        input.addEventListener('change', (e) => {
+            handleFiles(e.target.files, purpose);
+            e.target.value = '';
+        });
+    }
+
+    // === 탭 전환 ===
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-nav button').forEach((btn, i) => {
+            btn.classList.toggle('active', (tab === 'docs' && i === 0) || (tab === 'rag' && i === 1));
+        });
+        document.getElementById('tabDocs').classList.toggle('active', tab === 'docs');
+        document.getElementById('tabRag').classList.toggle('active', tab === 'rag');
+
+        if (tab === 'rag') {
+            loadConversations();
+            loadRagDocuments();
+        }
+    }
+
+    // === API 호출 헬퍼 ===
     async function api(path, options = {}) {
         const res = await fetch(API_BASE + path, {
             ...options,
@@ -373,7 +714,7 @@
         return res;
     }
 
-    // 로그인
+    // === 로그인/로그아웃 ===
     async function handleLogin() {
         const pw = document.getElementById('passwordInput').value;
         const errEl = document.getElementById('loginError');
@@ -416,7 +757,10 @@
         loadDocuments();
     }
 
-    // 문서 목록 로드
+    // ============================================================
+    //  문서 관리 탭
+    // ============================================================
+
     async function loadDocuments() {
         try {
             const res = await api('/admin/documents');
@@ -445,14 +789,20 @@
             return `<span class="badge ${cls}">${label}</span>`;
         };
 
+        const purposeBadge = (p) => {
+            if (p === 'rag_session') return '<span class="badge purpose-rag_session" style="margin-left:4px">RAG</span>';
+            return '<span class="badge purpose-consultant" style="margin-left:4px">상담</span>';
+        };
+
         const typeIcon = (t) => t === 'pdf' ? '&#128196;' : '&#128247;';
 
-        let html = '<table><thead><tr><th>파일명</th><th>유형</th><th>상태</th><th>업로드일</th><th>작업</th></tr></thead><tbody>';
+        let html = '<table><thead><tr><th>파일명</th><th>유형</th><th>용도</th><th>상태</th><th>업로드일</th><th>작업</th></tr></thead><tbody>';
         for (const doc of docs) {
             const date = doc.created_at ? new Date(doc.created_at).toLocaleString('ko-KR') : '-';
             html += `<tr>
                 <td style="cursor:pointer;color:var(--accent)" onclick="viewDocument(${doc.id})">${typeIcon(doc.file_type)} ${escapeHtml(doc.filename)}</td>
                 <td>${doc.file_type.toUpperCase()}</td>
+                <td>${purposeBadge(doc.purpose)}</td>
                 <td>${statusBadge(doc.status)}${doc.error_msg ? '<br><small style="color:var(--error)">' + escapeHtml(doc.error_msg) + '</small>' : ''}</td>
                 <td>${date}</td>
                 <td><button class="btn btn-danger" onclick="deleteDocument(${doc.id})">삭제</button></td>
@@ -463,13 +813,13 @@
     }
 
     // 파일 업로드
-    async function handleFiles(fileList) {
+    async function handleFiles(fileList, purpose) {
         for (const file of fileList) {
-            await uploadFile(file);
+            await uploadFile(file, purpose);
         }
     }
 
-    async function uploadFile(file) {
+    async function uploadFile(file, purpose) {
         const progress = document.getElementById('uploadProgress');
         const fileName = document.getElementById('uploadFileName');
 
@@ -478,6 +828,7 @@
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('purpose', purpose);
 
         try {
             const res = await api('/admin/upload', {
@@ -541,8 +892,271 @@
         }
     }
 
-    // 유틸
+    // ============================================================
+    //  RAG 채팅 탭
+    // ============================================================
+
+    // 대화 목록 로드
+    async function loadConversations() {
+        try {
+            const res = await api('/admin/rag/conversations');
+            const convs = await res.json();
+            renderConversations(convs);
+        } catch (e) {
+            console.error('대화 목록 로드 실패:', e);
+        }
+    }
+
+    function renderConversations(convs) {
+        const container = document.getElementById('convList');
+        if (!convs.length) {
+            container.innerHTML = '<div class="empty-state" style="padding:24px 12px;font-size:0.8rem">대화가 없습니다</div>';
+            return;
+        }
+
+        let html = '';
+        for (const c of convs) {
+            const isActive = c.id === currentConvId;
+            html += `<div class="conv-item ${isActive ? 'active' : ''}" onclick="selectConversation(${c.id})">
+                <span class="conv-title">${escapeHtml(c.title)}</span>
+                <button class="conv-delete" onclick="event.stopPropagation();deleteConversation(${c.id})" title="삭제">&times;</button>
+            </div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    // 새 대화 생성
+    async function createConversation() {
+        try {
+            const res = await api('/admin/rag/conversations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: '새 대화' }),
+            });
+            const conv = await res.json();
+            currentConvId = conv.id;
+            await loadConversations();
+            await loadConversation(conv.id);
+            enableChatInput();
+        } catch (e) {
+            console.error('대화 생성 실패:', e);
+        }
+    }
+
+    // 대화 선택
+    async function selectConversation(convId) {
+        currentConvId = convId;
+        await loadConversations();
+        await loadConversation(convId);
+        enableChatInput();
+    }
+
+    // 대화 내용 로드
+    async function loadConversation(convId) {
+        try {
+            const res = await api(`/admin/rag/conversations/${convId}`);
+            const data = await res.json();
+            renderChatMessages(data.messages);
+        } catch (e) {
+            console.error('대화 로드 실패:', e);
+        }
+    }
+
+    function renderChatMessages(messages) {
+        const container = document.getElementById('chatMessages');
+        if (!messages.length) {
+            container.innerHTML = '<div class="chat-empty">질문을 입력하여 대화를 시작하세요</div>';
+            return;
+        }
+
+        let html = '';
+        for (const m of messages) {
+            const refs = m.references || [];
+            html += `<div class="chat-msg ${m.role}">
+                <div class="msg-role">${m.role === 'user' ? '나' : 'AI'}</div>
+                <div class="msg-bubble">${escapeHtml(m.content)}</div>
+                ${m.role === 'assistant' && refs.length ? `<div class="msg-refs" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g, "&#39;")})'>참조 ${refs.length}건</div>` : ''}
+            </div>`;
+        }
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // 대화 삭제
+    async function deleteConversation(convId) {
+        if (!confirm('이 대화를 삭제하시겠습니까?')) return;
+        try {
+            await api(`/admin/rag/conversations/${convId}`, { method: 'DELETE' });
+            if (currentConvId === convId) {
+                currentConvId = null;
+                document.getElementById('chatMessages').innerHTML = '<div class="chat-empty">대화를 선택하거나 새 대화를 시작하세요</div>';
+                disableChatInput();
+            }
+            loadConversations();
+        } catch (e) {
+            console.error('대화 삭제 실패:', e);
+        }
+    }
+
+    // RAG 문서 목록 로드
+    async function loadRagDocuments() {
+        try {
+            const res = await api('/admin/rag/documents');
+            ragDocuments = await res.json();
+            renderRagDocuments(ragDocuments);
+        } catch (e) {
+            console.error('RAG 문서 로드 실패:', e);
+        }
+    }
+
+    function renderRagDocuments(docs) {
+        const container = document.getElementById('refDocList');
+        if (!docs.length) {
+            container.innerHTML = '<div class="empty-state" style="padding:16px;font-size:0.8rem">RAG 세션용 문서가 없습니다.<br>문서 관리에서 업로드하세요.</div>';
+            return;
+        }
+
+        let html = `<div class="ref-doc-item">
+            <input type="checkbox" id="refDocAll" checked onchange="toggleAllDocs(this.checked)" />
+            <label for="refDocAll"><strong>전체 선택</strong></label>
+        </div>`;
+        for (const doc of docs) {
+            html += `<div class="ref-doc-item">
+                <input type="checkbox" class="ref-doc-check" id="refDoc${doc.id}" value="${doc.id}" checked />
+                <label for="refDoc${doc.id}">${escapeHtml(doc.filename)}</label>
+            </div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    function toggleAllDocs(checked) {
+        document.querySelectorAll('.ref-doc-check').forEach(cb => cb.checked = checked);
+    }
+
+    function getSelectedDocIds() {
+        const checks = document.querySelectorAll('.ref-doc-check:checked');
+        const ids = Array.from(checks).map(cb => parseInt(cb.value));
+        // 전부 선택됐으면 null (필터 안 함)
+        if (ids.length === ragDocuments.length) return null;
+        return ids.length ? ids : null;
+    }
+
+    // 메시지 전송
+    async function sendRagMessage() {
+        if (!currentConvId) return;
+        const input = document.getElementById('ragInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        input.value = '';
+        const sendBtn = document.getElementById('ragSendBtn');
+        input.disabled = true;
+        sendBtn.disabled = true;
+
+        // 사용자 메시지 즉시 표시
+        appendChatMsg('user', message);
+
+        // AI 로딩 표시
+        const loadingId = appendChatMsg('assistant', '답변 생성 중...');
+
+        try {
+            const docIds = getSelectedDocIds();
+            const res = await api('/admin/rag/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    conversation_id: currentConvId,
+                    message: message,
+                    document_ids: docIds,
+                }),
+            });
+            const data = await res.json();
+
+            // 로딩 메시지 교체
+            removeChatMsg(loadingId);
+            appendChatMsg('assistant', data.reply, data.references || []);
+
+            // 참조 청크 패널 업데이트
+            showRefChunks(data.references || []);
+
+            // 대화 목록 갱신 (제목 변경 반영)
+            loadConversations();
+        } catch (e) {
+            removeChatMsg(loadingId);
+            appendChatMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
+            console.error('RAG 채팅 오류:', e);
+        } finally {
+            input.disabled = false;
+            sendBtn.disabled = false;
+            input.focus();
+        }
+    }
+
+    let msgCounter = 0;
+    function appendChatMsg(role, content, refs) {
+        const container = document.getElementById('chatMessages');
+        // 빈 상태 메시지 제거
+        const emptyEl = container.querySelector('.chat-empty');
+        if (emptyEl) emptyEl.remove();
+
+        const id = 'msg-' + (++msgCounter);
+        const div = document.createElement('div');
+        div.className = `chat-msg ${role}`;
+        div.id = id;
+
+        const refsHtml = (role === 'assistant' && refs && refs.length)
+            ? `<div class="msg-refs" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g, "&#39;")})'>참조 ${refs.length}건</div>`
+            : '';
+
+        div.innerHTML = `
+            <div class="msg-role">${role === 'user' ? '나' : 'AI'}</div>
+            <div class="msg-bubble">${escapeHtml(content)}</div>
+            ${refsHtml}
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return id;
+    }
+
+    function removeChatMsg(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
+    function showRefChunks(refs) {
+        const panel = document.getElementById('refChunksPanel');
+        if (!refs || !refs.length) {
+            panel.innerHTML = '<h4>참조된 청크</h4><div style="font-size:0.75rem;color:var(--text-muted)">참조된 내용이 없습니다</div>';
+            return;
+        }
+
+        let html = '<h4>참조된 청크</h4>';
+        for (const ref of refs) {
+            html += `<div class="ref-chunk-item">
+                <div class="ref-filename">${escapeHtml(ref.filename)}</div>
+                ${escapeHtml(ref.chunk_text)}
+                <div class="ref-similarity">유사도: ${(ref.similarity * 100).toFixed(1)}%</div>
+            </div>`;
+        }
+        panel.innerHTML = html;
+    }
+
+    function enableChatInput() {
+        document.getElementById('ragInput').disabled = false;
+        document.getElementById('ragSendBtn').disabled = false;
+    }
+
+    function disableChatInput() {
+        document.getElementById('ragInput').disabled = true;
+        document.getElementById('ragSendBtn').disabled = true;
+    }
+
+    // ============================================================
+    //  유틸
+    // ============================================================
+
     function escapeHtml(str) {
+        if (!str) return '';
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;

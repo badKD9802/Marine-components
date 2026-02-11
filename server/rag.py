@@ -62,17 +62,44 @@ async def store_chunks(document_id: int, chunks: list[str]):
             )
 
 
-async def search_similar_chunks(query: str, top_k: int = 5) -> list[dict]:
-    """쿼리와 유사한 청크를 pgvector DB에서 검색한다."""
+async def search_similar_chunks(
+    query: str,
+    top_k: int = 5,
+    purpose: str | None = None,
+    document_ids: list[int] | None = None,
+) -> list[dict]:
+    """쿼리와 유사한 청크를 pgvector DB에서 검색한다.
+
+    Args:
+        purpose: 'consultant' 또는 'rag_session'으로 필터링
+        document_ids: 특정 문서 ID 목록으로 필터링
+    """
     if not db.vector_pool:
         return []
 
     query_embedding = get_embeddings([query])[0]
     embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
 
+    where_clauses = ["d.status = 'done'"]
+    params: list = [embedding_str]
+    idx = 2
+
+    if purpose:
+        where_clauses.append(f"d.purpose = ${idx}")
+        params.append(purpose)
+        idx += 1
+
+    if document_ids:
+        where_clauses.append(f"d.id = ANY(${idx}::int[])")
+        params.append(document_ids)
+        idx += 1
+
+    where_sql = " AND ".join(where_clauses)
+    params.append(top_k)
+
     async with db.vector_pool.acquire() as conn:
         rows = await conn.fetch(
-            """
+            f"""
             SELECT
                 dc.chunk_text,
                 dc.document_id,
@@ -80,12 +107,11 @@ async def search_similar_chunks(query: str, top_k: int = 5) -> list[dict]:
                 1 - (dc.embedding <=> $1::vector) AS similarity
             FROM document_chunks dc
             JOIN documents d ON d.id = dc.document_id
-            WHERE d.status = 'done'
+            WHERE {where_sql}
             ORDER BY dc.embedding <=> $1::vector
-            LIMIT $2
+            LIMIT ${idx}
             """,
-            embedding_str,
-            top_k,
+            *params,
         )
 
     return [
