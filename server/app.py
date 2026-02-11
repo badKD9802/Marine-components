@@ -12,6 +12,8 @@ import json
 load_dotenv()
 
 from db import init_db, close_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
+from admin import router as admin_router
+from rag import search_similar_chunks
 
 
 # Lifespan: DB init/close
@@ -38,6 +40,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(admin_router)
 print("app 생성완료")
 
 
@@ -116,6 +119,20 @@ async def get_ai_response(user_message: str, history: list[dict]):
 - 피스톤 핀 부시: 100,000원
 - 다이하츠 밸브 스템 씰: 2,600원"""
 
+        # RAG: 업로드된 문서에서 관련 청크 검색
+        rag_context = ""
+        try:
+            rag_chunks = await search_similar_chunks(user_message, top_k=5)
+            if rag_chunks:
+                rag_lines = []
+                for chunk in rag_chunks:
+                    if chunk["similarity"] > 0.3:
+                        rag_lines.append(f"[{chunk['filename']}] {chunk['chunk_text']}")
+                if rag_lines:
+                    rag_context = "\n\n## 참고 문서 (업로드된 기술 자료)\n" + "\n---\n".join(rag_lines) + "\n위 문서를 참고하여 답변하되, 문서에 없는 내용은 추측하지 마세요."
+        except Exception as e:
+            print(f"RAG 검색 오류 (무시): {e}", flush=True)
+
         system_prompt = f"""
         당신은 영마린테크의 AI 상담원입니다.
         영마린테크는 선박 엔진 및 부품을 판매하는 회사입니다.
@@ -131,6 +148,7 @@ async def get_ai_response(user_message: str, history: list[dict]):
         영마린테크는 20년 이상의 전문 경험을 가지고 있으며, YANMAR, Daihatsu 등 글로벌 브랜드의 정품 부품만을 취급합니다.
         신속 배송과 24/7 기술 지원을 제공하며, 100% 정품 보증과 글로벌 네트워크를 통해 안정적인 재고를 확보합니다.
         전문 컨설팅, 재고 관리, 맞춤 견적 서비스를 제공합니다.
+{rag_context}
 
         ## 예시
         사용자: 얀마 커넥팅 로드 베어링 가격이 얼마인가요?
@@ -153,7 +171,6 @@ async def get_ai_response(user_message: str, history: list[dict]):
             return {"reply": "죄송합니다. AI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.", "suggested_questions": []}
 
         try:
-            print(response_text)
             gemini_response = json.loads(response_text)
             reply = gemini_response.get("reply", "죄송합니다. 답변을 생성하는 데 문제가 발생했습니다.")
             suggested_questions = gemini_response.get("suggested_questions", [])

@@ -54,6 +54,40 @@ async def create_tables():
             );
         """)
 
+        # pgvector 확장 활성화
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+
+        # 업로드된 문서 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS documents (
+                id          SERIAL PRIMARY KEY,
+                filename    TEXT NOT NULL,
+                file_type   TEXT NOT NULL,
+                raw_text    TEXT,
+                status      TEXT DEFAULT 'pending',
+                error_msg   TEXT,
+                created_at  TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        # 청크 + 임베딩 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS document_chunks (
+                id           SERIAL PRIMARY KEY,
+                document_id  INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+                chunk_index  INTEGER NOT NULL,
+                chunk_text   TEXT NOT NULL,
+                embedding    vector(1536),
+                created_at   TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        # 벡터 검색 인덱스 (ivfflat은 데이터가 있어야 생성 가능하므로 HNSW 사용)
+        await conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_chunks_embedding
+                ON document_chunks USING hnsw (embedding vector_cosine_ops);
+        """)
+
 
 async def get_all_products(category: str = None, search: str = None):
     """Get all products with optional category filter and search."""
