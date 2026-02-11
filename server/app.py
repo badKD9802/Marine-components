@@ -27,7 +27,12 @@ async def lifespan(app):
 # 1. 앱 생성
 print("app 생성 중...")
 app = FastAPI(lifespan=lifespan)
-print("has GOOGLE_API_KEY?", "GOOGLE_API_KEY" in os.environ)
+print("=== 환경변수 확인 ===")
+print(f"  GOOGLE_API_KEY: {'설정됨 (' + os.environ['GOOGLE_API_KEY'][:8] + '...)' if os.environ.get('GOOGLE_API_KEY') else '미설정'}")
+print(f"  OPENAI_API_KEY: {'설정됨 (' + os.environ['OPENAI_API_KEY'][:8] + '...)' if os.environ.get('OPENAI_API_KEY') else '미설정'}")
+print(f"  ADMIN_PASSWORD: {'설정됨 (' + str(len(os.environ.get('ADMIN_PASSWORD',''))) + '자)' if os.environ.get('ADMIN_PASSWORD') else '미설정'}")
+print(f"  DATABASE_URL:   {'설정됨' if os.environ.get('DATABASE_URL') else '미설정'}")
+print("====================")
 
 
 # 2. CORS 설정
