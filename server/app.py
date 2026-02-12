@@ -11,19 +11,32 @@ import json
 
 load_dotenv()
 
+import asyncio
+
 from db import init_db, close_db, init_vector_db, close_vector_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
 from admin import router as admin_router
 from rag_chat import router as rag_chat_router, cleanup_old_conversations
+from mail_compose import router as mail_compose_router, gmail_auto_check_loop
 from rag import search_similar_chunks
 
+_scheduler_task = None
 
-# Lifespan: DB init/close
+
+# Lifespan: DB init/close + Gmail 자동 체크 스케줄러
 @asynccontextmanager
 async def lifespan(app):
+    global _scheduler_task
     await init_db()
     await init_vector_db()
     await cleanup_old_conversations()
+    _scheduler_task = asyncio.create_task(gmail_auto_check_loop())
     yield
+    if _scheduler_task:
+        _scheduler_task.cancel()
+        try:
+            await _scheduler_task
+        except asyncio.CancelledError:
+            pass
     await close_vector_db()
     await close_db()
 
@@ -52,6 +65,7 @@ app.add_middleware(
 )
 app.include_router(admin_router)
 app.include_router(rag_chat_router)
+app.include_router(mail_compose_router)
 print("app 생성완료")
 
 

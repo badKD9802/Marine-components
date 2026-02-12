@@ -163,6 +163,50 @@ async def create_vector_tables():
             );
         """)
 
+        # 메일 작성 이력 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS mail_compositions (
+                id               SERIAL PRIMARY KEY,
+                incoming_email   TEXT NOT NULL,
+                detected_lang    TEXT DEFAULT 'en',
+                tone             TEXT DEFAULT 'formal',
+                korean_draft     TEXT,
+                translated_draft TEXT,
+                document_ids     JSONB DEFAULT '[]',
+                refs             JSONB DEFAULT '[]',
+                created_at       TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        # Gmail 설정 테이블 (단일 행)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS gmail_config (
+                id                 SERIAL PRIMARY KEY,
+                email              TEXT NOT NULL,
+                app_password       TEXT NOT NULL,
+                check_time         TEXT DEFAULT '09:00',
+                auto_reply_enabled BOOLEAN DEFAULT FALSE,
+                last_checked_at    TIMESTAMPTZ,
+                created_at         TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        # 수신 메일 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS inbox_emails (
+                id              SERIAL PRIMARY KEY,
+                gmail_uid       TEXT,
+                from_addr       TEXT NOT NULL,
+                from_name       TEXT,
+                subject         TEXT,
+                body            TEXT,
+                received_at     TIMESTAMPTZ,
+                status          TEXT DEFAULT 'new',
+                composition_id  INTEGER REFERENCES mail_compositions(id) ON DELETE SET NULL,
+                created_at      TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
         print("pgvector + RAG 테이블 생성 완료")
 
 

@@ -5,6 +5,7 @@ server/seed_data.py
 server/check_vectordb.py
 server/clear_vectordb.py
 neo4j.ipynb
+test.ipynb
 
 # 특정 폴더 전체 무시
 venv/

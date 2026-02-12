@@ -317,7 +317,8 @@ def _generate_rag_answer(
 
     contents = []
     for m in prev_messages:
-        contents.append({"role": m["role"], "parts": [{"text": m["content"]}]})
+        role = "model" if m["role"] == "assistant" else m["role"]
+        contents.append({"role": role, "parts": [{"text": m["content"]}]})
     contents.append({"role": "user", "parts": [{"text": user_message}]})
 
     try:

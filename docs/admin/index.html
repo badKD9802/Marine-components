@@ -458,7 +458,7 @@
         .chat-messages::-webkit-scrollbar { width: 5px; }
         .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-        /* 빈 상태 */
+        /* 빈 상태 — 초기 중앙 화면 */
         .chat-welcome {
             flex: 1;
             display: flex;
@@ -467,7 +467,7 @@
             justify-content: center;
             text-align: center;
             color: var(--text-muted);
-            padding: 40px;
+            padding: 40px 40px 20px;
         }
         .chat-welcome-icon {
             width: 72px; height: 72px;
@@ -487,6 +487,70 @@
             margin-bottom: 8px;
         }
         .chat-welcome p { font-size: 0.85rem; line-height: 1.6; max-width: 320px; }
+
+        /* 초기 화면 문서 칩 */
+        .welcome-docs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 20px;
+            max-width: 480px;
+        }
+        .welcome-doc-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: white;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.78rem;
+            color: var(--text-regular);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .welcome-doc-chip:hover { border-color: var(--accent); background: var(--primary-light); }
+        .welcome-doc-chip.selected { border-color: var(--accent); background: rgba(0,153,204,0.1); color: var(--primary); font-weight: 500; }
+        .welcome-doc-chip .chip-check { font-size: 0.7rem; }
+
+        /* 초기 화면 입력 박스 */
+        .welcome-input-wrap {
+            margin-top: 24px;
+            width: 100%;
+            max-width: 520px;
+        }
+        .welcome-input-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 6px 6px 6px 18px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+        .welcome-input-box:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0,153,204,0.1), var(--shadow-md);
+        }
+        .welcome-input-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 0.9rem;
+            font-family: inherit;
+            color: var(--text-regular);
+            background: transparent;
+        }
+        .welcome-input-box input::placeholder { color: var(--text-muted); }
+        .welcome-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
 
         /* 메시지 버블 */
         .msg-row {
@@ -648,12 +712,35 @@
         }
 
         .ref-doc-list {
-            flex: 1;
             overflow-y: auto;
             padding: 10px 12px;
+            flex-shrink: 0;
+            height: 45%;
         }
         .ref-doc-list::-webkit-scrollbar { width: 4px; }
         .ref-doc-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        /* 리사이저 핸들 */
+        .ref-resizer {
+            height: 7px;
+            background: var(--border-light);
+            cursor: row-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+        .ref-resizer:hover, .ref-resizer.dragging { background: var(--accent); }
+        .ref-resizer::after {
+            content: '';
+            width: 32px;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--text-muted);
+            opacity: 0.4;
+        }
+        .ref-resizer:hover::after, .ref-resizer.dragging::after { background: white; opacity: 0.9; }
 
         .ref-doc-item {
             display: flex;
@@ -683,10 +770,10 @@
 
         /* 참조 청크 패널 */
         .ref-chunks-area {
-            border-top: 1px solid var(--border-light);
-            max-height: 45%;
+            flex: 1;
             overflow-y: auto;
             padding: 14px 12px;
+            min-height: 60px;
         }
         .ref-chunks-area::-webkit-scrollbar { width: 4px; }
         .ref-chunks-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -699,37 +786,41 @@
             align-items: center;
             gap: 6px;
         }
+        /* 참조 문서 카드 */
         .ref-chunk-card {
             background: var(--bg-gray);
             border: 1px solid var(--border-light);
             border-radius: 10px;
-            padding: 10px 12px;
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s;
             font-size: 0.76rem;
-            line-height: 1.55;
-            white-space: pre-wrap;
-            transition: border-color 0.15s;
         }
-        .ref-chunk-card:hover { border-color: var(--accent); }
+        .ref-chunk-card:hover { border-color: var(--accent); background: rgba(0,153,204,0.04); }
         .ref-chunk-card .chunk-file {
             font-weight: 600;
             color: var(--accent);
-            margin-bottom: 5px;
-            font-size: 0.72rem;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            font-size: 0.74rem;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .ref-chunk-card .chunk-score {
             font-size: 0.65rem;
             color: var(--text-muted);
-            margin-top: 6px;
             display: flex;
             align-items: center;
             gap: 4px;
+            flex-shrink: 0;
         }
         .score-bar {
-            width: 50px; height: 4px;
+            width: 40px; height: 4px;
             background: var(--bg-gray-100);
             border-radius: 2px;
             overflow: hidden;
@@ -740,15 +831,549 @@
             border-radius: 2px;
         }
 
+        /* 참조 문서 팝업 */
+        .ref-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            animation: refPopFadeIn 0.2s ease;
+        }
+        .ref-popup-overlay.active { display: flex; }
+        @keyframes refPopFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .ref-popup {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 75vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+            animation: refPopSlideUp 0.25s ease;
+        }
+        @keyframes refPopSlideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ref-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 22px 14px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .ref-popup-header .popup-icon {
+            width: 36px; height: 36px;
+            background: var(--primary-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .ref-popup-header .popup-info { flex: 1; min-width: 0; }
+        .ref-popup-header .popup-filename {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .ref-popup-header .popup-score {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ref-popup-header .popup-score .score-bar { width: 60px; }
+        .ref-popup-close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.15s;
+            line-height: 1;
+        }
+        .ref-popup-close:hover { color: var(--text-dark); background: var(--bg-gray); }
+        .ref-popup-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px 22px 22px;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-regular);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .ref-popup-body::-webkit-scrollbar { width: 5px; }
+        .ref-popup-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+
+        /* ============================================
+           메일 작성 탭
+           ============================================ */
+        .mail-layout {
+            display: flex;
+            height: calc(100vh - 105px);
+            background: var(--bg-gray);
+        }
+
+        /* 왼쪽: 메일 작성 영역 */
+        .mail-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* 수신 메일 입력 영역 */
+        .mail-incoming {
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 20px;
+            flex-shrink: 0;
+        }
+        .mail-incoming-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .mail-incoming-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mail-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .mail-controls select {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            color: var(--text-regular);
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+        .mail-controls select:focus { border-color: var(--accent); }
+        .mail-incoming textarea {
+            width: 100%;
+            min-height: 120px;
+            max-height: 200px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            line-height: 1.6;
+            color: var(--text-regular);
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .mail-incoming textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,153,204,0.08); }
+        .mail-incoming textarea::placeholder { color: var(--text-muted); }
+
+        /* 분석 결과 */
+        .mail-analysis {
+            display: none;
+            background: var(--primary-light);
+            border: 1px solid rgba(0,153,204,0.2);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-top: 10px;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: var(--primary-dark);
+        }
+        .mail-analysis.visible { display: block; }
+        .mail-analysis-label {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        /* 편집 영역 (분할 뷰) */
+        .mail-editor {
+            flex: 1;
+            display: flex;
+            gap: 0;
+            overflow: hidden;
+        }
+        .mail-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .mail-pane + .mail-pane { border-left: 1px solid var(--border-light); }
+        .mail-pane-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+        .mail-pane-title {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mail-pane-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.68rem;
+            font-weight: 600;
+        }
+        .badge-ko { background: #d4edda; color: #155724; }
+        .badge-lang { background: #cce5ff; color: #004085; }
+        .mail-pane textarea {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 16px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            line-height: 1.7;
+            color: var(--text-regular);
+            resize: none;
+            outline: none;
+            background: var(--bg-white);
+        }
+        .mail-pane textarea:read-only {
+            background: var(--bg-gray);
+            color: var(--text-light);
+        }
+        .mail-pane textarea::placeholder { color: var(--text-muted); }
+
+        /* 하단 액션 바 */
+        .mail-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: white;
+            border-top: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+        .mail-actions-left { display: flex; gap: 8px; }
+        .mail-actions-right { display: flex; gap: 8px; }
+
+        /* 오른쪽: 참조 문서 + 이력 사이드바 */
+        .mail-sidebar {
+            width: 280px;
+            background: white;
+            border-left: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+        }
+        .mail-sidebar-section {
+            display: flex;
+            flex-direction: column;
+        }
+        .mail-sidebar-section:first-child {
+            flex-shrink: 0;
+            max-height: 45%;
+        }
+        .mail-sidebar-section:last-child {
+            flex: 1;
+            border-top: 1px solid var(--border-light);
+            min-height: 0;
+        }
+        .mail-sidebar-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .mail-doc-list {
+            overflow-y: auto;
+            padding: 8px 10px;
+            flex: 1;
+        }
+        .mail-doc-list::-webkit-scrollbar { width: 4px; }
+        .mail-doc-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .mail-history-list {
+            overflow-y: auto;
+            padding: 8px 10px;
+            flex: 1;
+        }
+        .mail-history-list::-webkit-scrollbar { width: 4px; }
+        .mail-history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .mail-history-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 3px;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .mail-history-item:hover { background: var(--bg-gray); }
+        .mail-history-item.active { background: var(--primary-light); }
+        .mail-history-title {
+            font-size: 0.8rem;
+            color: var(--text-regular);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+        .mail-history-meta {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mail-history-del {
+            position: absolute;
+            top: 8px; right: 8px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: all 0.15s;
+        }
+        .mail-history-item:hover .mail-history-del { opacity: 1; }
+        .mail-history-del:hover { color: var(--error); background: #fee; }
+
+        /* 메일 로딩 오버레이 */
+        .mail-loading {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.8);
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .mail-loading.active { display: flex; }
+        .mail-loading-spinner {
+            width: 36px; height: 36px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .mail-loading-text {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* Gmail 연동 바 */
+        .gmail-bar {
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .gmail-bar-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            white-space: nowrap;
+        }
+        .gmail-bar input[type="text"],
+        .gmail-bar input[type="password"] {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            outline: none;
+            width: 180px;
+        }
+        .gmail-bar input:focus { border-color: var(--accent); }
+        .gmail-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: var(--text-light);
+        }
+        .gmail-status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .gmail-status-dot.connected { background: #28a745; }
+        .gmail-status-dot.disconnected { background: #dc3545; }
+        .gmail-auto-settings {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: var(--text-light);
+            margin-left: auto;
+        }
+        .gmail-auto-settings select {
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: inherit;
+        }
+        .gmail-toggle {
+            position: relative;
+            width: 36px; height: 20px;
+            background: var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .gmail-toggle.active { background: #28a745; }
+        .gmail-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 16px; height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .gmail-toggle.active::after { transform: translateX(16px); }
+
+        /* 수신함 탭 전환 */
+        .mail-sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+        .mail-sidebar-tab {
+            flex: 1;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+        .mail-sidebar-tab:hover { color: var(--text-dark); background: var(--bg-gray); }
+        .mail-sidebar-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .mail-sidebar-tab .tab-count {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            font-size: 0.65rem;
+            padding: 1px 6px;
+            border-radius: 8px;
+            margin-left: 4px;
+        }
+
+        /* 수신함 아이템 */
+        .inbox-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 3px;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .inbox-item:hover { background: var(--bg-gray); }
+        .inbox-item.active { background: var(--primary-light); }
+        .inbox-item-from {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .inbox-item-subject {
+            font-size: 0.75rem;
+            color: var(--text-regular);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+        .inbox-item-meta {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge-status {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        .badge-new { background: #cce5ff; color: #004085; }
+        .badge-draft-ready { background: #fff3cd; color: #856404; }
+        .badge-replied { background: #d4edda; color: #155724; }
+        .badge-ignored { background: #e2e3e5; color: #383d41; }
+
         /* ===== 반응형 ===== */
         @media (max-width: 1024px) {
             .sidebar-ref { display: none; }
+            .mail-sidebar { display: none; }
         }
         @media (max-width: 768px) {
             .rag-layout { flex-direction: column; height: auto; min-height: calc(100vh - 105px); }
             .sidebar-conv { width: 100%; max-height: 180px; border-right: none; border-bottom: 1px solid var(--border-light); }
             .upload-section { flex-direction: column; }
             .content { padding: 16px; }
+            .mail-layout { flex-direction: column; height: auto; min-height: calc(100vh - 105px); }
+            .mail-editor { flex-direction: column; }
+            .mail-pane + .mail-pane { border-left: none; border-top: 1px solid var(--border-light); }
         }
     </style>
 </head>
@@ -774,6 +1399,7 @@
         <div class="tab-nav">
             <button class="active" onclick="switchTab('docs')">문서 관리</button>
             <button onclick="switchTab('rag')">RAG 채팅</button>
+            <button onclick="switchTab('mail')">메일 작성</button>
         </div>
 
         <!-- ===== 문서 관리 탭 ===== -->
@@ -839,16 +1465,24 @@
                         </div>
                     </div>
                     <div class="chat-messages" id="chatMessages">
-                        <div class="chat-welcome">
+                        <div class="chat-welcome" id="chatWelcome">
                             <div class="chat-welcome-icon">&#9875;</div>
                             <h3>RAG 문서 Q&A</h3>
                             <p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p>
+                            <div class="welcome-docs" id="welcomeDocs"></div>
+                            <div class="welcome-input-wrap">
+                                <div class="welcome-input-box">
+                                    <input type="text" id="welcomeInput" placeholder="문서에 대해 질문하세요..." />
+                                    <button class="chat-send-btn" id="welcomeSendBtn" onclick="sendRagMessage()">&#10148;</button>
+                                </div>
+                                <div class="welcome-hint">Enter로 전송 — 대화가 자동 생성됩니다</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="chat-input-wrap">
+                    <div class="chat-input-wrap" id="chatInputWrap" style="display:none">
                         <div class="chat-input-box">
-                            <input type="text" id="ragInput" placeholder="문서에 대해 질문하세요..." disabled />
-                            <button class="chat-send-btn" id="ragSendBtn" onclick="sendRagMessage()" disabled>&#10148;</button>
+                            <input type="text" id="ragInput" placeholder="문서에 대해 질문하세요..." />
+                            <button class="chat-send-btn" id="ragSendBtn" onclick="sendRagMessage()">&#10148;</button>
                         </div>
                     </div>
                 </div>
@@ -862,9 +1496,139 @@
                     <div class="ref-doc-list" id="refDocList">
                         <div class="empty-state" style="padding:20px 12px;font-size:0.8rem">문서 로드 중...</div>
                     </div>
+                    <div class="ref-resizer" id="refResizer"></div>
                     <div class="ref-chunks-area" id="refChunksPanel">
-                        <div class="ref-chunks-title">&#128269; 참조된 청크</div>
+                        <div class="ref-chunks-title">&#128269; 참조된 문서 내용</div>
                         <div style="font-size:0.76rem;color:var(--text-muted);text-align:center;padding:12px 0;">질문을 입력하면<br>참조 내용이 표시됩니다</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 메일 작성 탭 ===== -->
+        <div id="tabMail" class="tab-content">
+            <!-- Gmail 연동 바 -->
+            <div class="gmail-bar" id="gmailBar">
+                <span class="gmail-bar-title">&#128231; Gmail 연동</span>
+                <input type="text" id="gmailEmail" placeholder="이메일 주소" />
+                <input type="password" id="gmailAppPassword" placeholder="앱 비밀번호" />
+                <button class="btn btn-accent btn-sm" onclick="gmailConnect()">연결</button>
+                <button class="btn btn-ghost btn-sm" onclick="gmailDisconnect()" id="gmailDisconnectBtn" style="display:none">연결 해제</button>
+                <button class="btn btn-primary btn-sm" onclick="gmailFetch()" id="gmailFetchBtn" style="display:none">&#128229; 메일 가져오기</button>
+                <div class="gmail-status" id="gmailStatus">
+                    <span class="gmail-status-dot disconnected" id="gmailDot"></span>
+                    <span id="gmailStatusText">연결 안됨</span>
+                </div>
+                <div class="gmail-auto-settings" id="gmailAutoSettings" style="display:none">
+                    <span>자동 체크:</span>
+                    <select id="gmailCheckTime">
+                        <option value="07:00">07:00</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00" selected>09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="18:00">18:00</option>
+                    </select>
+                    <div class="gmail-toggle" id="gmailAutoToggle" onclick="toggleGmailAuto()"></div>
+                    <span id="gmailLastChecked"></span>
+                </div>
+            </div>
+            <div class="mail-layout">
+                <!-- 메인 영역 -->
+                <div class="mail-main" style="position:relative">
+                    <!-- 수신 메일 입력 -->
+                    <div class="mail-incoming">
+                        <div class="mail-incoming-header">
+                            <h3>&#128233; 수신 메일</h3>
+                            <div class="mail-controls">
+                                <select id="mailTone">
+                                    <option value="formal">격식체</option>
+                                    <option value="friendly">친근체</option>
+                                    <option value="concise">간결체</option>
+                                </select>
+                                <button class="btn btn-accent btn-sm" id="mailComposeBtn" onclick="composeMail()">&#9998; 답장 생성</button>
+                            </div>
+                        </div>
+                        <textarea id="mailIncoming" placeholder="수신된 견적/문의 메일 내용을 붙여넣으세요...&#10;&#10;예: Dear Young Marine Tech, We would like to request a quotation for the following spare parts..."></textarea>
+                        <div class="mail-analysis" id="mailAnalysis">
+                            <div class="mail-analysis-label">&#128269; 메일 분석</div>
+                            <div id="mailAnalysisText"></div>
+                        </div>
+                    </div>
+
+                    <!-- 분할 편집 영역 -->
+                    <div class="mail-editor">
+                        <div class="mail-pane">
+                            <div class="mail-pane-header">
+                                <span class="mail-pane-title">&#9998; 한국어 초안 <span class="mail-pane-badge badge-ko">KO</span></span>
+                            </div>
+                            <textarea id="mailKoreanDraft" placeholder="답장 생성 버튼을 클릭하면 한국어 초안이 여기에 표시됩니다.&#10;수정 후 번역 버튼을 눌러주세요."></textarea>
+                        </div>
+                        <div class="mail-pane">
+                            <div class="mail-pane-header">
+                                <span class="mail-pane-title">&#127760; 번역본 <span class="mail-pane-badge badge-lang" id="mailTargetLangBadge">EN</span></span>
+                                <select id="mailTargetLang" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.75rem;font-family:inherit">
+                                    <option value="en">English</option>
+                                    <option value="ja">日本語</option>
+                                    <option value="zh">中文</option>
+                                    <option value="de">Deutsch</option>
+                                    <option value="fr">Français</option>
+                                    <option value="es">Español</option>
+                                </select>
+                            </div>
+                            <textarea id="mailTranslated" readonly placeholder="한국어 초안을 번역하면 여기에 표시됩니다."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 하단 액션 -->
+                    <div class="mail-actions">
+                        <div class="mail-actions-left">
+                            <button class="btn btn-primary btn-sm" id="mailTranslateBtn" onclick="translateMail()" disabled>&#127760; 번역</button>
+                            <button class="btn btn-ghost btn-sm" id="mailRetranslateBtn" onclick="translateMail()" disabled>&#128260; 재번역</button>
+                        </div>
+                        <div class="mail-actions-right">
+                            <button class="btn btn-ghost btn-sm" onclick="copyMailDraft('ko')" title="한국어 복사">&#128203; 한국어 복사</button>
+                            <button class="btn btn-ghost btn-sm" onclick="copyMailDraft('translated')" title="번역본 복사">&#128203; 번역본 복사</button>
+                            <button class="btn btn-primary btn-sm" id="mailSaveBtn" onclick="saveMailComposition()" disabled>&#128190; 저장</button>
+                            <button class="btn btn-accent btn-sm" id="mailSendBtn" onclick="sendMailReply()" disabled style="display:none">&#128228; 발송</button>
+                        </div>
+                    </div>
+
+                    <!-- 로딩 오버레이 -->
+                    <div class="mail-loading" id="mailLoading">
+                        <div class="mail-loading-spinner"></div>
+                        <div class="mail-loading-text" id="mailLoadingText">답장을 생성하고 있습니다...</div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 사이드바 -->
+                <div class="mail-sidebar">
+                    <!-- 탭 전환: 수신함 / 참조문서 / 이력 -->
+                    <div class="mail-sidebar-tabs">
+                        <button class="mail-sidebar-tab active" onclick="switchMailSidebarTab('inbox')" id="mailSideTabInbox">&#128229; 수신함 <span class="tab-count" id="inboxCount" style="display:none">0</span></button>
+                        <button class="mail-sidebar-tab" onclick="switchMailSidebarTab('docs')" id="mailSideTabDocs">&#128196; 문서</button>
+                        <button class="mail-sidebar-tab" onclick="switchMailSidebarTab('history')" id="mailSideTabHistory">&#128336; 이력</button>
+                    </div>
+
+                    <!-- 수신함 패널 -->
+                    <div id="mailSidePanelInbox" style="flex:1;overflow-y:auto;padding:8px 10px;">
+                        <div class="empty-state" style="padding:20px 10px;font-size:0.8rem" id="inboxEmpty">Gmail을 연결하면<br>수신 메일이 표시됩니다</div>
+                        <div id="inboxList"></div>
+                    </div>
+
+                    <!-- 참조 문서 패널 -->
+                    <div id="mailSidePanelDocs" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
+                        <div class="mail-doc-list" id="mailDocList">
+                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">문서 로드 중...</div>
+                        </div>
+                    </div>
+
+                    <!-- 이력 패널 -->
+                    <div id="mailSidePanelHistory" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
+                        <div class="mail-history-list" id="mailHistoryList">
+                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">저장된 이력이 없습니다</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -877,6 +1641,21 @@
             <button class="close-btn" onclick="closeModal()">&times;</button>
             <h3 id="modalTitle">문서 상세</h3>
             <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- ===== 참조 문서 팝업 ===== -->
+    <div class="ref-popup-overlay" id="refPopup">
+        <div class="ref-popup">
+            <div class="ref-popup-header">
+                <div class="popup-icon">&#128196;</div>
+                <div class="popup-info">
+                    <div class="popup-filename" id="refPopupFilename"></div>
+                    <div class="popup-score" id="refPopupScore"></div>
+                </div>
+                <button class="ref-popup-close" onclick="closeRefPopup()">&times;</button>
+            </div>
+            <div class="ref-popup-body" id="refPopupBody"></div>
         </div>
     </div>
 
@@ -902,6 +1681,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ragInput').addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) sendRagMessage();
     });
+    document.getElementById('welcomeInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) sendRagMessage();
+    });
 });
 
 function setupUploadCard(cardId, inputId, purpose) {
@@ -919,11 +1701,13 @@ function setupUploadCard(cardId, inputId, purpose) {
 // ============================================================
 function switchTab(tab) {
     document.querySelectorAll('.tab-nav button').forEach((btn, i) => {
-        btn.classList.toggle('active', (tab === 'docs' && i === 0) || (tab === 'rag' && i === 1));
+        btn.classList.toggle('active', (tab === 'docs' && i === 0) || (tab === 'rag' && i === 1) || (tab === 'mail' && i === 2));
     });
     document.getElementById('tabDocs').classList.toggle('active', tab === 'docs');
     document.getElementById('tabRag').classList.toggle('active', tab === 'rag');
+    document.getElementById('tabMail').classList.toggle('active', tab === 'mail');
     if (tab === 'rag') { loadConversations(); loadRagDocuments(); }
+    if (tab === 'mail') { loadMailDocuments(); loadMailHistory(); loadGmailStatus(); }
 }
 
 async function api(path, options = {}) {
@@ -1155,6 +1939,7 @@ async function createConversation() {
         currentConvId = cv.id;
         await loadConversations();
         renderEmptyChat();
+        switchToChatMode();
         setChatEnabled(true);
     } catch (e) { console.error('대화 생성 실패:', e); }
 }
@@ -1163,6 +1948,7 @@ async function selectConversation(convId) {
     currentConvId = convId;
     await loadConversations();
     await loadConversation(convId);
+    switchToChatMode();
     setChatEnabled(true);
 }
 
@@ -1173,7 +1959,7 @@ async function loadConversation(convId) {
 
 function renderEmptyChat() {
     document.getElementById('chatMessages').innerHTML = `
-        <div class="chat-welcome">
+        <div class="chat-welcome" id="chatWelcome">
             <div class="chat-welcome-icon">&#9875;</div>
             <h3>새 대화가 시작되었습니다</h3>
             <p>오른쪽 패널에서 참조할 문서를 선택하고<br>질문을 입력하세요</p>
@@ -1205,9 +1991,8 @@ async function deleteConversation(convId) {
         await api(`/admin/rag/conversations/${convId}`, { method: 'DELETE' });
         if (currentConvId === convId) {
             currentConvId = null;
-            document.getElementById('chatMessages').innerHTML = `<div class="chat-welcome"><div class="chat-welcome-icon">&#9875;</div><h3>RAG 문서 Q&A</h3><p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p></div>`;
+            showWelcomeScreen();
             updateChatHeader(null);
-            setChatEnabled(false);
         }
         loadConversations();
     } catch (e) { console.error('대화 삭제 실패:', e); }
@@ -1293,8 +2078,11 @@ async function toggleSaveFromList(convId) {
 
 // --- RAG 문서 ---
 async function loadRagDocuments() {
-    try { ragDocuments = await (await api('/admin/rag/documents')).json(); renderRagDocuments(ragDocuments); }
-    catch (e) { console.error('RAG 문서 로드 실패:', e); }
+    try {
+        ragDocuments = await (await api('/admin/rag/documents')).json();
+        renderRagDocuments(ragDocuments);
+        renderWelcomeDocs(ragDocuments);
+    } catch (e) { console.error('RAG 문서 로드 실패:', e); }
 }
 
 function renderRagDocuments(docs) {
@@ -1310,21 +2098,111 @@ function renderRagDocuments(docs) {
     c.innerHTML = html;
 }
 
-function toggleAllDocs(checked) { document.querySelectorAll('.ref-doc-check').forEach(cb => cb.checked = checked); }
+function renderWelcomeDocs(docs) {
+    const c = document.getElementById('welcomeDocs');
+    if (!c) return;
+    if (!docs.length) {
+        c.innerHTML = '<div style="font-size:0.78rem;color:var(--text-muted);padding:8px 0;">문서 관리 탭에서 RAG 세션용 문서를 업로드하세요</div>';
+        return;
+    }
+    let html = '';
+    for (const d of docs) {
+        html += `<div class="welcome-doc-chip selected" data-doc-id="${d.id}" onclick="toggleWelcomeDoc(this)">
+            <span class="chip-check">&#10003;</span>
+            <span>&#128196; ${esc(d.filename)}</span>
+        </div>`;
+    }
+    c.innerHTML = html;
+}
+
+function toggleWelcomeDoc(chip) {
+    chip.classList.toggle('selected');
+    const check = chip.querySelector('.chip-check');
+    check.textContent = chip.classList.contains('selected') ? '\u2713' : '';
+    // 사이드바 체크박스도 동기화
+    const docId = chip.dataset.docId;
+    const sidebarCheck = document.getElementById('refDoc' + docId);
+    if (sidebarCheck) sidebarCheck.checked = chip.classList.contains('selected');
+    // 전체 체크박스 동기화
+    const allCheck = document.getElementById('refDocAll');
+    if (allCheck) allCheck.checked = document.querySelectorAll('.welcome-doc-chip.selected').length === ragDocuments.length;
+}
+
+function toggleAllDocs(checked) {
+    document.querySelectorAll('.ref-doc-check').forEach(cb => cb.checked = checked);
+    document.querySelectorAll('.welcome-doc-chip').forEach(chip => {
+        if (checked) chip.classList.add('selected');
+        else chip.classList.remove('selected');
+        chip.querySelector('.chip-check').textContent = checked ? '\u2713' : '';
+    });
+}
 
 function getSelectedDocIds() {
+    // 웰컴 화면의 칩에서도 선택 상태 확인
+    const welcomeChips = document.querySelectorAll('.welcome-doc-chip.selected');
+    if (welcomeChips.length > 0 && !currentConvId) {
+        const ids = Array.from(welcomeChips).map(c => parseInt(c.dataset.docId));
+        return (ids.length === ragDocuments.length || ids.length === 0) ? null : ids;
+    }
     const ids = Array.from(document.querySelectorAll('.ref-doc-check:checked')).map(cb => parseInt(cb.value));
     return (ids.length === ragDocuments.length || ids.length === 0) ? null : ids;
 }
 
+// --- 웰컴 화면 표시/복구 ---
+function showWelcomeScreen() {
+    document.getElementById('chatInputWrap').style.display = 'none';
+    const c = document.getElementById('chatMessages');
+    c.innerHTML = `
+        <div class="chat-welcome" id="chatWelcome">
+            <div class="chat-welcome-icon">&#9875;</div>
+            <h3>RAG 문서 Q&A</h3>
+            <p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p>
+            <div class="welcome-docs" id="welcomeDocs"></div>
+            <div class="welcome-input-wrap">
+                <div class="welcome-input-box">
+                    <input type="text" id="welcomeInput" placeholder="문서에 대해 질문하세요..." />
+                    <button class="chat-send-btn" id="welcomeSendBtn" onclick="sendRagMessage()">&#10148;</button>
+                </div>
+                <div class="welcome-hint">Enter로 전송 — 대화가 자동 생성됩니다</div>
+            </div>
+        </div>`;
+    // 이벤트 리스너 재등록
+    document.getElementById('welcomeInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) sendRagMessage();
+    });
+    // 문서 칩 렌더링
+    renderWelcomeDocs(ragDocuments);
+}
+
 // --- 메시지 전송 ---
 async function sendRagMessage() {
-    if (!currentConvId) return;
-    const input = document.getElementById('ragInput');
+    // 웰컴 입력 또는 하단 입력에서 메시지 가져오기
+    const welcomeInput = document.getElementById('welcomeInput');
+    const ragInput = document.getElementById('ragInput');
+    const isFromWelcome = !currentConvId && welcomeInput && welcomeInput.value.trim();
+    const input = isFromWelcome ? welcomeInput : ragInput;
     const msg = input.value.trim();
     if (!msg) return;
 
     input.value = '';
+
+    // 대화가 없으면 자동 생성
+    if (!currentConvId) {
+        try {
+            const cv = await (await api('/admin/rag/conversations', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: '새 대화' }),
+            })).json();
+            currentConvId = cv.id;
+        } catch (e) {
+            console.error('대화 자동 생성 실패:', e);
+            alert('대화 생성에 실패했습니다.');
+            return;
+        }
+    }
+
+    // 웰컴 화면 → 채팅 모드로 전환
+    switchToChatMode();
     setChatEnabled(false);
 
     appendMsg('user', msg);
@@ -1340,7 +2218,7 @@ async function sendRagMessage() {
         removeEl(loadingId);
         appendMsg('assistant', data.reply, data.references || []);
         showRefChunks(data.references || []);
-        loadConversations();
+        await loadConversations();
     } catch (e) {
         removeEl(loadingId);
         appendMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
@@ -1348,6 +2226,13 @@ async function sendRagMessage() {
     } finally {
         setChatEnabled(true);
     }
+}
+
+// 웰컴 화면 → 채팅 모드 전환
+function switchToChatMode() {
+    const welcome = document.getElementById('chatWelcome');
+    if (welcome) welcome.remove();
+    document.getElementById('chatInputWrap').style.display = '';
 }
 
 let _mc = 0;
@@ -1384,28 +2269,46 @@ function showTyping() {
 
 function removeEl(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
+let _lastRefs = [];
+
 function showRefChunks(refs) {
+    _lastRefs = refs || [];
     const p = document.getElementById('refChunksPanel');
     if (!refs || !refs.length) {
-        p.innerHTML = `<div class="ref-chunks-title">&#128269; 참조된 청크</div><div style="font-size:0.76rem;color:var(--text-muted);text-align:center;padding:12px 0;">참조된 내용이 없습니다</div>`;
+        p.innerHTML = `<div class="ref-chunks-title">&#128269; 참조된 문서 내용</div><div style="font-size:0.76rem;color:var(--text-muted);text-align:center;padding:12px 0;">참조된 내용이 없습니다</div>`;
         return;
     }
-    let html = '<div class="ref-chunks-title">&#128269; 참조된 청크</div>';
-    for (const r of refs) {
+    let html = `<div class="ref-chunks-title">&#128269; 참조된 문서 내용 (${refs.length}건)</div>`;
+    refs.forEach((r, i) => {
         const pct = Math.round(r.similarity * 100);
-        html += `<div class="ref-chunk-card">
-            <div class="chunk-file">&#128196; ${esc(r.filename)}</div>
-            ${esc(r.chunk_text)}
-            <div class="chunk-score"><span>유사도 ${pct}%</span><div class="score-bar"><div class="score-bar-fill" style="width:${pct}%"></div></div></div>
+        html += `<div class="ref-chunk-card" onclick="openRefPopup(${i})">
+            <span class="chunk-file">&#128196; ${esc(r.filename)}</span>
+            <span class="chunk-score">${pct}% <span class="score-bar"><span class="score-bar-fill" style="width:${pct}%"></span></span></span>
         </div>`;
-    }
+    });
     p.innerHTML = html;
 }
 
+function openRefPopup(idx) {
+    const r = _lastRefs[idx];
+    if (!r) return;
+    const pct = Math.round(r.similarity * 100);
+    document.getElementById('refPopupFilename').textContent = r.filename;
+    document.getElementById('refPopupScore').innerHTML = `유사도 ${pct}% <span class="score-bar"><span class="score-bar-fill" style="width:${pct}%"></span></span>`;
+    document.getElementById('refPopupBody').textContent = r.chunk_text;
+    document.getElementById('refPopup').classList.add('active');
+}
+
+function closeRefPopup() {
+    document.getElementById('refPopup').classList.remove('active');
+}
+
 function setChatEnabled(enabled) {
-    document.getElementById('ragInput').disabled = !enabled;
-    document.getElementById('ragSendBtn').disabled = !enabled;
-    if (enabled) document.getElementById('ragInput').focus();
+    const ragInput = document.getElementById('ragInput');
+    const ragSendBtn = document.getElementById('ragSendBtn');
+    ragInput.disabled = !enabled;
+    ragSendBtn.disabled = !enabled;
+    if (enabled) ragInput.focus();
 }
 
 // ============================================================
@@ -1421,6 +2324,653 @@ function esc(str) {
 document.getElementById('docModal').addEventListener('click', e => {
     if (e.target === document.getElementById('docModal')) closeModal();
 });
+document.getElementById('refPopup').addEventListener('click', e => {
+    if (e.target === document.getElementById('refPopup')) closeRefPopup();
+});
+
+// --- 사이드바 리사이저 ---
+(function() {
+    const resizer = document.getElementById('refResizer');
+    const docList = document.getElementById('refDocList');
+    const sidebar = docList.closest('.sidebar-ref');
+    let startY, startH;
+
+    resizer.addEventListener('mousedown', e => {
+        e.preventDefault();
+        startY = e.clientY;
+        startH = docList.offsetHeight;
+        resizer.classList.add('dragging');
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+
+    resizer.addEventListener('touchstart', e => {
+        startY = e.touches[0].clientY;
+        startH = docList.offsetHeight;
+        resizer.classList.add('dragging');
+        document.addEventListener('touchmove', onTouchMove);
+        document.addEventListener('touchend', onTouchEnd);
+    }, { passive: true });
+
+    function onMouseMove(e) { resize(e.clientY); }
+    function onTouchMove(e) { resize(e.touches[0].clientY); }
+
+    function resize(currentY) {
+        const delta = currentY - startY;
+        const sidebarH = sidebar.offsetHeight;
+        const headerH = sidebar.querySelector('.sidebar-ref-header').offsetHeight;
+        const resizerH = resizer.offsetHeight;
+        const minDoc = 60;
+        const minChunks = 60;
+        const maxDoc = sidebarH - headerH - resizerH - minChunks;
+        const newH = Math.max(minDoc, Math.min(maxDoc, startH + delta));
+        docList.style.height = newH + 'px';
+    }
+
+    function onMouseUp() {
+        resizer.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+    function onTouchEnd() {
+        resizer.classList.remove('dragging');
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+    }
+})();
+
+// ============================================================
+//  메일 작성 탭
+// ============================================================
+let mailDocuments = [];
+let mailDetectedLang = 'en';
+let mailCurrentRefs = [];
+
+// --- 문서 목록 로드 ---
+async function loadMailDocuments() {
+    try {
+        mailDocuments = await (await api('/admin/rag/documents')).json();
+        renderMailDocuments(mailDocuments);
+    } catch (e) { console.error('메일 문서 로드 실패:', e); }
+}
+
+function renderMailDocuments(docs) {
+    const c = document.getElementById('mailDocList');
+    if (!docs.length) {
+        c.innerHTML = '<div class="empty-state" style="padding:20px 10px;font-size:0.8rem"><div style="font-size:1.2rem;margin-bottom:6px;">&#128196;</div>RAG 세션용 문서가 없습니다<br><span style="font-size:0.72rem">문서 관리에서 업로드하세요</span></div>';
+        return;
+    }
+    let html = `<div class="ref-doc-item ref-doc-all"><input type="checkbox" id="mailDocAll" checked onchange="toggleAllMailDocs(this.checked)" /><label for="mailDocAll">전체 문서</label></div>`;
+    for (const d of docs) {
+        html += `<div class="ref-doc-item"><input type="checkbox" class="mail-doc-check" id="mailDoc${d.id}" value="${d.id}" checked /><label for="mailDoc${d.id}">&#128196; ${esc(d.filename)}</label></div>`;
+    }
+    c.innerHTML = html;
+}
+
+function toggleAllMailDocs(checked) {
+    document.querySelectorAll('.mail-doc-check').forEach(cb => cb.checked = checked);
+}
+
+function getMailSelectedDocIds() {
+    const ids = Array.from(document.querySelectorAll('.mail-doc-check:checked')).map(cb => parseInt(cb.value));
+    return (ids.length === mailDocuments.length || ids.length === 0) ? null : ids;
+}
+
+// --- 이력 로드 ---
+async function loadMailHistory() {
+    try {
+        const items = await (await api('/admin/mail/history')).json();
+        renderMailHistory(items);
+    } catch (e) { console.error('메일 이력 로드 실패:', e); }
+}
+
+function renderMailHistory(items) {
+    const c = document.getElementById('mailHistoryList');
+    if (!items.length) {
+        c.innerHTML = '<div class="empty-state" style="padding:20px 10px;font-size:0.8rem">저장된 이력이 없습니다</div>';
+        return;
+    }
+    const langMap = { en: 'EN', ja: 'JA', zh: 'ZH', ko: 'KO', de: 'DE', fr: 'FR', es: 'ES' };
+    let html = '';
+    for (const item of items) {
+        const date = item.created_at ? new Date(item.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        const lang = langMap[item.detected_lang] || item.detected_lang;
+        html += `<div class="mail-history-item" onclick="loadMailHistoryItem(${item.id})">
+            <div class="mail-history-title">${esc(item.incoming_email)}</div>
+            <div class="mail-history-meta">
+                <span class="mail-pane-badge badge-lang">${lang}</span>
+                <span>${date}</span>
+            </div>
+            <button class="mail-history-del" onclick="event.stopPropagation();deleteMailHistory(${item.id})" title="삭제">&#10005;</button>
+        </div>`;
+    }
+    c.innerHTML = html;
+}
+
+// --- 답장 생성 ---
+async function composeMail() {
+    const incoming = document.getElementById('mailIncoming').value.trim();
+    if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
+
+    const tone = document.getElementById('mailTone').value;
+    const docIds = getMailSelectedDocIds();
+
+    showMailLoading('수신 메일을 분석하고 답장을 생성하고 있습니다...');
+
+    try {
+        const data = await (await api('/admin/mail/compose', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ incoming_email: incoming, document_ids: docIds, tone: tone }),
+        })).json();
+
+        mailDetectedLang = data.detected_lang || 'en';
+        mailCurrentRefs = data.references || [];
+
+        // 분석 결과 표시
+        const analysisEl = document.getElementById('mailAnalysis');
+        if (data.analysis) {
+            document.getElementById('mailAnalysisText').textContent = data.analysis;
+            analysisEl.classList.add('visible');
+        } else {
+            analysisEl.classList.remove('visible');
+        }
+
+        // 한국어 초안
+        document.getElementById('mailKoreanDraft').value = data.korean_draft || '';
+
+        // 번역 대상 언어 자동 설정
+        const langSelect = document.getElementById('mailTargetLang');
+        if (mailDetectedLang && mailDetectedLang !== 'ko') {
+            langSelect.value = mailDetectedLang;
+        }
+        updateTargetLangBadge();
+
+        // 번역본 초기화
+        document.getElementById('mailTranslated').value = '';
+
+        // 버튼 활성화
+        document.getElementById('mailTranslateBtn').disabled = false;
+        document.getElementById('mailSaveBtn').disabled = false;
+
+    } catch (e) {
+        console.error('메일 생성 오류:', e);
+        alert('메일 생성에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+        hideMailLoading();
+    }
+}
+
+// --- 번역 ---
+async function translateMail() {
+    const koreanText = document.getElementById('mailKoreanDraft').value.trim();
+    if (!koreanText) { alert('번역할 한국어 초안이 없습니다.'); return; }
+
+    const targetLang = document.getElementById('mailTargetLang').value;
+
+    showMailLoading('번역 중...');
+
+    try {
+        const data = await (await api('/admin/mail/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ korean_text: koreanText, target_lang: targetLang }),
+        })).json();
+
+        document.getElementById('mailTranslated').value = data.translated || '';
+        document.getElementById('mailRetranslateBtn').disabled = false;
+        updateTargetLangBadge();
+
+    } catch (e) {
+        console.error('번역 오류:', e);
+        alert('번역에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+        hideMailLoading();
+    }
+}
+
+// --- 저장 ---
+async function saveMailComposition() {
+    const incoming = document.getElementById('mailIncoming').value.trim();
+    const korean = document.getElementById('mailKoreanDraft').value.trim();
+    const translated = document.getElementById('mailTranslated').value.trim();
+
+    if (!incoming || !korean) { alert('수신 메일과 한국어 초안이 필요합니다.'); return; }
+
+    try {
+        const saveResp = await (await api('/admin/mail/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                incoming_email: incoming,
+                detected_lang: mailDetectedLang,
+                tone: document.getElementById('mailTone').value,
+                korean_draft: korean,
+                translated_draft: translated,
+                document_ids: getMailSelectedDocIds(),
+                refs: mailCurrentRefs,
+            }),
+        })).json();
+
+        // 수신 메일이 선택된 상태면 composition_id 연결
+        if (currentInboxId && saveResp.id) {
+            try {
+                await api(`/admin/mail/gmail/inbox/${currentInboxId}/link?composition_id=${saveResp.id}`, { method: 'POST' });
+                document.getElementById('mailSendBtn').disabled = false;
+                loadInboxEmails();
+            } catch (e) { console.error('초안 연결 실패:', e); }
+        }
+
+        alert('저장되었습니다.');
+        loadMailHistory();
+    } catch (e) {
+        console.error('저장 오류:', e);
+        alert('저장에 실패했습니다.');
+    }
+}
+
+// --- 이력 불러오기 ---
+async function loadMailHistoryItem(id) {
+    try {
+        const data = await (await api(`/admin/mail/history/${id}`)).json();
+
+        document.getElementById('mailIncoming').value = data.incoming_email || '';
+        document.getElementById('mailKoreanDraft').value = data.korean_draft || '';
+        document.getElementById('mailTranslated').value = data.translated_draft || '';
+        document.getElementById('mailTone').value = data.tone || 'formal';
+
+        mailDetectedLang = data.detected_lang || 'en';
+        mailCurrentRefs = data.refs || [];
+
+        if (data.detected_lang && data.detected_lang !== 'ko') {
+            document.getElementById('mailTargetLang').value = data.detected_lang;
+        }
+        updateTargetLangBadge();
+
+        // 분석 숨기기 (이력에서는 분석 없음)
+        document.getElementById('mailAnalysis').classList.remove('visible');
+
+        // 버튼 활성화
+        document.getElementById('mailTranslateBtn').disabled = false;
+        document.getElementById('mailRetranslateBtn').disabled = !(data.translated_draft);
+        document.getElementById('mailSaveBtn').disabled = false;
+
+        // 활성 표시
+        document.querySelectorAll('.mail-history-item').forEach(el => el.classList.remove('active'));
+        const clicked = document.querySelector(`.mail-history-item[onclick*="loadMailHistoryItem(${id})"]`);
+        if (clicked) clicked.classList.add('active');
+
+    } catch (e) {
+        console.error('이력 로드 실패:', e);
+        alert('이력을 불러오는데 실패했습니다.');
+    }
+}
+
+// --- 이력 삭제 ---
+async function deleteMailHistory(id) {
+    if (!confirm('이 이력을 삭제하시겠습니까?')) return;
+    try {
+        await api(`/admin/mail/history/${id}`, { method: 'DELETE' });
+        loadMailHistory();
+    } catch (e) { console.error('이력 삭제 실패:', e); }
+}
+
+// --- 복사 ---
+function copyMailDraft(type) {
+    const text = type === 'ko'
+        ? document.getElementById('mailKoreanDraft').value
+        : document.getElementById('mailTranslated').value;
+    if (!text) { alert('복사할 내용이 없습니다.'); return; }
+    navigator.clipboard.writeText(text).then(() => {
+        const label = type === 'ko' ? '한국어 초안' : '번역본';
+        alert(`${label}이 클립보드에 복사되었습니다.`);
+    }).catch(() => {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('클립보드에 복사되었습니다.');
+    });
+}
+
+// --- 언어 뱃지 업데이트 ---
+function updateTargetLangBadge() {
+    const langSelect = document.getElementById('mailTargetLang');
+    const badge = document.getElementById('mailTargetLangBadge');
+    const langMap = { en: 'EN', ja: 'JA', zh: 'ZH', ko: 'KO', de: 'DE', fr: 'FR', es: 'ES' };
+    badge.textContent = langMap[langSelect.value] || langSelect.value.toUpperCase();
+}
+
+// 언어 선택 변경 시 뱃지 업데이트
+document.getElementById('mailTargetLang').addEventListener('change', updateTargetLangBadge);
+
+// --- 로딩 표시 ---
+function showMailLoading(text) {
+    document.getElementById('mailLoadingText').textContent = text || '처리 중...';
+    document.getElementById('mailLoading').classList.add('active');
+    document.getElementById('mailComposeBtn').disabled = true;
+    document.getElementById('mailTranslateBtn').disabled = true;
+}
+
+function hideMailLoading() {
+    document.getElementById('mailLoading').classList.remove('active');
+    document.getElementById('mailComposeBtn').disabled = false;
+}
+
+// ============================================================
+//  Gmail 연동
+// ============================================================
+let gmailConnected = false;
+let currentInboxId = null;  // 현재 선택된 수신 메일 ID
+
+// --- Gmail 상태 로드 ---
+async function loadGmailStatus() {
+    try {
+        const data = await (await api('/admin/mail/gmail/status')).json();
+        gmailConnected = data.connected;
+        updateGmailUI(data);
+    } catch (e) {
+        console.error('Gmail 상태 로드 실패:', e);
+    }
+}
+
+function updateGmailUI(data) {
+    const dot = document.getElementById('gmailDot');
+    const statusText = document.getElementById('gmailStatusText');
+    const disconnectBtn = document.getElementById('gmailDisconnectBtn');
+    const fetchBtn = document.getElementById('gmailFetchBtn');
+    const autoSettings = document.getElementById('gmailAutoSettings');
+    const emailInput = document.getElementById('gmailEmail');
+    const pwInput = document.getElementById('gmailAppPassword');
+    const sendBtn = document.getElementById('mailSendBtn');
+
+    if (data.connected) {
+        dot.className = 'gmail-status-dot connected';
+        statusText.textContent = data.email;
+        disconnectBtn.style.display = '';
+        fetchBtn.style.display = '';
+        autoSettings.style.display = '';
+        emailInput.value = data.email;
+        emailInput.disabled = true;
+        pwInput.style.display = 'none';
+        sendBtn.style.display = '';
+
+        // 자동 체크 설정
+        document.getElementById('gmailCheckTime').value = data.check_time || '09:00';
+        const toggle = document.getElementById('gmailAutoToggle');
+        if (data.auto_reply_enabled) {
+            toggle.classList.add('active');
+        } else {
+            toggle.classList.remove('active');
+        }
+
+        // 마지막 체크 시간
+        if (data.last_checked_at) {
+            const d = new Date(data.last_checked_at);
+            document.getElementById('gmailLastChecked').textContent =
+                '마지막: ' + d.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        loadInboxEmails();
+    } else {
+        dot.className = 'gmail-status-dot disconnected';
+        statusText.textContent = '연결 안됨';
+        disconnectBtn.style.display = 'none';
+        fetchBtn.style.display = 'none';
+        autoSettings.style.display = 'none';
+        emailInput.disabled = false;
+        emailInput.value = '';
+        pwInput.style.display = '';
+        pwInput.value = '';
+        sendBtn.style.display = 'none';
+    }
+}
+
+// --- Gmail 연결 ---
+async function gmailConnect() {
+    const email = document.getElementById('gmailEmail').value.trim();
+    const pw = document.getElementById('gmailAppPassword').value.trim();
+    if (!email || !pw) { alert('이메일과 앱 비밀번호를 입력하세요.'); return; }
+
+    try {
+        const resp = await api('/admin/mail/gmail/connect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, app_password: pw }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) { alert(data.detail || '연결 실패'); return; }
+        alert('Gmail 연결 성공!');
+        loadGmailStatus();
+    } catch (e) {
+        alert('Gmail 연결 오류: ' + e.message);
+    }
+}
+
+// --- Gmail 연결 해제 ---
+async function gmailDisconnect() {
+    if (!confirm('Gmail 연결을 해제하시겠습니까?')) return;
+    try {
+        await api('/admin/mail/gmail/disconnect', { method: 'POST' });
+        gmailConnected = false;
+        currentInboxId = null;
+        loadGmailStatus();
+    } catch (e) { alert('연결 해제 실패: ' + e.message); }
+}
+
+// --- 수동 메일 가져오기 ---
+async function gmailFetch() {
+    showMailLoading('메일을 가져오는 중...');
+    try {
+        const data = await (await api('/admin/mail/gmail/fetch', { method: 'POST' })).json();
+        alert(data.message);
+        loadInboxEmails();
+        loadGmailStatus();
+    } catch (e) {
+        alert('메일 가져오기 실패: ' + e.message);
+    } finally {
+        hideMailLoading();
+    }
+}
+
+// --- 자동 체크 토글 ---
+async function toggleGmailAuto() {
+    const toggle = document.getElementById('gmailAutoToggle');
+    const newState = !toggle.classList.contains('active');
+    const checkTime = document.getElementById('gmailCheckTime').value;
+
+    try {
+        await api('/admin/mail/gmail/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ check_time: checkTime, auto_reply_enabled: newState }),
+        });
+        toggle.classList.toggle('active', newState);
+    } catch (e) { alert('설정 저장 실패: ' + e.message); }
+}
+
+// 체크 시간 변경 시 자동 저장
+document.getElementById('gmailCheckTime').addEventListener('change', async function () {
+    const toggle = document.getElementById('gmailAutoToggle');
+    const autoEnabled = toggle.classList.contains('active');
+    if (!gmailConnected) return;
+    try {
+        await api('/admin/mail/gmail/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ check_time: this.value, auto_reply_enabled: autoEnabled }),
+        });
+    } catch (e) { console.error('설정 저장 실패:', e); }
+});
+
+// --- 수신함 로드 ---
+async function loadInboxEmails() {
+    if (!gmailConnected) return;
+    try {
+        const items = await (await api('/admin/mail/gmail/inbox')).json();
+        renderInboxList(items);
+    } catch (e) { console.error('수신함 로드 실패:', e); }
+}
+
+function renderInboxList(items) {
+    const c = document.getElementById('inboxList');
+    const empty = document.getElementById('inboxEmpty');
+    const countBadge = document.getElementById('inboxCount');
+
+    if (!items.length) {
+        c.innerHTML = '';
+        empty.style.display = '';
+        countBadge.style.display = 'none';
+        return;
+    }
+    empty.style.display = 'none';
+
+    // new 카운트
+    const newCount = items.filter(i => i.status === 'new').length;
+    if (newCount > 0) {
+        countBadge.textContent = newCount;
+        countBadge.style.display = '';
+    } else {
+        countBadge.style.display = 'none';
+    }
+
+    const statusMap = {
+        'new': { label: 'NEW', cls: 'badge-new' },
+        'draft_ready': { label: '초안', cls: 'badge-draft-ready' },
+        'replied': { label: '답장', cls: 'badge-replied' },
+        'ignored': { label: '무시', cls: 'badge-ignored' },
+    };
+
+    let html = '';
+    for (const item of items) {
+        const st = statusMap[item.status] || { label: item.status, cls: '' };
+        const date = item.received_at ? new Date(item.received_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        html += `<div class="inbox-item${currentInboxId === item.id ? ' active' : ''}" onclick="loadInboxItem(${item.id})">
+            <div class="inbox-item-from">${esc(item.from_name || item.from_addr)}</div>
+            <div class="inbox-item-subject">${esc(item.subject || '(제목 없음)')}</div>
+            <div class="inbox-item-meta">
+                <span class="badge-status ${st.cls}">${st.label}</span>
+                <span>${date}</span>
+            </div>
+        </div>`;
+    }
+    c.innerHTML = html;
+}
+
+// --- 수신 메일 클릭 → 본문 채우기 ---
+async function loadInboxItem(id) {
+    try {
+        const data = await (await api(`/admin/mail/gmail/inbox/${id}`)).json();
+        currentInboxId = id;
+
+        // 수신 메일 textarea에 채우기
+        const bodyText = `From: ${data.from_name || ''} <${data.from_addr}>\nSubject: ${data.subject || ''}\n\n${data.body || ''}`;
+        document.getElementById('mailIncoming').value = bodyText;
+
+        // 초안이 있으면 채우기
+        if (data.draft) {
+            document.getElementById('mailKoreanDraft').value = data.draft.korean_draft || '';
+            document.getElementById('mailTranslated').value = data.draft.translated_draft || '';
+            mailDetectedLang = data.draft.detected_lang || 'en';
+            if (data.draft.detected_lang && data.draft.detected_lang !== 'ko') {
+                document.getElementById('mailTargetLang').value = data.draft.detected_lang;
+            }
+            updateTargetLangBadge();
+            document.getElementById('mailTranslateBtn').disabled = false;
+            document.getElementById('mailRetranslateBtn').disabled = !(data.draft.translated_draft);
+            document.getElementById('mailSaveBtn').disabled = false;
+        } else {
+            document.getElementById('mailKoreanDraft').value = '';
+            document.getElementById('mailTranslated').value = '';
+        }
+
+        // 분석 숨기기
+        document.getElementById('mailAnalysis').classList.remove('visible');
+
+        // 발송 버튼 활성화 (번역본이 있을 때)
+        const sendBtn = document.getElementById('mailSendBtn');
+        if (data.draft && (data.draft.translated_draft || data.draft.korean_draft)) {
+            sendBtn.disabled = false;
+        } else {
+            sendBtn.disabled = true;
+        }
+
+        // 활성 표시
+        document.querySelectorAll('.inbox-item').forEach(el => el.classList.remove('active'));
+        const clicked = document.querySelector(`.inbox-item[onclick*="loadInboxItem(${id})"]`);
+        if (clicked) clicked.classList.add('active');
+
+    } catch (e) {
+        console.error('수신 메일 로드 실패:', e);
+        alert('수신 메일을 불러오는데 실패했습니다.');
+    }
+}
+
+// --- 답장 발송 ---
+async function sendMailReply() {
+    if (!currentInboxId) { alert('발송할 수신 메일을 선택하세요.'); return; }
+
+    const translated = document.getElementById('mailTranslated').value.trim();
+    const korean = document.getElementById('mailKoreanDraft').value.trim();
+    if (!translated && !korean) { alert('발송할 답장 내용이 없습니다.'); return; }
+
+    if (!confirm('이 답장을 발송하시겠습니까?')) return;
+
+    // 먼저 저장 (composition_id 연결을 위해)
+    const incoming = document.getElementById('mailIncoming').value.trim();
+    if (incoming && korean) {
+        try {
+            const saveResp = await (await api('/admin/mail/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    incoming_email: incoming,
+                    detected_lang: mailDetectedLang,
+                    tone: document.getElementById('mailTone').value,
+                    korean_draft: korean,
+                    translated_draft: translated,
+                    document_ids: getMailSelectedDocIds(),
+                    refs: mailCurrentRefs,
+                }),
+            })).json();
+
+            // inbox_emails에 composition_id 연결
+            await api(`/admin/mail/gmail/inbox/${currentInboxId}/link?composition_id=${saveResp.id}`, {
+                method: 'POST',
+            });
+        } catch (e) {
+            console.error('저장/연결 오류:', e);
+        }
+    }
+
+    showMailLoading('메일을 발송하는 중...');
+    try {
+        const resp = await api(`/admin/mail/gmail/send/${currentInboxId}`, { method: 'POST' });
+        const data = await resp.json();
+        if (!resp.ok) { alert(data.detail || '발송 실패'); return; }
+        alert('메일이 발송되었습니다!');
+        loadInboxEmails();
+        loadMailHistory();
+    } catch (e) {
+        alert('메일 발송 오류: ' + e.message);
+    } finally {
+        hideMailLoading();
+    }
+}
+
+// --- 사이드바 탭 전환 ---
+function switchMailSidebarTab(tab) {
+    document.getElementById('mailSideTabInbox').classList.toggle('active', tab === 'inbox');
+    document.getElementById('mailSideTabDocs').classList.toggle('active', tab === 'docs');
+    document.getElementById('mailSideTabHistory').classList.toggle('active', tab === 'history');
+    document.getElementById('mailSidePanelInbox').style.display = tab === 'inbox' ? '' : 'none';
+    document.getElementById('mailSidePanelDocs').style.display = tab === 'docs' ? '' : 'none';
+    document.getElementById('mailSidePanelHistory').style.display = tab === 'history' ? '' : 'none';
+}
+
 </script>
 </body>
 </html>
