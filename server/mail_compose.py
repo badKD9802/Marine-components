@@ -719,7 +719,7 @@ def _translate_text(text: str, target_lang: str, source_lang: str = "ko") -> str
     try:
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=[{"role": "user", "parts": [{"text": korean_text}]}],
+            contents=[{"role": "user", "parts": [{"text": text}]}],
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt,
                 temperature=0.3,
