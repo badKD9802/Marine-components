@@ -27,6 +27,11 @@ class TranslateRequest(BaseModel):
     target_lang: str = "en"
 
 
+class TranslateIncomingRequest(BaseModel):
+    foreign_text: str
+    source_lang: str = "auto"
+
+
 class SaveRequest(BaseModel):
     incoming_email: str
     detected_lang: str = "en"
@@ -79,6 +84,18 @@ async def compose_mail(req: ComposeRequest, _=Depends(verify_token)):
 async def translate_mail(req: TranslateRequest, _=Depends(verify_token)):
     translated = _translate_text(req.korean_text, req.target_lang)
     return {"translated": translated, "target_lang": req.target_lang}
+
+
+# --- 수신 메일 한국어 번역 ---
+
+@router.post("/translate-incoming")
+async def translate_incoming(req: TranslateIncomingRequest, _=Depends(verify_token)):
+    translated = _translate_text(
+        req.foreign_text,
+        target_lang="ko",
+        source_lang=req.source_lang,
+    )
+    return {"translated_korean": translated}
 
 
 # --- 이력 저장 ---
@@ -650,8 +667,8 @@ async def gmail_auto_check_loop():
 #  AI 함수들
 # ============================================================
 
-def _translate_text(korean_text: str, target_lang: str) -> str:
-    """한국어 텍스트를 대상 언어로 번역한다."""
+def _translate_text(text: str, target_lang: str, source_lang: str = "ko") -> str:
+    """텍스트를 대상 언어로 번역한다. source_lang으로 원문 언어를 지정."""
     from decouple import config
     import google.genai as genai
     from google.genai import types
@@ -669,10 +686,25 @@ def _translate_text(korean_text: str, target_lang: str) -> str:
         "fr": "French (Français)",
         "es": "Spanish (Español)",
     }
-    lang_name = lang_names.get(target_lang, target_lang)
+    target_name = lang_names.get(target_lang, target_lang)
+    source_name = lang_names.get(source_lang, source_lang)
 
-    system_prompt = f"""당신은 전문 비즈니스 번역가입니다.
-아래 한국어 메일을 {lang_name}로 번역하세요.
+    # 한국어→외국어 vs 외국어→한국어
+    if target_lang == "ko":
+        source_desc = f"{source_name}" if source_lang != "auto" else "외국어(자동 감지)"
+        system_prompt = f"""당신은 전문 비즈니스 번역가입니다.
+아래 {source_desc} 메일을 한국어로 번역하세요.
+
+## 규칙
+- 비즈니스 메일에 적합한 격식체 사용
+- 기술 용어(부품명, 사양 등)는 해당 업계 표준 한국어 표현 사용
+- 회사명 "Young Marine Tech"는 "영마린테크"로 표기
+- "[To be confirmed]" 같은 메모는 "[확인 필요]"로 변환
+- 번역문만 출력 (설명이나 메모 없이)
+"""
+    else:
+        system_prompt = f"""당신은 전문 비즈니스 번역가입니다.
+아래 한국어 메일을 {target_name}로 번역하세요.
 
 ## 규칙
 - 비즈니스 메일에 적합한 격식체 사용

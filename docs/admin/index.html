@@ -999,6 +999,63 @@
         .mail-incoming textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,153,204,0.08); }
         .mail-incoming textarea::placeholder { color: var(--text-muted); }
 
+        /* 수신 메일 분할 번역 뷰 */
+        .mail-incoming-split {
+            display: none;
+            gap: 0;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            min-height: 120px;
+            max-height: 240px;
+        }
+        .mail-incoming-split.visible {
+            display: flex;
+        }
+        .mail-incoming-split .incoming-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .mail-incoming-split .incoming-pane + .incoming-pane {
+            border-left: 1px solid var(--border-light);
+        }
+        .mail-incoming-split .incoming-pane-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            background: var(--bg-gray);
+            border-bottom: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+        .mail-incoming-split .incoming-pane-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mail-incoming-split textarea {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 10px 12px;
+            font-size: 0.83rem;
+            font-family: inherit;
+            line-height: 1.6;
+            color: var(--text-regular);
+            resize: none;
+            outline: none;
+            background: var(--bg-white);
+        }
+        .mail-incoming-split textarea:read-only {
+            background: var(--bg-gray);
+            color: var(--text-light);
+        }
+
         /* 분석 결과 */
         .mail-analysis {
             display: none;
@@ -1374,6 +1431,8 @@
             .mail-layout { flex-direction: column; height: auto; min-height: calc(100vh - 105px); }
             .mail-editor { flex-direction: column; }
             .mail-pane + .mail-pane { border-left: none; border-top: 1px solid var(--border-light); }
+            .mail-incoming-split { flex-direction: column; max-height: 360px; }
+            .mail-incoming-split .incoming-pane + .incoming-pane { border-left: none; border-top: 1px solid var(--border-light); }
         }
     </style>
 </head>
@@ -1547,10 +1606,26 @@
                                     <option value="friendly">친근체</option>
                                     <option value="concise">간결체</option>
                                 </select>
+                                <button class="btn btn-primary btn-sm" id="mailTranslateIncomingBtn" onclick="translateIncoming()">&#127472;&#127479; 번역</button>
                                 <button class="btn btn-accent btn-sm" id="mailComposeBtn" onclick="composeMail()">&#9998; 답장 생성</button>
                             </div>
                         </div>
                         <textarea id="mailIncoming" placeholder="수신된 견적/문의 메일 내용을 붙여넣으세요...&#10;&#10;예: Dear Young Marine Tech, We would like to request a quotation for the following spare parts..."></textarea>
+                        <!-- 수신 메일 분할 번역 뷰 (초기 숨김) -->
+                        <div class="mail-incoming-split" id="mailIncomingSplit">
+                            <div class="incoming-pane">
+                                <div class="incoming-pane-header">
+                                    <span class="incoming-pane-title">&#128196; 원문 <span class="mail-pane-badge badge-lang" id="incomingSrcLangBadge">EN</span></span>
+                                </div>
+                                <textarea id="mailIncomingOriginal" placeholder="원문"></textarea>
+                            </div>
+                            <div class="incoming-pane">
+                                <div class="incoming-pane-header">
+                                    <span class="incoming-pane-title">&#127472;&#127479; 한국어 번역 <span class="mail-pane-badge badge-ko">KO</span></span>
+                                </div>
+                                <textarea id="mailIncomingTranslated" readonly placeholder="번역 결과가 여기에 표시됩니다."></textarea>
+                            </div>
+                        </div>
                         <div class="mail-analysis" id="mailAnalysis">
                             <div class="mail-analysis-label">&#128269; 메일 분석</div>
                             <div id="mailAnalysisText"></div>
@@ -2447,6 +2522,50 @@ function renderMailHistory(items) {
     c.innerHTML = html;
 }
 
+// --- 수신 메일 한국어 번역 ---
+async function translateIncoming() {
+    const incoming = document.getElementById('mailIncoming').value.trim();
+    if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
+
+    showMailLoading('수신 메일을 한국어로 번역하고 있습니다...');
+
+    try {
+        const data = await (await api('/admin/mail/translate-incoming', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foreign_text: incoming, source_lang: 'auto' }),
+        })).json();
+
+        const translated = data.translated_korean || '';
+
+        // 단일 textarea 숨기고 분할 뷰 표시
+        document.getElementById('mailIncoming').style.display = 'none';
+        const splitView = document.getElementById('mailIncomingSplit');
+        splitView.classList.add('visible');
+
+        // 원문 채우기
+        document.getElementById('mailIncomingOriginal').value = incoming;
+        document.getElementById('mailIncomingTranslated').value = translated;
+
+        // 원문 편집 시 단일 textarea도 동기화
+        document.getElementById('mailIncomingOriginal').oninput = function() {
+            document.getElementById('mailIncoming').value = this.value;
+        };
+
+        // 소스 언어 배지 (감지된 언어가 있으면 표시)
+        const srcBadge = document.getElementById('incomingSrcLangBadge');
+        if (mailDetectedLang && mailDetectedLang !== 'ko') {
+            srcBadge.textContent = mailDetectedLang.toUpperCase();
+        }
+
+    } catch (e) {
+        console.error('수신 메일 번역 오류:', e);
+        alert('번역에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+        hideMailLoading();
+    }
+}
+
 // --- 답장 생성 ---
 async function composeMail() {
     const incoming = document.getElementById('mailIncoming').value.trim();
@@ -2587,8 +2706,10 @@ async function loadMailHistoryItem(id) {
         }
         updateTargetLangBadge();
 
-        // 분석 숨기기 (이력에서는 분석 없음)
+        // 분석 숨기기 + 번역 분할 뷰 리셋 (이력에서는 분석 없음)
         document.getElementById('mailAnalysis').classList.remove('visible');
+        document.getElementById('mailIncomingSplit').classList.remove('visible');
+        document.getElementById('mailIncoming').style.display = '';
 
         // 버튼 활성화
         document.getElementById('mailTranslateBtn').disabled = false;
@@ -2887,8 +3008,10 @@ async function loadInboxItem(id) {
             document.getElementById('mailTranslated').value = '';
         }
 
-        // 분석 숨기기
+        // 분석 숨기기 + 번역 분할 뷰 리셋
         document.getElementById('mailAnalysis').classList.remove('visible');
+        document.getElementById('mailIncomingSplit').classList.remove('visible');
+        document.getElementById('mailIncoming').style.display = '';
 
         // 발송 버튼 활성화 (번역본이 있을 때)
         const sendBtn = document.getElementById('mailSendBtn');
