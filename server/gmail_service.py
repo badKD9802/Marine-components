@@ -16,8 +16,14 @@ SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 
 
+def _clean_password(app_password: str) -> str:
+    """앱 비밀번호에서 공백 제거 (Google은 'abcd efgh ijkl mnop' 형태로 표시)."""
+    return app_password.replace(" ", "")
+
+
 def test_connection(addr: str, app_password: str) -> bool:
     """IMAP 로그인 테스트. 성공하면 True, 실패하면 예외 발생."""
+    app_password = _clean_password(app_password)
     imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
     try:
         imap.login(addr, app_password)
@@ -83,6 +89,7 @@ def fetch_new_emails(addr: str, app_password: str, since_date: datetime | None =
     Returns:
         list of dict with keys: uid, from_addr, from_name, subject, body, received_at
     """
+    app_password = _clean_password(app_password)
     imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
     imap.login(addr, app_password)
     try:
@@ -155,6 +162,7 @@ def fetch_new_emails(addr: str, app_password: str, since_date: datetime | None =
 
 def send_email(addr: str, app_password: str, to: str, subject: str, body: str, reply_to_subject: str | None = None) -> bool:
     """SMTP로 메일을 발송한다."""
+    app_password = _clean_password(app_password)
     msg = MIMEMultipart("alternative")
     msg["From"] = addr
     msg["To"] = to

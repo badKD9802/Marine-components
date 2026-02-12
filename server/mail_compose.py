@@ -428,33 +428,33 @@ async def gmail_inbox_detail(inbox_id: int, _=Depends(verify_token)):
         raise HTTPException(status_code=500, detail="DB 연결 없음")
     async with db.vector_pool.acquire() as conn:
         row = await conn.fetchrow("SELECT * FROM inbox_emails WHERE id = $1", inbox_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="메일을 찾을 수 없습니다")
+        if not row:
+            raise HTTPException(status_code=404, detail="메일을 찾을 수 없습니다")
 
-    result = {
-        "id": row["id"],
-        "from_addr": row["from_addr"],
-        "from_name": row["from_name"],
-        "subject": row["subject"],
-        "body": row["body"],
-        "received_at": row["received_at"].isoformat() if row["received_at"] else None,
-        "status": row["status"],
-        "composition_id": row["composition_id"],
-    }
+        result = {
+            "id": row["id"],
+            "from_addr": row["from_addr"],
+            "from_name": row["from_name"],
+            "subject": row["subject"],
+            "body": row["body"],
+            "received_at": row["received_at"].isoformat() if row["received_at"] else None,
+            "status": row["status"],
+            "composition_id": row["composition_id"],
+        }
 
-    # 연결된 초안이 있으면 포함
-    if row["composition_id"]:
-        comp = await conn.fetchrow(
-            "SELECT korean_draft, translated_draft, detected_lang, tone FROM mail_compositions WHERE id = $1",
-            row["composition_id"],
-        )
-        if comp:
-            result["draft"] = {
-                "korean_draft": comp["korean_draft"],
-                "translated_draft": comp["translated_draft"],
-                "detected_lang": comp["detected_lang"],
-                "tone": comp["tone"],
-            }
+        # 연결된 초안이 있으면 포함
+        if row["composition_id"]:
+            comp = await conn.fetchrow(
+                "SELECT korean_draft, translated_draft, detected_lang, tone FROM mail_compositions WHERE id = $1",
+                row["composition_id"],
+            )
+            if comp:
+                result["draft"] = {
+                    "korean_draft": comp["korean_draft"],
+                    "translated_draft": comp["translated_draft"],
+                    "detected_lang": comp["detected_lang"],
+                    "tone": comp["tone"],
+                }
     return result
 
 
