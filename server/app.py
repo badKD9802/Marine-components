@@ -13,7 +13,7 @@ load_dotenv()
 
 from db import init_db, close_db, init_vector_db, close_vector_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
 from admin import router as admin_router
-from rag_chat import router as rag_chat_router
+from rag_chat import router as rag_chat_router, cleanup_old_conversations
 from rag import search_similar_chunks
 
 
@@ -22,6 +22,7 @@ from rag import search_similar_chunks
 async def lifespan(app):
     await init_db()
     await init_vector_db()
+    await cleanup_old_conversations()
     yield
     await close_vector_db()
     await close_db()

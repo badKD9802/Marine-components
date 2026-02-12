@@ -132,9 +132,23 @@ async def create_vector_tables():
             CREATE TABLE IF NOT EXISTS rag_conversations (
                 id          SERIAL PRIMARY KEY,
                 title       TEXT NOT NULL DEFAULT '새 대화',
+                saved       BOOLEAN NOT NULL DEFAULT FALSE,
                 created_at  TIMESTAMPTZ DEFAULT NOW(),
                 updated_at  TIMESTAMPTZ DEFAULT NOW()
             );
+        """)
+
+        # 기존 rag_conversations에 saved 컬럼이 없으면 추가
+        await conn.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'rag_conversations' AND column_name = 'saved'
+                ) THEN
+                    ALTER TABLE rag_conversations ADD COLUMN saved BOOLEAN NOT NULL DEFAULT FALSE;
+                END IF;
+            END $$;
         """)
 
         # RAG 대화 메시지 테이블

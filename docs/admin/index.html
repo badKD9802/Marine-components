@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영마린테크 관리자</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #003366;
             --primary-dark: #001f3f;
             --primary-light: #e6f2ff;
             --accent: #0099cc;
+            --accent-light: #00b8e6;
             --success: #28a745;
             --warning: #ff9800;
             --error: #dc3545;
@@ -22,7 +23,11 @@
             --bg-gray: #f8f9fa;
             --bg-gray-100: #f1f3f5;
             --border: #e9ecef;
-            --dark-navy: #1a2a3a;
+            --border-light: #f0f0f0;
+            --gradient: linear-gradient(135deg, #003366 0%, #0099cc 100%);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -34,16 +39,19 @@
             min-height: 100vh;
         }
 
-        /* 헤더 */
+        /* ===== 헤더 ===== */
         .header {
-            background: var(--primary);
+            background: var(--gradient);
             color: white;
-            padding: 16px 24px;
+            padding: 14px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 8px rgba(0,51,102,0.3);
+            position: relative;
+            z-index: 10;
         }
-        .header h1 { font-size: 1.25rem; font-weight: 600; }
+        .header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.3px; }
         .header .logout-btn {
             background: rgba(255,255,255,0.15);
             border: 1px solid rgba(255,255,255,0.3);
@@ -51,159 +59,146 @@
             padding: 6px 16px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
         }
         .header .logout-btn:hover { background: rgba(255,255,255,0.25); }
 
-        /* 로그인 */
+        /* ===== 로그인 ===== */
         .login-container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
         }
         .login-box {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 48px 40px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
             width: 100%;
             max-width: 400px;
             text-align: center;
         }
-        .login-box h1 {
-            font-size: 1.5rem;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-        .login-box p {
-            color: var(--text-light);
-            font-size: 0.875rem;
-            margin-bottom: 32px;
-        }
+        .login-box h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 6px; font-weight: 700; }
+        .login-box p { color: var(--text-light); font-size: 0.875rem; margin-bottom: 32px; }
         .login-box input {
             width: 100%;
             padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
             margin-bottom: 16px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .login-box input:focus { border-color: var(--accent); }
+        .login-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,153,204,0.1); }
         .login-box .error { color: var(--error); font-size: 0.8rem; margin-bottom: 12px; display: none; }
 
+        /* ===== 버튼 ===== */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 10px 24px;
+            padding: 10px 22px;
             border: none;
             border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s, opacity 0.2s;
+            transition: all 0.2s;
+            font-family: inherit;
         }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-danger { background: var(--error); color: white; font-size: 0.8rem; padding: 6px 12px; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-accent { background: var(--gradient); color: white; }
+        .btn-accent:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-danger { background: var(--error); color: white; font-size: 0.78rem; padding: 5px 12px; border-radius: 6px; }
         .btn-danger:hover { background: #c82333; }
-        .btn-sm { font-size: 0.8rem; padding: 6px 14px; }
+        .btn-ghost { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--bg-gray); }
+        .btn-sm { font-size: 0.8rem; padding: 7px 16px; }
 
-        /* 대시보드 */
+        /* ===== 대시보드 ===== */
         .dashboard { display: none; }
 
-        /* 탭 네비게이션 */
+        /* ===== 탭 네비게이션 ===== */
         .tab-nav {
             display: flex;
             background: white;
-            border-bottom: 2px solid var(--border);
+            border-bottom: 1px solid var(--border);
             padding: 0 24px;
         }
         .tab-nav button {
             background: none;
             border: none;
-            padding: 14px 24px;
-            font-size: 0.95rem;
+            padding: 14px 28px;
+            font-size: 0.9rem;
             font-weight: 500;
-            color: var(--text-light);
+            color: var(--text-muted);
             cursor: pointer;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-            transition: color 0.2s, border-color 0.2s;
+            border-bottom: 2.5px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+            font-family: inherit;
         }
-        .tab-nav button.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
+        .tab-nav button.active { color: var(--primary); border-bottom-color: var(--accent); }
         .tab-nav button:hover { color: var(--primary); }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
         .content { max-width: 960px; margin: 0 auto; padding: 24px; }
 
-        /* 업로드 영역 */
-        .upload-section {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
+        /* ===== 업로드 영역 ===== */
+        .upload-section { display: flex; gap: 16px; margin-bottom: 24px; }
         .upload-card {
             flex: 1;
             background: white;
             border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 30px 20px;
+            border-radius: 14px;
+            padding: 28px 20px;
             text-align: center;
-            transition: border-color 0.2s, background 0.2s;
+            transition: all 0.25s;
             cursor: pointer;
         }
-        .upload-card.dragover {
-            border-color: var(--accent);
-            background: var(--primary-light);
-        }
+        .upload-card:hover { border-color: var(--accent); background: rgba(0,153,204,0.02); }
+        .upload-card.dragover { border-color: var(--accent); background: var(--primary-light); }
         .upload-card .icon { font-size: 2rem; margin-bottom: 8px; }
-        .upload-card .title { font-size: 0.95rem; font-weight: 500; color: var(--text-dark); margin-bottom: 4px; }
+        .upload-card .title { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; }
         .upload-card .subtitle { font-size: 0.75rem; color: var(--text-muted); }
         .upload-card input[type="file"] { display: none; }
-        .upload-card .purpose-label {
+        .purpose-label {
             display: inline-block;
             padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+            border-radius: 20px;
+            font-size: 0.68rem;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
         }
         .purpose-consultant { background: #d4edda; color: #155724; }
-        .purpose-rag_session { background: #cce5ff; color: #004085; }
+        .purpose-rag { background: #cce5ff; color: #004085; }
 
-        /* 업로드 진행 */
+        /* ===== 업로드 진행 ===== */
         .upload-progress {
             display: none;
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 16px 20px;
             margin-bottom: 24px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            box-shadow: var(--shadow-sm);
         }
-        .upload-progress .file-name { font-weight: 500; margin-bottom: 8px; }
-        .progress-bar {
-            height: 6px;
-            background: var(--bg-gray-100);
-            border-radius: 3px;
-            overflow: hidden;
-        }
+        .upload-progress .file-name { font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; }
+        .progress-bar { height: 5px; background: var(--bg-gray-100); border-radius: 3px; overflow: hidden; }
         .progress-bar .fill {
             height: 100%;
-            background: var(--accent);
+            background: var(--gradient);
             border-radius: 3px;
-            transition: width 0.3s;
             animation: progress-indeterminate 1.5s infinite;
         }
         @keyframes progress-indeterminate {
@@ -212,63 +207,53 @@
             100% { width: 0%; margin-left: 100%; }
         }
 
-        /* 문서 테이블 */
-        .docs-section h2 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--text-dark);
-        }
+        /* ===== 문서 테이블 ===== */
+        .docs-section h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 14px; color: var(--text-dark); }
         .docs-table {
             width: 100%;
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            box-shadow: var(--shadow-sm);
         }
         .docs-table table { width: 100%; border-collapse: collapse; }
         .docs-table th {
             text-align: left;
-            padding: 12px 16px;
+            padding: 11px 16px;
             background: var(--bg-gray);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: var(--text-light);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .docs-table td {
-            padding: 12px 16px;
-            border-top: 1px solid var(--border);
-            font-size: 0.875rem;
+            padding: 11px 16px;
+            border-top: 1px solid var(--border-light);
+            font-size: 0.85rem;
         }
         .docs-table tr:hover td { background: var(--bg-gray); }
-
         .badge {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
             font-weight: 500;
         }
         .badge-done { background: #d4edda; color: #155724; }
         .badge-processing { background: #fff3cd; color: #856404; }
         .badge-error { background: #f8d7da; color: #721c24; }
         .badge-pending { background: var(--bg-gray-100); color: var(--text-muted); }
-
-        .empty-state {
-            text-align: center;
-            padding: 48px 20px;
-            color: var(--text-muted);
-        }
+        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
         .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
 
-        /* 모달 */
+        /* ===== 모달 ===== */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -277,29 +262,25 @@
         .modal-overlay.active { display: flex; }
         .modal {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             width: 100%;
             max-width: 700px;
             max-height: 80vh;
             overflow-y: auto;
-            padding: 24px;
+            padding: 28px;
+            box-shadow: var(--shadow-lg);
         }
-        .modal h3 { font-size: 1.125rem; margin-bottom: 16px; }
+        .modal h3 { font-size: 1.1rem; margin-bottom: 16px; font-weight: 600; }
         .modal .chunk {
             background: var(--bg-gray);
-            border-radius: 6px;
-            padding: 12px;
+            border-radius: 8px;
+            padding: 12px 14px;
             margin-bottom: 8px;
             font-size: 0.8rem;
-            line-height: 1.5;
+            line-height: 1.6;
             white-space: pre-wrap;
         }
-        .modal .chunk-label {
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
+        .modal .chunk-label { font-weight: 600; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
         .modal .close-btn {
             float: right;
             background: none;
@@ -307,250 +288,497 @@
             font-size: 1.5rem;
             cursor: pointer;
             color: var(--text-muted);
+            transition: color 0.2s;
+        }
+        .modal .close-btn:hover { color: var(--text-dark); }
+
+        /* ============================================
+           RAG 채팅 탭 — 모던 3컬럼 레이아웃
+           ============================================ */
+        .rag-layout {
+            display: flex;
+            height: calc(100vh - 105px);
+            background: var(--bg-gray);
         }
 
-        /* ===== RAG 채팅 탭 ===== */
-        .rag-chat-layout {
+        /* --- 왼쪽 사이드바: 대화 목록 --- */
+        .sidebar-conv {
+            width: 260px;
+            background: white;
+            border-right: 1px solid var(--border-light);
             display: flex;
-            height: calc(100vh - 110px);
+            flex-direction: column;
+        }
+        .sidebar-conv-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .sidebar-conv-header button { width: 100%; }
+        .conv-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .conv-list::-webkit-scrollbar { width: 4px; }
+        .conv-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .conv-item {
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 3px;
+            font-size: 0.84rem;
+            color: var(--text-regular);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .conv-item:hover { background: var(--bg-gray); }
+        .conv-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+        .conv-item-icon {
+            width: 32px; height: 32px;
+            background: var(--bg-gray-100);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .conv-item.active .conv-item-icon { background: rgba(0,153,204,0.15); }
+        .conv-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .conv-actions {
+            display: flex;
+            gap: 2px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .conv-item:hover .conv-actions { opacity: 1; }
+        .conv-act-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.78rem;
+            padding: 3px 5px;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+        .conv-act-btn:hover { background: var(--bg-gray-100); }
+        .conv-act-btn.del:hover { color: var(--error); background: #fee; }
+        .conv-act-btn.edit:hover { color: var(--accent); }
+        .conv-act-btn.save:hover { color: var(--warning); }
+
+        /* 대화 그룹 헤더 */
+        .conv-group-header {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 14px 6px;
+            margin-top: 4px;
+        }
+        .conv-group-header:first-child { margin-top: 0; }
+
+        /* 저장된 대화 아이콘 표시 */
+        .conv-saved-badge {
+            font-size: 0.7rem;
+            color: var(--warning);
+        }
+
+        /* 인라인 이름 편집 */
+        .conv-rename-input {
+            flex: 1;
+            border: 1.5px solid var(--accent);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.82rem;
+            font-family: inherit;
+            outline: none;
             background: white;
         }
 
-        /* 왼쪽: 대화 목록 */
-        .conv-sidebar {
-            width: 240px;
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-gray);
-        }
-        .conv-sidebar .sidebar-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .conv-sidebar .sidebar-header button {
-            width: 100%;
-        }
-        .conv-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px;
-        }
-        .conv-item {
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 4px;
-            font-size: 0.85rem;
-            color: var(--text-regular);
-            display: flex;
-            justify-content: space-between;
+        /* 채팅 헤더 (대화 선택 시 표시) */
+        .chat-header-bar {
+            display: none;
             align-items: center;
-            transition: background 0.15s;
+            justify-content: space-between;
+            padding: 10px 24px;
+            background: white;
+            border-bottom: 1px solid var(--border-light);
         }
-        .conv-item:hover { background: var(--bg-gray-100); }
-        .conv-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
-        .conv-item .conv-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .conv-item .conv-delete {
-            opacity: 0;
-            background: none;
-            border: none;
-            color: var(--error);
+        .chat-header-bar.visible { display: flex; }
+        .chat-header-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chat-header-actions { display: flex; gap: 6px; }
+        .btn-icon {
+            background: var(--bg-gray);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            color: var(--text-light);
             cursor: pointer;
-            font-size: 1rem;
-            padding: 0 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+            font-family: inherit;
         }
-        .conv-item:hover .conv-delete { opacity: 1; }
+        .btn-icon:hover { background: var(--bg-gray-100); color: var(--text-dark); border-color: var(--accent); }
+        .conv-age {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
 
-        /* 가운데: 채팅 영역 */
-        .chat-main {
+        /* --- 가운데: 채팅 영역 --- */
+        .chat-center {
             flex: 1;
             display: flex;
             flex-direction: column;
             min-width: 0;
+            background: var(--bg-gray);
         }
+
+        /* 채팅 메시지 영역 */
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 24px;
-        }
-        .chat-empty {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-        .chat-msg {
-            margin-bottom: 16px;
+            padding: 28px 24px;
             display: flex;
             flex-direction: column;
+            gap: 6px;
         }
-        .chat-msg.user { align-items: flex-end; }
-        .chat-msg.assistant { align-items: flex-start; }
-        .chat-msg .msg-role {
-            font-size: 0.7rem;
+        .chat-messages::-webkit-scrollbar { width: 5px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* 빈 상태 */
+        .chat-welcome {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
             color: var(--text-muted);
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            font-weight: 600;
+            padding: 40px;
         }
-        .chat-msg .msg-bubble {
-            max-width: 75%;
+        .chat-welcome-icon {
+            width: 72px; height: 72px;
+            background: var(--gradient);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,153,204,0.25);
+        }
+        .chat-welcome h3 {
+            font-size: 1.15rem;
+            color: var(--text-dark);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .chat-welcome p { font-size: 0.85rem; line-height: 1.6; max-width: 320px; }
+
+        /* 메시지 버블 */
+        .msg-row {
+            display: flex;
+            gap: 10px;
+            max-width: 78%;
+            animation: msgFadeIn 0.3s ease;
+        }
+        @keyframes msgFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-row.assistant { align-self: flex-start; }
+
+        .msg-avatar {
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .msg-row.user .msg-avatar { background: var(--primary); color: white; }
+        .msg-row.assistant .msg-avatar { background: var(--gradient); color: white; }
+
+        .msg-content { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .msg-bubble {
             padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 0.9rem;
-            line-height: 1.6;
+            font-size: 0.88rem;
+            line-height: 1.65;
             white-space: pre-wrap;
             word-break: break-word;
         }
-        .chat-msg.user .msg-bubble {
+        .msg-row.user .msg-bubble {
             background: var(--primary);
             color: white;
-            border-bottom-right-radius: 4px;
+            border-radius: 16px 16px 4px 16px;
+            box-shadow: 0 2px 8px rgba(0,51,102,0.2);
         }
-        .chat-msg.assistant .msg-bubble {
-            background: var(--bg-gray);
+        .msg-row.assistant .msg-bubble {
+            background: white;
             color: var(--text-regular);
-            border-bottom-left-radius: 4px;
+            border-radius: 16px 16px 16px 4px;
+            box-shadow: var(--shadow-sm);
         }
-        .chat-msg .msg-refs {
-            max-width: 75%;
-            margin-top: 6px;
+        .msg-refs-link {
             font-size: 0.75rem;
             color: var(--accent);
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 0;
+            transition: color 0.15s;
         }
-        .chat-msg .msg-refs:hover { text-decoration: underline; }
+        .msg-refs-link:hover { color: var(--primary); text-decoration: underline; }
+        .msg-time {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            padding: 0 2px;
+        }
 
-        .chat-input-area {
-            padding: 16px 24px;
-            border-top: 1px solid var(--border);
+        /* 타이핑 인디케이터 */
+        .typing-indicator {
             display: flex;
-            gap: 8px;
+            gap: 5px;
+            padding: 14px 18px;
         }
-        .chat-input-area input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.9rem;
-            outline: none;
+        .typing-indicator span {
+            width: 8px; height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out both;
         }
-        .chat-input-area input:focus { border-color: var(--accent); }
-        .chat-input-area button { white-space: nowrap; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0.4); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
 
-        /* 오른쪽: 참조 문서 패널 */
-        .ref-sidebar {
+        /* 입력 영역 */
+        .chat-input-wrap {
+            padding: 16px 24px 20px;
+            background: transparent;
+        }
+        .chat-input-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 6px 6px 6px 18px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .chat-input-box:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0,153,204,0.1);
+        }
+        .chat-input-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 0.9rem;
+            font-family: inherit;
+            color: var(--text-regular);
+            background: transparent;
+        }
+        .chat-input-box input::placeholder { color: var(--text-muted); }
+        .chat-input-box input:disabled { opacity: 0.5; }
+        .chat-send-btn {
+            width: 40px; height: 40px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .chat-send-btn:hover { opacity: 0.9; transform: scale(1.05); }
+        .chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+        /* --- 오른쪽 사이드바: 참조 문서 --- */
+        .sidebar-ref {
             width: 280px;
-            border-left: 1px solid var(--border);
+            background: white;
+            border-left: 1px solid var(--border-light);
             display: flex;
             flex-direction: column;
-            background: var(--bg-gray);
         }
-        .ref-sidebar .sidebar-header {
+        .sidebar-ref-header {
             padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-light);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-dark);
-        }
-        .ref-doc-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-        }
-        .ref-doc-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 10px;
+        }
+        .sidebar-ref-header .header-icon {
+            width: 24px; height: 24px;
+            background: var(--primary-light);
             border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .ref-doc-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 12px;
+        }
+        .ref-doc-list::-webkit-scrollbar { width: 4px; }
+        .ref-doc-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .ref-doc-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 8px;
             font-size: 0.8rem;
             color: var(--text-regular);
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            transition: background 0.15s;
         }
-        .ref-doc-item:hover { background: var(--bg-gray-100); }
-        .ref-doc-item input[type="checkbox"] { margin: 0; }
-        .ref-doc-item label { cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ref-doc-item:hover { background: var(--bg-gray); }
+        .ref-doc-item input[type="checkbox"] {
+            width: 16px; height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .ref-doc-item label {
+            cursor: pointer;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .ref-doc-all { font-weight: 600; color: var(--text-dark); border-bottom: 1px solid var(--border-light); padding-bottom: 10px; margin-bottom: 4px; }
 
-        .ref-chunks-panel {
-            border-top: 1px solid var(--border);
-            max-height: 40%;
+        /* 참조 청크 패널 */
+        .ref-chunks-area {
+            border-top: 1px solid var(--border-light);
+            max-height: 45%;
             overflow-y: auto;
-            padding: 12px;
+            padding: 14px 12px;
         }
-        .ref-chunks-panel h4 {
-            font-size: 0.8rem;
+        .ref-chunks-area::-webkit-scrollbar { width: 4px; }
+        .ref-chunks-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .ref-chunks-title {
+            font-size: 0.78rem;
+            font-weight: 600;
             color: var(--text-light);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ref-chunk-card {
+            background: var(--bg-gray);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 10px 12px;
             margin-bottom: 8px;
-        }
-        .ref-chunk-item {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            font-size: 0.75rem;
-            line-height: 1.5;
+            font-size: 0.76rem;
+            line-height: 1.55;
             white-space: pre-wrap;
+            transition: border-color 0.15s;
         }
-        .ref-chunk-item .ref-filename {
+        .ref-chunk-card:hover { border-color: var(--accent); }
+        .ref-chunk-card .chunk-file {
             font-weight: 600;
             color: var(--accent);
-            margin-bottom: 4px;
-            font-size: 0.7rem;
+            margin-bottom: 5px;
+            font-size: 0.72rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
-        .ref-chunk-item .ref-similarity {
+        .ref-chunk-card .chunk-score {
             font-size: 0.65rem;
             color: var(--text-muted);
-            margin-top: 4px;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .score-bar {
+            width: 50px; height: 4px;
+            background: var(--bg-gray-100);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .score-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
         }
 
-        @media (max-width: 900px) {
-            .rag-chat-layout { flex-direction: column; height: auto; }
-            .conv-sidebar, .ref-sidebar { width: 100%; height: auto; max-height: 200px; }
-            .ref-sidebar { border-left: none; border-top: 1px solid var(--border); }
-            .conv-sidebar { border-right: none; border-bottom: 1px solid var(--border); }
-            .upload-section { flex-direction: column; }
+        /* ===== 반응형 ===== */
+        @media (max-width: 1024px) {
+            .sidebar-ref { display: none; }
         }
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
+            .rag-layout { flex-direction: column; height: auto; min-height: calc(100vh - 105px); }
+            .sidebar-conv { width: 100%; max-height: 180px; border-right: none; border-bottom: 1px solid var(--border-light); }
+            .upload-section { flex-direction: column; }
             .content { padding: 16px; }
-            .docs-table { overflow-x: auto; }
-            .modal { padding: 16px; }
         }
     </style>
 </head>
 <body>
-    <!-- 로그인 화면 -->
+    <!-- ===== 로그인 ===== -->
     <div id="loginView" class="login-container">
         <div class="login-box">
             <h1>Young Marine Tech</h1>
             <p>관리자 로그인</p>
             <input type="password" id="passwordInput" placeholder="비밀번호를 입력하세요" />
             <div class="error" id="loginError"></div>
-            <button class="btn btn-primary" style="width:100%" onclick="handleLogin()">로그인</button>
+            <button class="btn btn-accent" style="width:100%" onclick="handleLogin()">로그인</button>
         </div>
     </div>
 
-    <!-- 대시보드 -->
+    <!-- ===== 대시보드 ===== -->
     <div id="dashboardView" class="dashboard">
         <div class="header">
             <h1>Young Marine Tech 관리자</h1>
             <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
         </div>
 
-        <!-- 탭 네비게이션 -->
         <div class="tab-nav">
             <button class="active" onclick="switchTab('docs')">문서 관리</button>
             <button onclick="switchTab('rag')">RAG 채팅</button>
         </div>
 
-        <!-- 문서 관리 탭 -->
+        <!-- ===== 문서 관리 탭 ===== -->
         <div id="tabDocs" class="tab-content active">
             <div class="content">
-                <!-- 업로드 영역 2개 -->
                 <div class="upload-section">
                     <div class="upload-card" id="uploadConsultant">
                         <input type="file" id="fileInputConsultant" accept=".pdf,.jpg,.jpeg,.png" multiple />
@@ -561,20 +789,18 @@
                     </div>
                     <div class="upload-card" id="uploadRag">
                         <input type="file" id="fileInputRag" accept=".pdf,.jpg,.jpeg,.png" multiple />
-                        <span class="purpose-label purpose-rag_session">RAG 세션용</span>
+                        <span class="purpose-label purpose-rag">RAG 세션용</span>
                         <div class="icon">&#128218;</div>
                         <div class="title">RAG 세션 문서 업로드</div>
                         <div class="subtitle">관리자 RAG 채팅에서 참조</div>
                     </div>
                 </div>
 
-                <!-- 업로드 진행 표시 -->
                 <div class="upload-progress" id="uploadProgress">
                     <div class="file-name" id="uploadFileName">업로드 중...</div>
                     <div class="progress-bar"><div class="fill"></div></div>
                 </div>
 
-                <!-- 문서 목록 -->
                 <div class="docs-section">
                     <h2>업로드된 문서</h2>
                     <div class="docs-table" id="docsTable">
@@ -587,46 +813,65 @@
             </div>
         </div>
 
-        <!-- RAG 채팅 탭 -->
+        <!-- ===== RAG 채팅 탭 ===== -->
         <div id="tabRag" class="tab-content">
-            <div class="rag-chat-layout">
+            <div class="rag-layout">
                 <!-- 왼쪽: 대화 목록 -->
-                <div class="conv-sidebar">
-                    <div class="sidebar-header">
-                        <button class="btn btn-primary btn-sm" style="width:100%" onclick="createConversation()">+ 새 대화</button>
+                <div class="sidebar-conv">
+                    <div class="sidebar-conv-header">
+                        <button class="btn btn-accent btn-sm" style="width:100%" onclick="createConversation()">+ 새 대화</button>
                     </div>
                     <div class="conv-list" id="convList">
-                        <div class="empty-state" style="padding:24px 12px;font-size:0.8rem">대화가 없습니다</div>
+                        <div class="empty-state" style="padding:32px 12px;font-size:0.82rem">
+                            <div style="font-size:1.3rem;margin-bottom:6px;">&#128172;</div>
+                            새 대화를 시작하세요
+                        </div>
                     </div>
                 </div>
 
-                <!-- 가운데: 채팅 영역 -->
-                <div class="chat-main">
+                <!-- 가운데: 채팅 -->
+                <div class="chat-center">
+                    <div class="chat-header-bar" id="chatHeaderBar">
+                        <span class="chat-header-title" id="chatHeaderTitle"></span>
+                        <div class="chat-header-actions">
+                            <button class="btn-icon" id="chatSaveBtn" onclick="toggleSaveConversation()" title="대화 저장">&#11088; 저장</button>
+                            <button class="btn-icon" onclick="startRenameFromHeader()" title="이름 변경">&#9998; 이름 변경</button>
+                        </div>
+                    </div>
                     <div class="chat-messages" id="chatMessages">
-                        <div class="chat-empty">대화를 선택하거나 새 대화를 시작하세요</div>
+                        <div class="chat-welcome">
+                            <div class="chat-welcome-icon">&#9875;</div>
+                            <h3>RAG 문서 Q&A</h3>
+                            <p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p>
+                        </div>
                     </div>
-                    <div class="chat-input-area">
-                        <input type="text" id="ragInput" placeholder="질문을 입력하세요..." disabled />
-                        <button class="btn btn-primary btn-sm" id="ragSendBtn" onclick="sendRagMessage()" disabled>전송</button>
+                    <div class="chat-input-wrap">
+                        <div class="chat-input-box">
+                            <input type="text" id="ragInput" placeholder="문서에 대해 질문하세요..." disabled />
+                            <button class="chat-send-btn" id="ragSendBtn" onclick="sendRagMessage()" disabled>&#10148;</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 오른쪽: 참조 문서 패널 -->
-                <div class="ref-sidebar">
-                    <div class="sidebar-header">참조 문서 선택</div>
-                    <div class="ref-doc-list" id="refDocList">
-                        <div class="empty-state" style="padding:16px;font-size:0.8rem">문서 로드 중...</div>
+                <!-- 오른쪽: 참조 문서 -->
+                <div class="sidebar-ref">
+                    <div class="sidebar-ref-header">
+                        <span class="header-icon">&#128196;</span>
+                        참조 문서
                     </div>
-                    <div class="ref-chunks-panel" id="refChunksPanel">
-                        <h4>참조된 청크</h4>
-                        <div style="font-size:0.75rem;color:var(--text-muted)">메시지를 보내면 참조 청크가 표시됩니다</div>
+                    <div class="ref-doc-list" id="refDocList">
+                        <div class="empty-state" style="padding:20px 12px;font-size:0.8rem">문서 로드 중...</div>
+                    </div>
+                    <div class="ref-chunks-area" id="refChunksPanel">
+                        <div class="ref-chunks-title">&#128269; 참조된 청크</div>
+                        <div style="font-size:0.76rem;color:var(--text-muted);text-align:center;padding:12px 0;">질문을 입력하면<br>참조 내용이 표시됩니다</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 문서 상세 모달 -->
+    <!-- ===== 문서 상세 모달 ===== -->
     <div class="modal-overlay" id="docModal">
         <div class="modal">
             <button class="close-btn" onclick="closeModal()">&times;</button>
@@ -635,537 +880,547 @@
         </div>
     </div>
 
-    <script>
-    const API_BASE = 'https://marine-parts-production-60a3.up.railway.app';
-    let authToken = sessionStorage.getItem('admin_token') || '';
+<script>
+const API_BASE = 'https://marine-parts-production-60a3.up.railway.app';
+let authToken = sessionStorage.getItem('admin_token') || '';
+let currentConvId = null;
+let ragDocuments = [];
 
-    // === RAG 채팅 상태 ===
-    let currentConvId = null;
-    let ragDocuments = [];
+// ============================================================
+//  초기화
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    if (authToken) showDashboard();
 
-    // === 초기화 ===
-    document.addEventListener('DOMContentLoaded', () => {
-        if (authToken) {
-            showDashboard();
-        }
-
-        // 엔터 키 로그인
-        document.getElementById('passwordInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleLogin();
-        });
-
-        // 업로드 카드: AI 상담사용
-        setupUploadCard('uploadConsultant', 'fileInputConsultant', 'consultant');
-        // 업로드 카드: RAG 세션용
-        setupUploadCard('uploadRag', 'fileInputRag', 'rag_session');
-
-        // RAG 채팅 입력 엔터
-        document.getElementById('ragInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendRagMessage();
-        });
+    document.getElementById('passwordInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleLogin();
     });
 
-    function setupUploadCard(cardId, inputId, purpose) {
-        const card = document.getElementById(cardId);
-        const input = document.getElementById(inputId);
-        card.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT') input.click();
+    setupUploadCard('uploadConsultant', 'fileInputConsultant', 'consultant');
+    setupUploadCard('uploadRag', 'fileInputRag', 'rag_session');
+
+    document.getElementById('ragInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) sendRagMessage();
+    });
+});
+
+function setupUploadCard(cardId, inputId, purpose) {
+    const card = document.getElementById(cardId);
+    const input = document.getElementById(inputId);
+    card.addEventListener('click', e => { if (e.target.tagName !== 'INPUT') input.click(); });
+    card.addEventListener('dragover', e => { e.preventDefault(); card.classList.add('dragover'); });
+    card.addEventListener('dragleave', () => card.classList.remove('dragover'));
+    card.addEventListener('drop', e => { e.preventDefault(); card.classList.remove('dragover'); handleFiles(e.dataTransfer.files, purpose); });
+    input.addEventListener('change', e => { handleFiles(e.target.files, purpose); e.target.value = ''; });
+}
+
+// ============================================================
+//  탭 / 인증
+// ============================================================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-nav button').forEach((btn, i) => {
+        btn.classList.toggle('active', (tab === 'docs' && i === 0) || (tab === 'rag' && i === 1));
+    });
+    document.getElementById('tabDocs').classList.toggle('active', tab === 'docs');
+    document.getElementById('tabRag').classList.toggle('active', tab === 'rag');
+    if (tab === 'rag') { loadConversations(); loadRagDocuments(); }
+}
+
+async function api(path, options = {}) {
+    const res = await fetch(API_BASE + path, {
+        ...options,
+        headers: { ...(options.headers || {}), 'Authorization': 'Bearer ' + authToken },
+    });
+    if (res.status === 401) { handleLogout(); throw new Error('인증 만료'); }
+    return res;
+}
+
+async function handleLogin() {
+    const pw = document.getElementById('passwordInput').value;
+    const errEl = document.getElementById('loginError');
+    errEl.style.display = 'none';
+    try {
+        const res = await fetch(API_BASE + '/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pw }),
         });
-        card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('dragover'); });
-        card.addEventListener('dragleave', () => card.classList.remove('dragover'));
-        card.addEventListener('drop', (e) => {
-            e.preventDefault();
-            card.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files, purpose);
-        });
-        input.addEventListener('change', (e) => {
-            handleFiles(e.target.files, purpose);
-            e.target.value = '';
-        });
+        if (!res.ok) { const d = await res.json(); errEl.textContent = d.detail || '로그인 실패'; errEl.style.display = 'block'; return; }
+        const d = await res.json();
+        authToken = d.token;
+        sessionStorage.setItem('admin_token', authToken);
+        showDashboard();
+    } catch { errEl.textContent = '서버 연결 실패'; errEl.style.display = 'block'; }
+}
+
+function handleLogout() {
+    authToken = '';
+    sessionStorage.removeItem('admin_token');
+    document.getElementById('loginView').style.display = 'flex';
+    document.getElementById('dashboardView').style.display = 'none';
+}
+
+function showDashboard() {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('dashboardView').style.display = 'block';
+    loadDocuments();
+}
+
+// ============================================================
+//  문서 관리 탭
+// ============================================================
+async function loadDocuments() {
+    try { const res = await api('/admin/documents'); renderDocuments(await res.json()); }
+    catch (e) { console.error('문서 목록 로드 실패:', e); }
+}
+
+function renderDocuments(docs) {
+    const c = document.getElementById('docsTable');
+    if (!docs.length) { c.innerHTML = '<div class="empty-state"><div class="icon">&#128196;</div><div>아직 업로드된 문서가 없습니다</div></div>'; return; }
+
+    const statusBadge = s => {
+        const m = { done: ['badge-done','완료'], processing: ['badge-processing','처리중'], error: ['badge-error','오류'], pending: ['badge-pending','대기'] };
+        const [cls, label] = m[s] || ['badge-pending', s];
+        return `<span class="badge ${cls}">${label}</span>`;
+    };
+    const purposeBadge = p => p === 'rag_session'
+        ? '<span class="badge purpose-rag" style="margin-left:4px">RAG</span>'
+        : '<span class="badge purpose-consultant" style="margin-left:4px">상담</span>';
+
+    let html = '<table><thead><tr><th>파일명</th><th>유형</th><th>용도</th><th>상태</th><th>업로드일</th><th>작업</th></tr></thead><tbody>';
+    for (const d of docs) {
+        const date = d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '-';
+        html += `<tr>
+            <td style="cursor:pointer;color:var(--accent);font-weight:500" onclick="viewDocument(${d.id})">${d.file_type==='pdf'?'&#128196;':'&#128247;'} ${esc(d.filename)}</td>
+            <td>${d.file_type.toUpperCase()}</td>
+            <td>${purposeBadge(d.purpose)}</td>
+            <td>${statusBadge(d.status)}${d.error_msg?'<br><small style="color:var(--error)">'+esc(d.error_msg)+'</small>':''}</td>
+            <td style="font-size:0.8rem;color:var(--text-light)">${date}</td>
+            <td><button class="btn btn-danger" onclick="deleteDocument(${d.id})">삭제</button></td>
+        </tr>`;
+    }
+    c.innerHTML = html + '</tbody></table>';
+}
+
+async function handleFiles(fileList, purpose) {
+    for (const f of fileList) await uploadFile(f, purpose);
+}
+
+async function uploadFile(file, purpose) {
+    const prog = document.getElementById('uploadProgress');
+    const fname = document.getElementById('uploadFileName');
+    prog.style.display = 'block';
+    fname.textContent = `처리 중: ${file.name}`;
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('purpose', purpose);
+    try {
+        const res = await api('/admin/upload', { method: 'POST', body: fd });
+        const d = await res.json();
+        if (d.status === 'error') { fname.textContent = `오류: ${file.name} — ${d.error_msg}`; setTimeout(() => prog.style.display='none', 4000); }
+        else { fname.textContent = `완료: ${file.name} (${d.chunks_count}개 청크)`; setTimeout(() => prog.style.display='none', 2000); }
+    } catch { fname.textContent = `업로드 실패: ${file.name}`; setTimeout(() => prog.style.display='none', 4000); }
+    loadDocuments();
+}
+
+async function viewDocument(docId) {
+    try {
+        const doc = await (await api(`/admin/documents/${docId}`)).json();
+        document.getElementById('modalTitle').textContent = doc.filename;
+        let html = `<p style="margin-bottom:12px;color:var(--text-light);font-size:0.85rem">상태: ${doc.status} | 청크: ${doc.chunks.length}개</p>`;
+        if (doc.chunks.length) { for (const c of doc.chunks) html += `<div class="chunk-label">청크 #${c.chunk_index+1}</div><div class="chunk">${esc(c.chunk_text)}</div>`; }
+        else html += '<p style="color:var(--text-muted)">청크가 없습니다</p>';
+        document.getElementById('modalContent').innerHTML = html;
+        document.getElementById('docModal').classList.add('active');
+    } catch (e) { console.error('문서 상세 조회 실패:', e); }
+}
+
+function closeModal() { document.getElementById('docModal').classList.remove('active'); }
+
+async function deleteDocument(docId) {
+    if (!confirm('이 문서를 삭제하시겠습니까?')) return;
+    try { await api(`/admin/documents/${docId}`, { method: 'DELETE' }); loadDocuments(); }
+    catch (e) { console.error('삭제 실패:', e); }
+}
+
+// ============================================================
+//  RAG 채팅 탭
+// ============================================================
+async function loadConversations() {
+    try { renderConversations(await (await api('/admin/rag/conversations')).json()); }
+    catch (e) { console.error('대화 목록 로드 실패:', e); }
+}
+
+function renderConversations(convs) {
+    const c = document.getElementById('convList');
+    if (!convs.length) {
+        c.innerHTML = '<div class="empty-state" style="padding:32px 12px;font-size:0.82rem"><div style="font-size:1.3rem;margin-bottom:6px;">&#128172;</div>새 대화를 시작하세요</div>';
+        updateChatHeader(null);
+        return;
     }
 
-    // === 탭 전환 ===
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-nav button').forEach((btn, i) => {
-            btn.classList.toggle('active', (tab === 'docs' && i === 0) || (tab === 'rag' && i === 1));
-        });
-        document.getElementById('tabDocs').classList.toggle('active', tab === 'docs');
-        document.getElementById('tabRag').classList.toggle('active', tab === 'rag');
+    // 3그룹으로 분류: 저장된 대화, 오늘, 7일 이내
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-        if (tab === 'rag') {
-            loadConversations();
-            loadRagDocuments();
-        }
-    }
+    const saved = [];
+    const today = [];
+    const recent = [];
 
-    // === API 호출 헬퍼 ===
-    async function api(path, options = {}) {
-        const res = await fetch(API_BASE + path, {
-            ...options,
-            headers: {
-                ...(options.headers || {}),
-                'Authorization': 'Bearer ' + authToken,
-            },
-        });
-        if (res.status === 401) {
-            handleLogout();
-            throw new Error('인증 만료');
-        }
-        return res;
-    }
-
-    // === 로그인/로그아웃 ===
-    async function handleLogin() {
-        const pw = document.getElementById('passwordInput').value;
-        const errEl = document.getElementById('loginError');
-        errEl.style.display = 'none';
-
-        try {
-            const res = await fetch(API_BASE + '/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pw }),
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                errEl.textContent = data.detail || '로그인 실패';
-                errEl.style.display = 'block';
-                return;
-            }
-
-            const data = await res.json();
-            authToken = data.token;
-            sessionStorage.setItem('admin_token', authToken);
-            showDashboard();
-        } catch (e) {
-            errEl.textContent = '서버 연결 실패';
-            errEl.style.display = 'block';
-        }
-    }
-
-    function handleLogout() {
-        authToken = '';
-        sessionStorage.removeItem('admin_token');
-        document.getElementById('loginView').style.display = 'flex';
-        document.getElementById('dashboardView').style.display = 'none';
-    }
-
-    function showDashboard() {
-        document.getElementById('loginView').style.display = 'none';
-        document.getElementById('dashboardView').style.display = 'block';
-        loadDocuments();
-    }
-
-    // ============================================================
-    //  문서 관리 탭
-    // ============================================================
-
-    async function loadDocuments() {
-        try {
-            const res = await api('/admin/documents');
-            const docs = await res.json();
-            renderDocuments(docs);
-        } catch (e) {
-            console.error('문서 목록 로드 실패:', e);
-        }
-    }
-
-    function renderDocuments(docs) {
-        const container = document.getElementById('docsTable');
-        if (!docs.length) {
-            container.innerHTML = '<div class="empty-state"><div class="icon">&#128196;</div><div>아직 업로드된 문서가 없습니다</div></div>';
-            return;
-        }
-
-        const statusBadge = (s) => {
-            const map = {
-                done: ['badge-done', '완료'],
-                processing: ['badge-processing', '처리중'],
-                error: ['badge-error', '오류'],
-                pending: ['badge-pending', '대기'],
-            };
-            const [cls, label] = map[s] || ['badge-pending', s];
-            return `<span class="badge ${cls}">${label}</span>`;
-        };
-
-        const purposeBadge = (p) => {
-            if (p === 'rag_session') return '<span class="badge purpose-rag_session" style="margin-left:4px">RAG</span>';
-            return '<span class="badge purpose-consultant" style="margin-left:4px">상담</span>';
-        };
-
-        const typeIcon = (t) => t === 'pdf' ? '&#128196;' : '&#128247;';
-
-        let html = '<table><thead><tr><th>파일명</th><th>유형</th><th>용도</th><th>상태</th><th>업로드일</th><th>작업</th></tr></thead><tbody>';
-        for (const doc of docs) {
-            const date = doc.created_at ? new Date(doc.created_at).toLocaleString('ko-KR') : '-';
-            html += `<tr>
-                <td style="cursor:pointer;color:var(--accent)" onclick="viewDocument(${doc.id})">${typeIcon(doc.file_type)} ${escapeHtml(doc.filename)}</td>
-                <td>${doc.file_type.toUpperCase()}</td>
-                <td>${purposeBadge(doc.purpose)}</td>
-                <td>${statusBadge(doc.status)}${doc.error_msg ? '<br><small style="color:var(--error)">' + escapeHtml(doc.error_msg) + '</small>' : ''}</td>
-                <td>${date}</td>
-                <td><button class="btn btn-danger" onclick="deleteDocument(${doc.id})">삭제</button></td>
-            </tr>`;
-        }
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    }
-
-    // 파일 업로드
-    async function handleFiles(fileList, purpose) {
-        for (const file of fileList) {
-            await uploadFile(file, purpose);
-        }
-    }
-
-    async function uploadFile(file, purpose) {
-        const progress = document.getElementById('uploadProgress');
-        const fileName = document.getElementById('uploadFileName');
-
-        progress.style.display = 'block';
-        fileName.textContent = `처리 중: ${file.name}`;
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('purpose', purpose);
-
-        try {
-            const res = await api('/admin/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await res.json();
-
-            if (data.status === 'error') {
-                fileName.textContent = `오류: ${file.name} — ${data.error_msg}`;
-                setTimeout(() => { progress.style.display = 'none'; }, 4000);
+    for (const cv of convs) {
+        if (cv.saved) {
+            saved.push(cv);
+        } else {
+            const updated = cv.updated_at ? new Date(cv.updated_at) : new Date();
+            if (updated >= todayStart) {
+                today.push(cv);
             } else {
-                fileName.textContent = `완료: ${file.name} (${data.chunks_count}개 청크)`;
-                setTimeout(() => { progress.style.display = 'none'; }, 2000);
+                recent.push(cv);
             }
-        } catch (e) {
-            fileName.textContent = `업로드 실패: ${file.name}`;
-            setTimeout(() => { progress.style.display = 'none'; }, 4000);
-        }
-
-        loadDocuments();
-    }
-
-    // 문서 상세 보기
-    async function viewDocument(docId) {
-        try {
-            const res = await api(`/admin/documents/${docId}`);
-            const doc = await res.json();
-
-            document.getElementById('modalTitle').textContent = doc.filename;
-
-            let html = `<p style="margin-bottom:12px;color:var(--text-light);font-size:0.85rem">상태: ${doc.status} | 청크: ${doc.chunks.length}개</p>`;
-
-            if (doc.chunks.length) {
-                for (const chunk of doc.chunks) {
-                    html += `<div class="chunk-label">청크 #${chunk.chunk_index + 1}</div><div class="chunk">${escapeHtml(chunk.chunk_text)}</div>`;
-                }
-            } else {
-                html += '<p style="color:var(--text-muted)">청크가 없습니다</p>';
-            }
-
-            document.getElementById('modalContent').innerHTML = html;
-            document.getElementById('docModal').classList.add('active');
-        } catch (e) {
-            console.error('문서 상세 조회 실패:', e);
         }
     }
 
-    function closeModal() {
-        document.getElementById('docModal').classList.remove('active');
-    }
+    let html = '';
 
-    // 문서 삭제
-    async function deleteDocument(docId) {
-        if (!confirm('이 문서를 삭제하시겠습니까?')) return;
-        try {
-            await api(`/admin/documents/${docId}`, { method: 'DELETE' });
-            loadDocuments();
-        } catch (e) {
-            console.error('삭제 실패:', e);
-        }
-    }
-
-    // ============================================================
-    //  RAG 채팅 탭
-    // ============================================================
-
-    // 대화 목록 로드
-    async function loadConversations() {
-        try {
-            const res = await api('/admin/rag/conversations');
-            const convs = await res.json();
-            renderConversations(convs);
-        } catch (e) {
-            console.error('대화 목록 로드 실패:', e);
-        }
-    }
-
-    function renderConversations(convs) {
-        const container = document.getElementById('convList');
-        if (!convs.length) {
-            container.innerHTML = '<div class="empty-state" style="padding:24px 12px;font-size:0.8rem">대화가 없습니다</div>';
-            return;
-        }
-
-        let html = '';
-        for (const c of convs) {
-            const isActive = c.id === currentConvId;
-            html += `<div class="conv-item ${isActive ? 'active' : ''}" onclick="selectConversation(${c.id})">
-                <span class="conv-title">${escapeHtml(c.title)}</span>
-                <button class="conv-delete" onclick="event.stopPropagation();deleteConversation(${c.id})" title="삭제">&times;</button>
+    const renderGroup = (label, items, showDaysLeft) => {
+        if (!items.length) return '';
+        let groupHtml = `<div class="conv-group-header">${label}</div>`;
+        for (const cv of items) {
+            const daysLeft = getDaysLeft(cv.updated_at);
+            const savedIcon = cv.saved ? '<span class="conv-saved-badge">&#11088;</span> ' : '';
+            const ageText = cv.saved ? '영구 보관' : `${daysLeft}일 후 삭제`;
+            groupHtml += `<div class="conv-item ${cv.id===currentConvId?'active':''}" onclick="selectConversation(${cv.id})">
+                <div class="conv-item-icon">&#128172;</div>
+                <div style="flex:1;min-width:0">
+                    <span class="conv-title">${savedIcon}${esc(cv.title)}</span>
+                    <div class="conv-age">${ageText}</div>
+                </div>
+                <div class="conv-actions" onclick="event.stopPropagation()">
+                    <button class="conv-act-btn save" onclick="toggleSaveFromList(${cv.id})" title="${cv.saved?'저장 해제':'저장'}">${cv.saved?'&#11088;':'&#9734;'}</button>
+                    <button class="conv-act-btn edit" onclick="startRename(${cv.id},'${esc(cv.title).replace(/'/g,"\\&#39;")}')" title="이름 변경">&#9998;</button>
+                    <button class="conv-act-btn del" onclick="deleteConversation(${cv.id})" title="삭제">&#10005;</button>
+                </div>
             </div>`;
         }
-        container.innerHTML = html;
-    }
+        return groupHtml;
+    };
 
-    // 새 대화 생성
-    async function createConversation() {
-        try {
-            const res = await api('/admin/rag/conversations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: '새 대화' }),
-            });
-            const conv = await res.json();
-            currentConvId = conv.id;
-            await loadConversations();
-            await loadConversation(conv.id);
-            enableChatInput();
-        } catch (e) {
-            console.error('대화 생성 실패:', e);
+    html += renderGroup('&#11088; 저장한 대화내역', saved, false);
+    html += renderGroup('&#128197; 오늘', today, true);
+    html += renderGroup('&#128336; 7일 이내', recent, true);
+
+    c.innerHTML = html;
+    // 현재 대화 헤더 업데이트
+    if (currentConvId) {
+        const current = convs.find(cv => cv.id === currentConvId);
+        updateChatHeader(current);
+    }
+}
+
+function getDaysLeft(updatedAt) {
+    if (!updatedAt) return 7;
+    const updated = new Date(updatedAt);
+    const expiry = new Date(updated.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const diff = Math.ceil((expiry - now) / (24 * 60 * 60 * 1000));
+    return Math.max(0, diff);
+}
+
+function updateChatHeader(conv) {
+    const bar = document.getElementById('chatHeaderBar');
+    const title = document.getElementById('chatHeaderTitle');
+    const saveBtn = document.getElementById('chatSaveBtn');
+    if (conv) {
+        bar.classList.add('visible');
+        title.textContent = conv.title;
+        if (conv.saved) {
+            saveBtn.innerHTML = '&#11088; 저장됨';
+            saveBtn.style.color = 'var(--warning)';
+            saveBtn.style.borderColor = 'var(--warning)';
+        } else {
+            saveBtn.innerHTML = '&#9734; 저장';
+            saveBtn.style.color = '';
+            saveBtn.style.borderColor = '';
         }
+    } else {
+        bar.classList.remove('visible');
     }
+}
 
-    // 대화 선택
-    async function selectConversation(convId) {
-        currentConvId = convId;
+async function createConversation() {
+    try {
+        const cv = await (await api('/admin/rag/conversations', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: '새 대화' }),
+        })).json();
+        currentConvId = cv.id;
         await loadConversations();
-        await loadConversation(convId);
-        enableChatInput();
-    }
+        renderEmptyChat();
+        setChatEnabled(true);
+    } catch (e) { console.error('대화 생성 실패:', e); }
+}
 
-    // 대화 내용 로드
-    async function loadConversation(convId) {
-        try {
-            const res = await api(`/admin/rag/conversations/${convId}`);
-            const data = await res.json();
-            renderChatMessages(data.messages);
-        } catch (e) {
-            console.error('대화 로드 실패:', e);
-        }
-    }
+async function selectConversation(convId) {
+    currentConvId = convId;
+    await loadConversations();
+    await loadConversation(convId);
+    setChatEnabled(true);
+}
 
-    function renderChatMessages(messages) {
-        const container = document.getElementById('chatMessages');
-        if (!messages.length) {
-            container.innerHTML = '<div class="chat-empty">질문을 입력하여 대화를 시작하세요</div>';
-            return;
-        }
+async function loadConversation(convId) {
+    try { renderChatMessages((await (await api(`/admin/rag/conversations/${convId}`)).json()).messages); }
+    catch (e) { console.error('대화 로드 실패:', e); }
+}
 
-        let html = '';
-        for (const m of messages) {
-            const refs = m.references || [];
-            html += `<div class="chat-msg ${m.role}">
-                <div class="msg-role">${m.role === 'user' ? '나' : 'AI'}</div>
-                <div class="msg-bubble">${escapeHtml(m.content)}</div>
-                ${m.role === 'assistant' && refs.length ? `<div class="msg-refs" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g, "&#39;")})'>참조 ${refs.length}건</div>` : ''}
-            </div>`;
-        }
-        container.innerHTML = html;
-        container.scrollTop = container.scrollHeight;
-    }
-
-    // 대화 삭제
-    async function deleteConversation(convId) {
-        if (!confirm('이 대화를 삭제하시겠습니까?')) return;
-        try {
-            await api(`/admin/rag/conversations/${convId}`, { method: 'DELETE' });
-            if (currentConvId === convId) {
-                currentConvId = null;
-                document.getElementById('chatMessages').innerHTML = '<div class="chat-empty">대화를 선택하거나 새 대화를 시작하세요</div>';
-                disableChatInput();
-            }
-            loadConversations();
-        } catch (e) {
-            console.error('대화 삭제 실패:', e);
-        }
-    }
-
-    // RAG 문서 목록 로드
-    async function loadRagDocuments() {
-        try {
-            const res = await api('/admin/rag/documents');
-            ragDocuments = await res.json();
-            renderRagDocuments(ragDocuments);
-        } catch (e) {
-            console.error('RAG 문서 로드 실패:', e);
-        }
-    }
-
-    function renderRagDocuments(docs) {
-        const container = document.getElementById('refDocList');
-        if (!docs.length) {
-            container.innerHTML = '<div class="empty-state" style="padding:16px;font-size:0.8rem">RAG 세션용 문서가 없습니다.<br>문서 관리에서 업로드하세요.</div>';
-            return;
-        }
-
-        let html = `<div class="ref-doc-item">
-            <input type="checkbox" id="refDocAll" checked onchange="toggleAllDocs(this.checked)" />
-            <label for="refDocAll"><strong>전체 선택</strong></label>
+function renderEmptyChat() {
+    document.getElementById('chatMessages').innerHTML = `
+        <div class="chat-welcome">
+            <div class="chat-welcome-icon">&#9875;</div>
+            <h3>새 대화가 시작되었습니다</h3>
+            <p>오른쪽 패널에서 참조할 문서를 선택하고<br>질문을 입력하세요</p>
         </div>`;
-        for (const doc of docs) {
-            html += `<div class="ref-doc-item">
-                <input type="checkbox" class="ref-doc-check" id="refDoc${doc.id}" value="${doc.id}" checked />
-                <label for="refDoc${doc.id}">${escapeHtml(doc.filename)}</label>
-            </div>`;
+}
+
+function renderChatMessages(messages) {
+    const c = document.getElementById('chatMessages');
+    if (!messages.length) { renderEmptyChat(); return; }
+    let html = '';
+    for (const m of messages) {
+        const refs = m.references || [];
+        const avatar = m.role === 'user' ? 'U' : 'AI';
+        html += `<div class="msg-row ${m.role}">
+            <div class="msg-avatar">${avatar}</div>
+            <div class="msg-content">
+                <div class="msg-bubble">${esc(m.content)}</div>
+                ${m.role === 'assistant' && refs.length ? `<span class="msg-refs-link" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g,"&#39;")})'>&#128196; 참조 ${refs.length}건 보기</span>` : ''}
+            </div>
+        </div>`;
+    }
+    c.innerHTML = html;
+    c.scrollTop = c.scrollHeight;
+}
+
+async function deleteConversation(convId) {
+    if (!confirm('이 대화를 삭제하시겠습니까?')) return;
+    try {
+        await api(`/admin/rag/conversations/${convId}`, { method: 'DELETE' });
+        if (currentConvId === convId) {
+            currentConvId = null;
+            document.getElementById('chatMessages').innerHTML = `<div class="chat-welcome"><div class="chat-welcome-icon">&#9875;</div><h3>RAG 문서 Q&A</h3><p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p></div>`;
+            updateChatHeader(null);
+            setChatEnabled(false);
         }
-        container.innerHTML = html;
-    }
+        loadConversations();
+    } catch (e) { console.error('대화 삭제 실패:', e); }
+}
 
-    function toggleAllDocs(checked) {
-        document.querySelectorAll('.ref-doc-check').forEach(cb => cb.checked = checked);
-    }
+// --- 대화 이름 변경 ---
+function startRename(convId, currentTitle) {
+    const item = document.querySelector(`.conv-item[onclick*="selectConversation(${convId})"]`);
+    if (!item) return;
+    const titleArea = item.querySelector('.conv-title');
+    if (!titleArea) return;
 
-    function getSelectedDocIds() {
-        const checks = document.querySelectorAll('.ref-doc-check:checked');
-        const ids = Array.from(checks).map(cb => parseInt(cb.value));
-        // 전부 선택됐으면 null (필터 안 함)
-        if (ids.length === ragDocuments.length) return null;
-        return ids.length ? ids : null;
-    }
+    const input = document.createElement('input');
+    input.className = 'conv-rename-input';
+    input.value = currentTitle;
+    input.onclick = e => e.stopPropagation();
 
-    // 메시지 전송
-    async function sendRagMessage() {
-        if (!currentConvId) return;
-        const input = document.getElementById('ragInput');
-        const message = input.value.trim();
-        if (!message) return;
+    titleArea.replaceWith(input);
+    input.focus();
+    input.select();
 
-        input.value = '';
-        const sendBtn = document.getElementById('ragSendBtn');
-        input.disabled = true;
-        sendBtn.disabled = true;
-
-        // 사용자 메시지 즉시 표시
-        appendChatMsg('user', message);
-
-        // AI 로딩 표시
-        const loadingId = appendChatMsg('assistant', '답변 생성 중...');
-
-        try {
-            const docIds = getSelectedDocIds();
-            const res = await api('/admin/rag/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    conversation_id: currentConvId,
-                    message: message,
-                    document_ids: docIds,
-                }),
-            });
-            const data = await res.json();
-
-            // 로딩 메시지 교체
-            removeChatMsg(loadingId);
-            appendChatMsg('assistant', data.reply, data.references || []);
-
-            // 참조 청크 패널 업데이트
-            showRefChunks(data.references || []);
-
-            // 대화 목록 갱신 (제목 변경 반영)
-            loadConversations();
-        } catch (e) {
-            removeChatMsg(loadingId);
-            appendChatMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
-            console.error('RAG 채팅 오류:', e);
-        } finally {
-            input.disabled = false;
-            sendBtn.disabled = false;
-            input.focus();
+    const doRename = async () => {
+        const newTitle = input.value.trim();
+        if (newTitle && newTitle !== currentTitle) {
+            try {
+                await api(`/admin/rag/conversations/${convId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle }),
+                });
+            } catch (e) { console.error('이름 변경 실패:', e); }
         }
-    }
+        loadConversations();
+    };
 
-    let msgCounter = 0;
-    function appendChatMsg(role, content, refs) {
-        const container = document.getElementById('chatMessages');
-        // 빈 상태 메시지 제거
-        const emptyEl = container.querySelector('.chat-empty');
-        if (emptyEl) emptyEl.remove();
-
-        const id = 'msg-' + (++msgCounter);
-        const div = document.createElement('div');
-        div.className = `chat-msg ${role}`;
-        div.id = id;
-
-        const refsHtml = (role === 'assistant' && refs && refs.length)
-            ? `<div class="msg-refs" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g, "&#39;")})'>참조 ${refs.length}건</div>`
-            : '';
-
-        div.innerHTML = `
-            <div class="msg-role">${role === 'user' ? '나' : 'AI'}</div>
-            <div class="msg-bubble">${escapeHtml(content)}</div>
-            ${refsHtml}
-        `;
-        container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
-        return id;
-    }
-
-    function removeChatMsg(id) {
-        const el = document.getElementById(id);
-        if (el) el.remove();
-    }
-
-    function showRefChunks(refs) {
-        const panel = document.getElementById('refChunksPanel');
-        if (!refs || !refs.length) {
-            panel.innerHTML = '<h4>참조된 청크</h4><div style="font-size:0.75rem;color:var(--text-muted)">참조된 내용이 없습니다</div>';
-            return;
-        }
-
-        let html = '<h4>참조된 청크</h4>';
-        for (const ref of refs) {
-            html += `<div class="ref-chunk-item">
-                <div class="ref-filename">${escapeHtml(ref.filename)}</div>
-                ${escapeHtml(ref.chunk_text)}
-                <div class="ref-similarity">유사도: ${(ref.similarity * 100).toFixed(1)}%</div>
-            </div>`;
-        }
-        panel.innerHTML = html;
-    }
-
-    function enableChatInput() {
-        document.getElementById('ragInput').disabled = false;
-        document.getElementById('ragSendBtn').disabled = false;
-    }
-
-    function disableChatInput() {
-        document.getElementById('ragInput').disabled = true;
-        document.getElementById('ragSendBtn').disabled = true;
-    }
-
-    // ============================================================
-    //  유틸
-    // ============================================================
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    // 모달 바깥 클릭으로 닫기
-    document.getElementById('docModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('docModal')) closeModal();
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); doRename(); }
+        if (e.key === 'Escape') loadConversations();
     });
-    </script>
+    input.addEventListener('blur', doRename);
+}
+
+function startRenameFromHeader() {
+    if (!currentConvId) return;
+    const title = document.getElementById('chatHeaderTitle').textContent;
+    const newTitle = prompt('대화 이름 변경', title);
+    if (newTitle && newTitle.trim() && newTitle.trim() !== title) {
+        api(`/admin/rag/conversations/${currentConvId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: newTitle.trim() }),
+        }).then(() => loadConversations()).catch(e => console.error('이름 변경 실패:', e));
+    }
+}
+
+// --- 대화 저장/해제 토글 ---
+async function toggleSaveConversation() {
+    if (!currentConvId) return;
+    const saveBtn = document.getElementById('chatSaveBtn');
+    const origText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '&#8987; 처리중...';
+    saveBtn.disabled = true;
+    try {
+        const res = await api(`/admin/rag/conversations/${currentConvId}/save`, { method: 'POST' });
+        if (!res.ok) { alert('저장 토글 실패: ' + (await res.json()).detail); return; }
+        await loadConversations();
+    } catch (e) {
+        console.error('저장 토글 실패:', e);
+        alert('저장 토글에 실패했습니다.');
+        saveBtn.innerHTML = origText;
+    } finally {
+        saveBtn.disabled = false;
+    }
+}
+
+async function toggleSaveFromList(convId) {
+    try {
+        const res = await api(`/admin/rag/conversations/${convId}/save`, { method: 'POST' });
+        if (!res.ok) { console.error('저장 토글 실패:', await res.text()); }
+        await loadConversations();
+    } catch (e) { console.error('저장 토글 실패:', e); }
+}
+
+// --- RAG 문서 ---
+async function loadRagDocuments() {
+    try { ragDocuments = await (await api('/admin/rag/documents')).json(); renderRagDocuments(ragDocuments); }
+    catch (e) { console.error('RAG 문서 로드 실패:', e); }
+}
+
+function renderRagDocuments(docs) {
+    const c = document.getElementById('refDocList');
+    if (!docs.length) {
+        c.innerHTML = '<div class="empty-state" style="padding:24px 12px;font-size:0.8rem"><div style="font-size:1.2rem;margin-bottom:6px;">&#128196;</div>RAG 세션용 문서가 없습니다<br><span style="font-size:0.72rem">문서 관리에서 업로드하세요</span></div>';
+        return;
+    }
+    let html = `<div class="ref-doc-item ref-doc-all"><input type="checkbox" id="refDocAll" checked onchange="toggleAllDocs(this.checked)" /><label for="refDocAll">전체 문서</label></div>`;
+    for (const d of docs) {
+        html += `<div class="ref-doc-item"><input type="checkbox" class="ref-doc-check" id="refDoc${d.id}" value="${d.id}" checked /><label for="refDoc${d.id}">&#128196; ${esc(d.filename)}</label></div>`;
+    }
+    c.innerHTML = html;
+}
+
+function toggleAllDocs(checked) { document.querySelectorAll('.ref-doc-check').forEach(cb => cb.checked = checked); }
+
+function getSelectedDocIds() {
+    const ids = Array.from(document.querySelectorAll('.ref-doc-check:checked')).map(cb => parseInt(cb.value));
+    return (ids.length === ragDocuments.length || ids.length === 0) ? null : ids;
+}
+
+// --- 메시지 전송 ---
+async function sendRagMessage() {
+    if (!currentConvId) return;
+    const input = document.getElementById('ragInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    input.value = '';
+    setChatEnabled(false);
+
+    appendMsg('user', msg);
+    const loadingId = showTyping();
+
+    try {
+        const data = await (await api('/admin/rag/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: currentConvId, message: msg, document_ids: getSelectedDocIds() }),
+        })).json();
+
+        removeEl(loadingId);
+        appendMsg('assistant', data.reply, data.references || []);
+        showRefChunks(data.references || []);
+        loadConversations();
+    } catch (e) {
+        removeEl(loadingId);
+        appendMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
+        console.error('RAG 채팅 오류:', e);
+    } finally {
+        setChatEnabled(true);
+    }
+}
+
+let _mc = 0;
+function appendMsg(role, content, refs) {
+    const c = document.getElementById('chatMessages');
+    const welcome = c.querySelector('.chat-welcome');
+    if (welcome) welcome.remove();
+
+    const id = 'msg-' + (++_mc);
+    const avatar = role === 'user' ? 'U' : 'AI';
+    const refsHtml = (role === 'assistant' && refs && refs.length)
+        ? `<span class="msg-refs-link" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g,"&#39;")})'>&#128196; 참조 ${refs.length}건 보기</span>` : '';
+
+    const div = document.createElement('div');
+    div.className = `msg-row ${role}`;
+    div.id = id;
+    div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-content"><div class="msg-bubble">${esc(content)}</div>${refsHtml}</div>`;
+    c.appendChild(div);
+    c.scrollTop = c.scrollHeight;
+    return id;
+}
+
+function showTyping() {
+    const c = document.getElementById('chatMessages');
+    const id = 'typing-' + (++_mc);
+    const div = document.createElement('div');
+    div.className = 'msg-row assistant';
+    div.id = id;
+    div.innerHTML = `<div class="msg-avatar">AI</div><div class="msg-content"><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div></div>`;
+    c.appendChild(div);
+    c.scrollTop = c.scrollHeight;
+    return id;
+}
+
+function removeEl(id) { const el = document.getElementById(id); if (el) el.remove(); }
+
+function showRefChunks(refs) {
+    const p = document.getElementById('refChunksPanel');
+    if (!refs || !refs.length) {
+        p.innerHTML = `<div class="ref-chunks-title">&#128269; 참조된 청크</div><div style="font-size:0.76rem;color:var(--text-muted);text-align:center;padding:12px 0;">참조된 내용이 없습니다</div>`;
+        return;
+    }
+    let html = '<div class="ref-chunks-title">&#128269; 참조된 청크</div>';
+    for (const r of refs) {
+        const pct = Math.round(r.similarity * 100);
+        html += `<div class="ref-chunk-card">
+            <div class="chunk-file">&#128196; ${esc(r.filename)}</div>
+            ${esc(r.chunk_text)}
+            <div class="chunk-score"><span>유사도 ${pct}%</span><div class="score-bar"><div class="score-bar-fill" style="width:${pct}%"></div></div></div>
+        </div>`;
+    }
+    p.innerHTML = html;
+}
+
+function setChatEnabled(enabled) {
+    document.getElementById('ragInput').disabled = !enabled;
+    document.getElementById('ragSendBtn').disabled = !enabled;
+    if (enabled) document.getElementById('ragInput').focus();
+}
+
+// ============================================================
+//  유틸
+// ============================================================
+function esc(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+
+document.getElementById('docModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('docModal')) closeModal();
+});
+</script>
 </body>
 </html>

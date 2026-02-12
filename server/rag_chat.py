@@ -1,17 +1,16 @@
 """RAG 세션 전용 채팅 API 라우터"""
 
-import os
 import json
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
 import db
 from rag import search_similar_chunks
+from admin import verify_token
 
 router = APIRouter(prefix="/admin/rag", tags=["rag-chat"])
 
-# admin.py의 verify_token 재사용
-from admin import verify_token
+CONVERSATION_TTL_DAYS = 7  # 대화 보관 기간 (일)
 
 
 # --- 요청/응답 모델 ---
@@ -22,6 +21,32 @@ class RagChatRequest(BaseModel):
     document_ids: list[int] | None = None
 
 
+class ConversationCreate(BaseModel):
+    title: str = "새 대화"
+
+
+class ConversationRename(BaseModel):
+    title: str
+
+
+# --- 7일 초과 대화 자동 삭제 (saved 제외) ---
+
+async def cleanup_old_conversations():
+    """7일 이상 된 대화를 자동 삭제한다 (saved=TRUE는 제외). 서버 시작 시 호출."""
+    if not db.vector_pool:
+        return
+    try:
+        async with db.vector_pool.acquire() as conn:
+            result = await conn.execute(
+                f"DELETE FROM rag_conversations WHERE saved = FALSE AND updated_at < NOW() - INTERVAL '{CONVERSATION_TTL_DAYS} days'"
+            )
+            count = int(result.split()[-1]) if result else 0
+            if count > 0:
+                print(f"[RAG 정리] {count}개의 오래된 대화 삭제 완료", flush=True)
+    except Exception as e:
+        print(f"[RAG 정리] 오류: {e}", flush=True)
+
+
 # --- 대화 목록 ---
 
 @router.get("/conversations")
@@ -30,12 +55,13 @@ async def list_conversations(_=Depends(verify_token)):
         raise HTTPException(status_code=500, detail="DB 연결 없음")
     async with db.vector_pool.acquire() as conn:
         rows = await conn.fetch(
-            "SELECT id, title, created_at, updated_at FROM rag_conversations ORDER BY updated_at DESC"
+            "SELECT id, title, saved, created_at, updated_at FROM rag_conversations ORDER BY updated_at DESC"
         )
     return [
         {
             "id": row["id"],
             "title": row["title"],
+            "saved": row["saved"],
             "created_at": row["created_at"].isoformat() if row["created_at"] else None,
             "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
         }
@@ -46,18 +72,19 @@ async def list_conversations(_=Depends(verify_token)):
 # --- 새 대화 생성 ---
 
 @router.post("/conversations")
-async def create_conversation(body: dict = None, _=Depends(verify_token)):
+async def create_conversation(body: ConversationCreate = None, _=Depends(verify_token)):
     if not db.vector_pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
-    title = (body or {}).get("title", "새 대화")
+    title = body.title if body else "새 대화"
     async with db.vector_pool.acquire() as conn:
         row = await conn.fetchrow(
-            "INSERT INTO rag_conversations (title) VALUES ($1) RETURNING id, title, created_at, updated_at",
+            "INSERT INTO rag_conversations (title) VALUES ($1) RETURNING id, title, saved, created_at, updated_at",
             title,
         )
     return {
         "id": row["id"],
         "title": row["title"],
+        "saved": row["saved"],
         "created_at": row["created_at"].isoformat(),
         "updated_at": row["updated_at"].isoformat(),
     }
@@ -71,7 +98,7 @@ async def get_conversation(conv_id: int, _=Depends(verify_token)):
         raise HTTPException(status_code=500, detail="DB 연결 없음")
     async with db.vector_pool.acquire() as conn:
         conv = await conn.fetchrow(
-            "SELECT id, title, created_at, updated_at FROM rag_conversations WHERE id = $1",
+            "SELECT id, title, saved, created_at, updated_at FROM rag_conversations WHERE id = $1",
             conv_id,
         )
         if not conv:
@@ -80,21 +107,31 @@ async def get_conversation(conv_id: int, _=Depends(verify_token)):
             "SELECT id, role, content, refs, created_at FROM rag_messages WHERE conversation_id = $1 ORDER BY id",
             conv_id,
         )
+
+    parsed_messages = []
+    for m in messages:
+        refs_raw = m["refs"]
+        if isinstance(refs_raw, list):
+            refs = refs_raw
+        elif isinstance(refs_raw, str):
+            refs = json.loads(refs_raw) if refs_raw else []
+        else:
+            refs = []
+        parsed_messages.append({
+            "id": m["id"],
+            "role": m["role"],
+            "content": m["content"],
+            "references": refs,
+            "created_at": m["created_at"].isoformat() if m["created_at"] else None,
+        })
+
     return {
         "id": conv["id"],
         "title": conv["title"],
+        "saved": conv["saved"],
         "created_at": conv["created_at"].isoformat() if conv["created_at"] else None,
         "updated_at": conv["updated_at"].isoformat() if conv["updated_at"] else None,
-        "messages": [
-            {
-                "id": m["id"],
-                "role": m["role"],
-                "content": m["content"],
-                "references": m["refs"] if isinstance(m["refs"], list) else json.loads(m["refs"] or "[]"),
-                "created_at": m["created_at"].isoformat() if m["created_at"] else None,
-            }
-            for m in messages
-        ],
+        "messages": parsed_messages,
     }
 
 
@@ -109,6 +146,42 @@ async def delete_conversation(conv_id: int, _=Depends(verify_token)):
     if result == "DELETE 0":
         raise HTTPException(status_code=404, detail="대화를 찾을 수 없습니다")
     return {"message": "삭제 완료"}
+
+
+# --- 대화 이름 변경 ---
+
+@router.patch("/conversations/{conv_id}")
+async def rename_conversation(conv_id: int, body: ConversationRename, _=Depends(verify_token)):
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    title = body.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="제목을 입력하세요")
+    async with db.vector_pool.acquire() as conn:
+        result = await conn.execute(
+            "UPDATE rag_conversations SET title = $1 WHERE id = $2",
+            title,
+            conv_id,
+        )
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="대화를 찾을 수 없습니다")
+    return {"message": "변경 완료", "title": title}
+
+
+# --- 대화 저장/해제 토글 ---
+
+@router.post("/conversations/{conv_id}/save")
+async def toggle_save_conversation(conv_id: int, _=Depends(verify_token)):
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "UPDATE rag_conversations SET saved = NOT COALESCE(saved, FALSE) WHERE id = $1 RETURNING saved",
+            conv_id,
+        )
+    if not row:
+        raise HTTPException(status_code=404, detail="대화를 찾을 수 없습니다")
+    return {"saved": row["saved"]}
 
 
 # --- RAG 세션용 문서 목록 ---
@@ -168,14 +241,14 @@ async def rag_chat(req: RagChatRequest, _=Depends(verify_token)):
 
     # 이전 대화 이력 가져오기 (최근 10개)
     async with db.vector_pool.acquire() as conn:
-        prev_messages = await conn.fetch(
+        prev_rows = await conn.fetch(
             "SELECT role, content FROM rag_messages WHERE conversation_id = $1 ORDER BY id DESC LIMIT 10",
             req.conversation_id,
         )
-    prev_messages = list(reversed(prev_messages))
+    prev_messages = [{"role": r["role"], "content": r["content"]} for r in reversed(prev_rows)]
 
     # AI 답변 생성
-    reply = await _generate_rag_answer(req.message, references, prev_messages)
+    reply = _generate_rag_answer(req.message, references, prev_messages)
 
     # 사용자 메시지 + AI 답변 DB 저장
     refs_json = json.dumps(references, ensure_ascii=False)
@@ -211,12 +284,12 @@ async def rag_chat(req: RagChatRequest, _=Depends(verify_token)):
     }
 
 
-async def _generate_rag_answer(
+def _generate_rag_answer(
     user_message: str,
     references: list[dict],
-    prev_messages: list,
+    prev_messages: list[dict],
 ) -> str:
-    """Gemini로 RAG 기반 답변을 생성한다."""
+    """Gemini로 RAG 기반 답변을 생성한다 (동기 함수)."""
     from decouple import config
     import google.genai as genai
     from google.genai import types
@@ -244,9 +317,7 @@ async def _generate_rag_answer(
 
     contents = []
     for m in prev_messages:
-        role = m["role"] if isinstance(m, dict) else m["role"]
-        content = m["content"] if isinstance(m, dict) else m["content"]
-        contents.append({"role": role, "parts": [{"text": content}]})
+        contents.append({"role": m["role"], "parts": [{"text": m["content"]}]})
     contents.append({"role": "user", "parts": [{"text": user_message}]})
 
     try:
