@@ -17,6 +17,7 @@ from db import init_db, close_db, init_vector_db, close_vector_db, get_all_produ
 from admin import router as admin_router
 from rag_chat import router as rag_chat_router, cleanup_old_conversations
 from mail_compose import router as mail_compose_router, gmail_auto_check_loop
+from inquiry import router as inquiry_router
 from rag import search_similar_chunks
 
 _scheduler_task = None
@@ -66,6 +67,7 @@ app.add_middleware(
 app.include_router(admin_router)
 app.include_router(rag_chat_router)
 app.include_router(mail_compose_router)
+app.include_router(inquiry_router)
 print("app 생성완료")
 
 

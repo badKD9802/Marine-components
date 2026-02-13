@@ -170,7 +170,7 @@ def send_email(addr: str, app_password: str, to: str, subject: str, body: str, r
 
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
         server.starttls()
         server.login(addr, app_password)
         server.sendmail(addr, to, msg.as_string())

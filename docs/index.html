@@ -602,55 +602,261 @@
             line-height: 1.6;
         }
 
-        /* ==================== 7. QUOTE CTA SECTION ==================== */
+        /* ==================== 7. QUOTE / INQUIRY BOARD SECTION ==================== */
         .quote-section {
             background: linear-gradient(135deg, var(--primary) 0%, #0077b6 100%);
             color: white;
             padding: 80px 24px;
-            text-align: center;
+        }
+        .quote-container {
+            max-width: 960px;
+            margin: 0 auto;
         }
         .quote-title {
             font-size: 2.2rem;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
+            text-align: center;
         }
         .quote-subtitle {
             font-size: 1.1rem;
             color: rgba(255,255,255,0.9);
-            margin-bottom: 40px;
+            margin-bottom: 32px;
+            text-align: center;
         }
-        .quote-buttons {
+        .inquiry-toolbar {
             display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-bottom: 40px;
+            justify-content: flex-end;
+            margin-bottom: 12px;
         }
-        .btn-quote {
-            padding: 16px 36px;
+        .btn-inquiry-write {
+            padding: 10px 24px;
             background: white;
             color: var(--primary);
             border: none;
             border-radius: var(--radius-full);
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             font-weight: 600;
+            cursor: pointer;
             box-shadow: var(--shadow-md);
             transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
         }
-        .btn-quote:hover {
-            transform: translateY(-3px);
+        .btn-inquiry-write:hover {
+            transform: translateY(-2px);
             box-shadow: var(--shadow-xl);
         }
-        .contact-info {
+        .inquiry-table-wrapper {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+        .inquiry-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: var(--text-dark);
+            font-size: 0.93rem;
+        }
+        .inquiry-table th {
+            background: #f0f4f8;
+            padding: 12px 14px;
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .inquiry-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f0f4f8;
+        }
+        .inquiry-table tbody tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .inquiry-table tbody tr:hover {
+            background: #f7fafc;
+        }
+        .inquiry-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .inquiry-status.waiting {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .inquiry-status.answered {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .inquiry-pagination {
             display: flex;
             justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-            font-size: 1.05rem;
-            opacity: 0.95;
+            gap: 6px;
+            padding: 16px;
+        }
+        .inquiry-pagination button {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.4);
+            background: transparent;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .inquiry-pagination button.active,
+        .inquiry-pagination button:hover {
+            background: white;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .inquiry-form-card,
+        .inquiry-detail-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 36px;
+            color: var(--text-dark);
+            box-shadow: var(--shadow-md);
+        }
+        .inquiry-form-card h3,
+        .inquiry-detail-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 24px;
+            color: var(--primary);
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.93rem;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .btn-inquiry-submit {
+            padding: 12px 32px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-inquiry-submit:hover {
+            background: #0077b6;
+        }
+        .btn-inquiry-cancel {
+            padding: 12px 32px;
+            background: transparent;
+            color: var(--text-dark);
+            border: 1px solid #d1d5db;
+            border-radius: var(--radius-full);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-inquiry-cancel:hover {
+            background: #f3f4f6;
+        }
+        .inquiry-detail-card .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .inquiry-detail-card .detail-header h3 {
+            margin-bottom: 0;
+        }
+        .inquiry-detail-card .detail-meta {
+            font-size: 0.88rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+        .inquiry-detail-card .detail-body {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            margin-bottom: 24px;
+        }
+        .inquiry-reply {
+            border-top: 3px solid var(--accent);
+            padding-top: 20px;
+        }
+        .inquiry-reply h4 {
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        .inquiry-reply .reply-body {
+            background: #fffbf0;
+            border-radius: 8px;
+            padding: 16px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        .inquiry-reply .reply-date {
+            font-size: 0.82rem;
+            color: var(--text-light);
+            margin-top: 8px;
+        }
+        .inquiry-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .inquiry-modal-overlay.show {
+            display: flex;
+        }
+        .inquiry-modal {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+            color: var(--text-dark);
+            box-shadow: var(--shadow-xl);
+        }
+        .inquiry-modal h3 {
+            margin-bottom: 20px;
+            color: var(--primary);
+            font-size: 1.15rem;
         }
 
         /* ==================== 8. FOOTER ==================== */
@@ -1003,16 +1209,20 @@
                 gap: 24px;
             }
 
-            /* Quote */
+            /* Quote / Inquiry */
             .quote-section {
-                padding: 60px 20px;
+                padding: 60px 16px;
             }
             .quote-title {
                 font-size: 1.8rem;
             }
-            .contact-info {
-                flex-direction: column;
-                gap: 20px;
+            .inquiry-table .col-no,
+            .inquiry-table .col-author {
+                display: none;
+            }
+            .inquiry-form-card,
+            .inquiry-detail-card {
+                padding: 24px 16px;
             }
 
             /* Footer */
@@ -1262,26 +1472,95 @@
         </div>
     </section>
 
-    <!-- ==================== QUOTE CTA SECTION ==================== -->
+    <!-- ==================== QUOTE / INQUIRY BOARD SECTION ==================== -->
     <section class="quote-section" id="quote-section">
-        <div class="animate-on-scroll">
-            <h2 class="quote-title" data-i18n="quoteTitle">지금 바로 견적을 요청하세요</h2>
-            <p class="quote-subtitle" data-i18n="quoteSubtitle">전문 상담원이 신속하게 답변해 드립니다</p>
+        <div class="quote-container animate-on-scroll">
+            <h2 class="quote-title" data-i18n="quoteTitle">견적문의</h2>
+            <p class="quote-subtitle" data-i18n="quoteSubtitle">궁금한 사항을 남겨주시면 신속하게 답변해 드립니다</p>
 
-            <div class="quote-buttons">
-                <button class="btn-quote" onclick="window.location.href='tel:010-4056-2656'">
-                    <span>📞</span>
-                    <span data-i18n="btnPhone">전화 문의</span>
-                </button>
-                <button class="btn-quote" onclick="window.location.href='mailto:qorudemr92@gmail.com'">
-                    <span>📧</span>
-                    <span data-i18n="btnEmail">이메일 문의</span>
-                </button>
+            <!-- 목록 뷰 -->
+            <div id="inquiryListView">
+                <div class="inquiry-toolbar">
+                    <button class="btn-inquiry-write" onclick="showInquiryForm()">글쓰기</button>
+                </div>
+                <div class="inquiry-table-wrapper">
+                    <table class="inquiry-table">
+                        <thead>
+                            <tr>
+                                <th class="col-no" style="width:60px">번호</th>
+                                <th>제목</th>
+                                <th class="col-author" style="width:100px">작성자</th>
+                                <th style="width:100px">날짜</th>
+                                <th style="width:80px">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inquiryTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="inquiry-pagination" id="inquiryPagination"></div>
             </div>
 
-            <div class="contact-info">
-                <div>📞 010-4056-2656</div>
-                <div>📧 qorudemr92@gmail.com</div>
+            <!-- 글쓰기 뷰 -->
+            <div id="inquiryFormView" style="display:none">
+                <div class="inquiry-form-card">
+                    <h3>견적문의 작성</h3>
+                    <div class="form-group">
+                        <label>이름</label>
+                        <input type="text" id="inqFormName" placeholder="이름을 입력하세요" maxlength="50" />
+                    </div>
+                    <div class="form-group">
+                        <label>비밀번호 (4자 이상)</label>
+                        <input type="password" id="inqFormPw" placeholder="비밀번호" maxlength="100" />
+                    </div>
+                    <div class="form-group">
+                        <label>제목</label>
+                        <input type="text" id="inqFormTitle" placeholder="제목을 입력하세요" maxlength="200" />
+                    </div>
+                    <div class="form-group">
+                        <label>내용</label>
+                        <textarea id="inqFormContent" placeholder="문의 내용을 입력하세요" maxlength="5000"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-inquiry-submit" onclick="submitInquiry()">등록</button>
+                        <button class="btn-inquiry-cancel" onclick="showInquiryList()">취소</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상세 뷰 -->
+            <div id="inquiryDetailView" style="display:none">
+                <div class="inquiry-detail-card">
+                    <div class="detail-header">
+                        <h3 id="inqDetailTitle"></h3>
+                        <span class="inquiry-status" id="inqDetailStatus"></span>
+                    </div>
+                    <div class="detail-meta" id="inqDetailMeta"></div>
+                    <div class="detail-body" id="inqDetailBody"></div>
+                    <div id="inqDetailReplies"></div>
+                    <div class="form-actions">
+                        <button class="btn-inquiry-cancel" onclick="showInquiryList()">목록으로</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 비밀번호 확인 모달 -->
+        <div class="inquiry-modal-overlay" id="inquiryModal">
+            <div class="inquiry-modal">
+                <h3>문의 확인</h3>
+                <div class="form-group">
+                    <label>작성자 이름</label>
+                    <input type="text" id="inqModalName" placeholder="이름" />
+                </div>
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" id="inqModalPw" placeholder="비밀번호" />
+                </div>
+                <div class="form-actions">
+                    <button class="btn-inquiry-submit" onclick="verifyAndView()">확인</button>
+                    <button class="btn-inquiry-cancel" onclick="closeVerifyModal()">취소</button>
+                </div>
             </div>
         </div>
     </section>
@@ -1425,10 +1704,8 @@
                 service2Desc: "주요 부품을 상시 재고로 보유하여 긴급 상황에도 즉시 대응 가능합니다.",
                 service3Title: "맞춤 견적",
                 service3Desc: "수량별, 고객별 맞춤 특별 가격을 제공하여 최상의 가성비를 제공합니다.",
-                quoteTitle: "지금 바로 견적을 요청하세요",
-                quoteSubtitle: "전문 상담원이 신속하게 답변해 드립니다",
-                btnPhone: "전화 문의",
-                btnEmail: "이메일 문의",
+                quoteTitle: "견적문의",
+                quoteSubtitle: "궁금한 사항을 남겨주시면 신속하게 답변해 드립니다",
                 footerDesc: "해양 엔진 부품 전문 기업으로 20년 이상의 경험과 신뢰를 바탕으로 최고의 서비스를 제공합니다.",
                 footerProducts: "제품 카테고리",
                 footerCat1: "베어링",
@@ -1494,10 +1771,8 @@
                 service2Desc: "Major parts are always in stock for immediate response to emergencies.",
                 service3Title: "Custom Quotation",
                 service3Desc: "We offer special prices by quantity and customer for the best value.",
-                quoteTitle: "Request a Quote Now",
-                quoteSubtitle: "Our experts will respond promptly",
-                btnPhone: "Call Us",
-                btnEmail: "Email Us",
+                quoteTitle: "Quote Inquiry",
+                quoteSubtitle: "Leave your questions and we'll respond promptly",
                 footerDesc: "As a marine engine parts specialist with over 20 years of experience and trust, we provide the best service.",
                 footerProducts: "Product Categories",
                 footerCat1: "Bearings",
@@ -1563,10 +1838,8 @@
                 service2Desc: "主要配件常备库存，即使在紧急情况下也能立即响应。",
                 service3Title: "定制报价",
                 service3Desc: "根据数量和客户提供定制特价，提供最佳性价比。",
-                quoteTitle: "立即申请报价",
-                quoteSubtitle: "专业顾问将迅速回复",
-                btnPhone: "电话咨询",
-                btnEmail: "电子邮件咨询",
+                quoteTitle: "询价",
+                quoteSubtitle: "请留下您的问题，我们会迅速回复",
                 footerDesc: "作为一家拥有20多年经验和信任的船用发动机配件专业公司，我们提供最好的服务。",
                 footerProducts: "产品类别",
                 footerCat1: "轴承",
@@ -1798,6 +2071,165 @@
             });
         }
 
+        // ==================== INQUIRY BOARD ====================
+        const INQUIRY_API = API_BASE;
+        let inquiryPage = 1;
+        const inquiryPageSize = 10;
+        let selectedInquiryId = null;
+
+        function showInquiryList() {
+            document.getElementById('inquiryListView').style.display = '';
+            document.getElementById('inquiryFormView').style.display = 'none';
+            document.getElementById('inquiryDetailView').style.display = 'none';
+            loadInquiries();
+        }
+
+        function showInquiryForm() {
+            document.getElementById('inquiryListView').style.display = 'none';
+            document.getElementById('inquiryFormView').style.display = '';
+            document.getElementById('inquiryDetailView').style.display = 'none';
+            document.getElementById('inqFormName').value = '';
+            document.getElementById('inqFormPw').value = '';
+            document.getElementById('inqFormTitle').value = '';
+            document.getElementById('inqFormContent').value = '';
+        }
+
+        function showInquiryDetail(data) {
+            document.getElementById('inquiryListView').style.display = 'none';
+            document.getElementById('inquiryFormView').style.display = 'none';
+            document.getElementById('inquiryDetailView').style.display = '';
+            document.getElementById('inqDetailTitle').textContent = data.title;
+            const statusEl = document.getElementById('inqDetailStatus');
+            statusEl.textContent = data.status === 'answered' ? '답변완료' : '대기중';
+            statusEl.className = 'inquiry-status ' + (data.status === 'answered' ? 'answered' : 'waiting');
+            document.getElementById('inqDetailMeta').textContent = data.author_name + ' | ' + formatDate(data.created_at);
+            document.getElementById('inqDetailBody').textContent = data.content;
+            const repliesEl = document.getElementById('inqDetailReplies');
+            repliesEl.innerHTML = '';
+            if (data.replies && data.replies.length > 0) {
+                data.replies.forEach(function(rp) {
+                    const div = document.createElement('div');
+                    div.className = 'inquiry-reply';
+                    div.innerHTML = '<h4>관리자 답변</h4>'
+                        + '<div class="reply-body">' + escapeHtml(rp.content) + '</div>'
+                        + '<div class="reply-date">' + formatDate(rp.created_at) + '</div>';
+                    repliesEl.appendChild(div);
+                });
+            }
+        }
+
+        async function loadInquiries() {
+            try {
+                const res = await fetch(INQUIRY_API + '/api/inquiries?page=' + inquiryPage + '&size=' + inquiryPageSize);
+                const data = await res.json();
+                renderInquiryList(data.items, data.total);
+            } catch (e) {
+                console.warn('견적문의 로드 실패:', e);
+            }
+        }
+
+        async function submitInquiry() {
+            const name = document.getElementById('inqFormName').value.trim();
+            const pw = document.getElementById('inqFormPw').value;
+            const title = document.getElementById('inqFormTitle').value.trim();
+            const content = document.getElementById('inqFormContent').value.trim();
+            if (!name || !pw || !title || !content) { alert('모든 항목을 입력해주세요.'); return; }
+            if (pw.length < 4) { alert('비밀번호는 4자 이상이어야 합니다.'); return; }
+            try {
+                const res = await fetch(INQUIRY_API + '/api/inquiries', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ author_name: name, password: pw, title: title, content: content })
+                });
+                if (!res.ok) { const err = await res.json(); alert(err.detail || '등록 실패'); return; }
+                alert('문의가 등록되었습니다.');
+                inquiryPage = 1;
+                showInquiryList();
+            } catch (e) {
+                alert('오류: ' + e.message);
+            }
+        }
+
+        function renderInquiryList(items, total) {
+            const tbody = document.getElementById('inquiryTableBody');
+            if (!items || items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#94a3b8;">등록된 문의가 없습니다.</td></tr>';
+                document.getElementById('inquiryPagination').innerHTML = '';
+                return;
+            }
+            tbody.innerHTML = items.map(function(item) {
+                const statusClass = item.status === 'answered' ? 'answered' : 'waiting';
+                const statusText = item.status === 'answered' ? '답변완료' : '대기중';
+                return '<tr onclick="openVerifyModal(' + item.id + ')">'
+                    + '<td class="col-no">' + item.id + '</td>'
+                    + '<td>' + escapeHtml(item.title) + '</td>'
+                    + '<td class="col-author">' + escapeHtml(item.author_name) + '</td>'
+                    + '<td>' + formatDate(item.created_at) + '</td>'
+                    + '<td><span class="inquiry-status ' + statusClass + '">' + statusText + '</span></td>'
+                    + '</tr>';
+            }).join('');
+            const totalPages = Math.ceil(total / inquiryPageSize);
+            renderInquiryPagination(totalPages);
+        }
+
+        function renderInquiryPagination(totalPages) {
+            const container = document.getElementById('inquiryPagination');
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+            let html = '';
+            for (let i = 1; i <= totalPages; i++) {
+                html += '<button class="' + (i === inquiryPage ? 'active' : '') + '" onclick="goInquiryPage(' + i + ')">' + i + '</button>';
+            }
+            container.innerHTML = html;
+        }
+
+        function goInquiryPage(page) {
+            inquiryPage = page;
+            loadInquiries();
+        }
+
+        function openVerifyModal(id) {
+            selectedInquiryId = id;
+            document.getElementById('inqModalName').value = '';
+            document.getElementById('inqModalPw').value = '';
+            document.getElementById('inquiryModal').classList.add('show');
+        }
+
+        function closeVerifyModal() {
+            document.getElementById('inquiryModal').classList.remove('show');
+            selectedInquiryId = null;
+        }
+
+        async function verifyAndView() {
+            const name = document.getElementById('inqModalName').value.trim();
+            const pw = document.getElementById('inqModalPw').value;
+            if (!name || !pw) { alert('이름과 비밀번호를 입력해주세요.'); return; }
+            try {
+                const res = await fetch(INQUIRY_API + '/api/inquiries/' + selectedInquiryId + '/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ author_name: name, password: pw })
+                });
+                if (res.status === 403) { alert('이름 또는 비밀번호가 올바르지 않습니다.'); return; }
+                if (!res.ok) { const err = await res.json(); alert(err.detail || '확인 실패'); return; }
+                const data = await res.json();
+                closeVerifyModal();
+                showInquiryDetail(data);
+            } catch (e) {
+                alert('오류: ' + e.message);
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function formatDate(isoStr) {
+            if (!isoStr) return '';
+            const d = new Date(isoStr);
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+
         // ==================== INITIALIZATION ====================
         window.addEventListener('DOMContentLoaded', async function() {
             try {
@@ -1806,6 +2238,7 @@
                 console.warn('fetchProducts failed, using fallback:', e);
             }
 
+            loadInquiries();
             if (typeof products !== 'undefined' && products.length > 0) {
                 filteredProducts = products;
                 renderProducts(products);

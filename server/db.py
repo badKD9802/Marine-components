@@ -76,6 +76,25 @@ async def create_tables():
                 updated_at    TIMESTAMPTZ DEFAULT NOW()
             );
         """)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS inquiries (
+                id            SERIAL PRIMARY KEY,
+                author_name   TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                title         TEXT NOT NULL,
+                content       TEXT NOT NULL,
+                status        TEXT NOT NULL DEFAULT 'waiting',
+                created_at    TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS inquiry_replies (
+                id          SERIAL PRIMARY KEY,
+                inquiry_id  INTEGER NOT NULL REFERENCES inquiries(id) ON DELETE CASCADE,
+                content     TEXT NOT NULL,
+                created_at  TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
 
 
 async def create_vector_tables():

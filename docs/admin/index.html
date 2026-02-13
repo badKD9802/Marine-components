@@ -154,6 +154,76 @@
         .tab-content.active { display: block; }
         .content { max-width: 960px; margin: 0 auto; padding: 24px; }
 
+        /* ===== 서비스 안내 탭 ===== */
+        .guide-container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+        .guide-hero {
+            background: var(--gradient);
+            color: white;
+            border-radius: 16px;
+            padding: 48px 36px;
+            text-align: center;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-md);
+        }
+        .guide-hero .hero-icon { font-size: 2.8rem; margin-bottom: 12px; }
+        .guide-hero h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+        .guide-hero p { font-size: 0.95rem; opacity: 0.9; line-height: 1.6; }
+        .guide-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+        .guide-card {
+            background: white;
+            border-radius: 14px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+        .guide-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .guide-card .card-icon { font-size: 2.2rem; margin-bottom: 12px; }
+        .guide-card .card-title { font-size: 1.05rem; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
+        .guide-card .card-desc { font-size: 0.82rem; color: var(--text-light); line-height: 1.5; margin-bottom: 16px; }
+        .guide-card .card-link {
+            display: inline-block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--accent);
+            padding: 6px 18px;
+            border: 1.5px solid var(--accent);
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .guide-card:hover .card-link { background: var(--accent); color: white; }
+        .guide-flow {
+            background: white;
+            border-radius: 14px;
+            padding: 24px 28px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+        .guide-flow h3 { font-size: 1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 16px; }
+        .guide-flow-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .guide-flow-step {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.88rem;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        .guide-flow-arrow { color: var(--accent); font-size: 1.2rem; font-weight: 700; }
+        @media (max-width: 768px) {
+            .guide-cards { grid-template-columns: 1fr; }
+            .guide-hero { padding: 32px 20px; }
+            .guide-hero h2 { font-size: 1.3rem; }
+        }
+
         /* ===== 업로드 영역 ===== */
         .upload-section { display: flex; gap: 16px; margin-bottom: 24px; }
         .upload-card {
@@ -946,9 +1016,41 @@
         /* 수신 메일 입력 영역 */
         .mail-incoming {
             background: white;
-            border-bottom: 1px solid var(--border-light);
+            border-bottom: none;
             padding: 16px 20px;
             flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        /* 수신 메일 ↔ 초안 리사이즈 핸들 */
+        .mail-resize-handle {
+            height: 6px;
+            background: var(--border-light);
+            cursor: row-resize;
+            flex-shrink: 0;
+            position: relative;
+            transition: background 0.15s;
+        }
+        .mail-resize-handle:hover,
+        .mail-resize-handle.active {
+            background: var(--accent);
+        }
+        .mail-resize-handle::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--text-muted);
+            opacity: 0.5;
+        }
+        .mail-resize-handle:hover::after,
+        .mail-resize-handle.active::after {
+            background: white;
+            opacity: 0.9;
         }
         .mail-incoming-header {
             display: flex;
@@ -983,8 +1085,7 @@
         .mail-controls select:focus { border-color: var(--accent); }
         .mail-incoming textarea {
             width: 100%;
-            min-height: 120px;
-            max-height: 200px;
+            height: 100%;
             border: 1.5px solid var(--border);
             border-radius: 10px;
             padding: 12px 14px;
@@ -992,9 +1093,10 @@
             font-family: inherit;
             line-height: 1.6;
             color: var(--text-regular);
-            resize: vertical;
+            resize: none;
             outline: none;
             transition: border-color 0.2s;
+            box-sizing: border-box;
         }
         .mail-incoming textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,153,204,0.08); }
         .mail-incoming textarea::placeholder { color: var(--text-muted); }
@@ -1006,8 +1108,8 @@
             border: 1.5px solid var(--border);
             border-radius: 10px;
             overflow: hidden;
-            min-height: 120px;
-            max-height: 240px;
+            height: 100%;
+            box-sizing: border-box;
         }
         .mail-incoming-split.visible {
             display: flex;
@@ -1456,13 +1558,97 @@
         </div>
 
         <div class="tab-nav">
-            <button class="active" onclick="switchTab('docs')">문서 관리</button>
+            <button class="active" onclick="switchTab('guide')">서비스 안내</button>
             <button onclick="switchTab('rag')">RAG 채팅</button>
             <button onclick="switchTab('mail')">메일 작성</button>
+            <button onclick="switchTab('inquiry')">견적문의</button>
+            <button onclick="switchTab('docs')">문서 관리</button>
+        </div>
+
+        <!-- ===== 서비스 안내 탭 ===== -->
+        <div id="tabGuide" class="tab-content active">
+            <div class="guide-container">
+                <div class="guide-hero">
+                    <div class="hero-icon">&#9875;</div>
+                    <h2>Young Marine Tech 관리자 시스템</h2>
+                    <p>해양 엔진 부품 B2B를 위한<br>AI 문서 관리 · 상담 · 메일 자동화 플랫폼</p>
+                </div>
+                <div class="guide-cards">
+                    <div class="guide-card" onclick="switchTab('rag')">
+                        <div class="card-icon">&#128172;</div>
+                        <div class="card-title">RAG 채팅</div>
+                        <div class="card-desc">업로드된 문서 기반<br>AI Q&A 상담</div>
+                        <span class="card-link">바로가기 &rarr;</span>
+                    </div>
+                    <div class="guide-card" onclick="switchTab('mail')">
+                        <div class="card-icon">&#9993;</div>
+                        <div class="card-title">메일 작성</div>
+                        <div class="card-desc">수신 메일 AI 분석 &rarr;<br>자동 답장 생성 · 발송</div>
+                        <span class="card-link">바로가기 &rarr;</span>
+                    </div>
+                    <div class="guide-card" onclick="switchTab('inquiry')">
+                        <div class="card-icon">&#128221;</div>
+                        <div class="card-title">견적문의</div>
+                        <div class="card-desc">고객 견적문의<br>확인 · 답변 관리</div>
+                        <span class="card-link">바로가기 &rarr;</span>
+                    </div>
+                    <div class="guide-card" onclick="switchTab('docs')">
+                        <div class="card-icon">&#128218;</div>
+                        <div class="card-title">문서 관리</div>
+                        <div class="card-desc">PDF/이미지 업로드 후<br>AI가 자동 분석 · 색인</div>
+                        <span class="card-link">바로가기 &rarr;</span>
+                    </div>
+                </div>
+                <div class="guide-flow">
+                    <h3>&#128161; 사용 흐름</h3>
+                    <div class="guide-flow-steps">
+                        <span class="guide-flow-step">&#10102; 문서 업로드</span>
+                        <span class="guide-flow-arrow">&rarr;</span>
+                        <span class="guide-flow-step">&#10103; AI 문서 상담</span>
+                        <span class="guide-flow-arrow">&rarr;</span>
+                        <span class="guide-flow-step">&#10104; 메일 자동화</span>
+                        <span class="guide-flow-arrow">&rarr;</span>
+                        <span class="guide-flow-step">&#10105; 견적문의 답변</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 견적문의 탭 ===== -->
+        <div id="tabInquiry" class="tab-content">
+            <div class="content" style="max-width:960px;margin:0 auto;">
+                <h2 style="margin-bottom:16px;">견적문의 관리</h2>
+                <table class="doc-table" style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="width:50px">ID</th>
+                            <th>제목</th>
+                            <th style="width:90px">작성자</th>
+                            <th style="width:90px">상태</th>
+                            <th style="width:100px">날짜</th>
+                            <th style="width:110px">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminInquiryList"></tbody>
+                </table>
+
+                <div id="adminReplyPanel" style="display:none;margin-top:24px;background:#f9fafb;border-radius:12px;padding:24px;">
+                    <h3 id="adminReplyTitle" style="margin-bottom:8px;"></h3>
+                    <div id="adminReplyMeta" style="font-size:0.88rem;color:#64748b;margin-bottom:12px;"></div>
+                    <div id="adminReplyContent" style="background:white;border-radius:8px;padding:16px;margin-bottom:16px;white-space:pre-wrap;line-height:1.7;border:1px solid #e2e8f0;"></div>
+                    <div id="adminExistingReplies" style="margin-bottom:16px;"></div>
+                    <label style="font-weight:600;display:block;margin-bottom:6px;">답변 작성</label>
+                    <textarea id="adminReplyText" rows="5" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:0.95rem;box-sizing:border-box;resize:vertical;"></textarea>
+                    <div style="margin-top:12px;display:flex;gap:10px;">
+                        <button onclick="submitAdminReply()" style="padding:10px 24px;background:#0a2647;color:white;border:none;border-radius:20px;font-weight:600;cursor:pointer;">답변 등록</button>
+                        <button onclick="closeAdminReply()" style="padding:10px 24px;background:transparent;border:1px solid #d1d5db;border-radius:20px;font-weight:600;cursor:pointer;">닫기</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- ===== 문서 관리 탭 ===== -->
-        <div id="tabDocs" class="tab-content active">
+        <div id="tabDocs" class="tab-content">
             <div class="content">
                 <div class="upload-section">
                     <div class="upload-card" id="uploadConsultant">
@@ -1632,6 +1818,9 @@
                         </div>
                     </div>
 
+                    <!-- 리사이즈 핸들 -->
+                    <div class="mail-resize-handle" id="mailResizeHandle"></div>
+
                     <!-- 분할 편집 영역 -->
                     <div class="mail-editor">
                         <div class="mail-pane">
@@ -1775,14 +1964,18 @@ function setupUploadCard(cardId, inputId, purpose) {
 //  탭 / 인증
 // ============================================================
 function switchTab(tab) {
+    const tabMap = { guide: 0, rag: 1, mail: 2, inquiry: 3, docs: 4 };
     document.querySelectorAll('.tab-nav button').forEach((btn, i) => {
-        btn.classList.toggle('active', (tab === 'docs' && i === 0) || (tab === 'rag' && i === 1) || (tab === 'mail' && i === 2));
+        btn.classList.toggle('active', i === tabMap[tab]);
     });
+    document.getElementById('tabGuide').classList.toggle('active', tab === 'guide');
     document.getElementById('tabDocs').classList.toggle('active', tab === 'docs');
     document.getElementById('tabRag').classList.toggle('active', tab === 'rag');
     document.getElementById('tabMail').classList.toggle('active', tab === 'mail');
+    document.getElementById('tabInquiry').classList.toggle('active', tab === 'inquiry');
     if (tab === 'rag') { loadConversations(); loadRagDocuments(); }
     if (tab === 'mail') { loadMailDocuments(); loadMailHistory(); loadGmailStatus(); }
+    if (tab === 'inquiry') { loadAdminInquiries(); }
 }
 
 async function api(path, options = {}) {
@@ -2522,6 +2715,57 @@ function renderMailHistory(items) {
     c.innerHTML = html;
 }
 
+// --- 수신 메일 ↔ 초안 리사이즈 ---
+(function() {
+    const handle = document.getElementById('mailResizeHandle');
+    const mailMain = document.querySelector('.mail-main');
+    const incoming = document.querySelector('.mail-incoming');
+    let dragging = false, startY = 0, startH = 0;
+
+    handle.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        dragging = true;
+        startY = e.clientY;
+        startH = incoming.offsetHeight;
+        handle.classList.add('active');
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        const delta = e.clientY - startY;
+        const newH = Math.max(100, Math.min(startH + delta, mailMain.offsetHeight - 150));
+        incoming.style.height = newH + 'px';
+    });
+    document.addEventListener('mouseup', function() {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    });
+
+    // 터치 지원
+    handle.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        dragging = true;
+        startY = e.touches[0].clientY;
+        startH = incoming.offsetHeight;
+        handle.classList.add('active');
+    }, { passive: false });
+    document.addEventListener('touchmove', function(e) {
+        if (!dragging) return;
+        const delta = e.touches[0].clientY - startY;
+        const newH = Math.max(100, Math.min(startH + delta, mailMain.offsetHeight - 150));
+        incoming.style.height = newH + 'px';
+    });
+    document.addEventListener('touchend', function() {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('active');
+    });
+})();
+
 // --- 수신 메일 한국어 번역 ---
 async function translateIncoming() {
     const incoming = document.getElementById('mailIncoming').value.trim();
@@ -3042,10 +3286,11 @@ async function sendMailReply() {
 
     if (!confirm('이 답장을 발송하시겠습니까?')) return;
 
-    // 먼저 저장 (composition_id 연결을 위해)
-    const incoming = document.getElementById('mailIncoming').value.trim();
-    if (incoming && korean) {
-        try {
+    showMailLoading('메일을 저장·발송하는 중...');
+    try {
+        // 먼저 저장 (composition_id 연결을 위해)
+        const incoming = document.getElementById('mailIncoming').value.trim();
+        if (incoming && korean) {
             const saveResp = await (await api('/admin/mail/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -3064,13 +3309,8 @@ async function sendMailReply() {
             await api(`/admin/mail/gmail/inbox/${currentInboxId}/link?composition_id=${saveResp.id}`, {
                 method: 'POST',
             });
-        } catch (e) {
-            console.error('저장/연결 오류:', e);
         }
-    }
 
-    showMailLoading('메일을 발송하는 중...');
-    try {
         const resp = await api(`/admin/mail/gmail/send/${currentInboxId}`, { method: 'POST' });
         const data = await resp.json();
         if (!resp.ok) { alert(data.detail || '발송 실패'); return; }
@@ -3081,6 +3321,118 @@ async function sendMailReply() {
         alert('메일 발송 오류: ' + e.message);
     } finally {
         hideMailLoading();
+    }
+}
+
+// ============================================================
+//  견적문의 관리
+// ============================================================
+let currentAdminInquiryId = null;
+
+async function loadAdminInquiries() {
+    try {
+        const res = await api('/admin/inquiries');
+        const data = await res.json();
+        renderAdminInquiries(data);
+    } catch (e) {
+        console.warn('견적문의 로드 실패:', e);
+    }
+}
+
+function renderAdminInquiries(items) {
+    const tbody = document.getElementById('adminInquiryList');
+    if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">등록된 문의가 없습니다.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = items.map(item => {
+        const statusBadge = item.status === 'answered'
+            ? '<span style="background:#e8f5e9;color:#2e7d32;padding:2px 10px;border-radius:10px;font-size:0.82rem;font-weight:600;">답변완료</span>'
+            : '<span style="background:#fff3e0;color:#e65100;padding:2px 10px;border-radius:10px;font-size:0.82rem;font-weight:600;">대기중</span>';
+        const d = item.created_at ? new Date(item.created_at) : null;
+        const dateStr = d ? (d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')) : '';
+        return `<tr>
+            <td>${item.id}</td>
+            <td>${escapeHtmlAdmin(item.title)}</td>
+            <td>${escapeHtmlAdmin(item.author_name)}</td>
+            <td>${statusBadge}</td>
+            <td>${dateStr}</td>
+            <td>
+                <button onclick="openAdminReply(${item.id})" style="padding:4px 12px;background:#0a2647;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.82rem;margin-right:4px;">보기</button>
+                <button onclick="deleteAdminInquiry(${item.id})" style="padding:4px 12px;background:#ef4444;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.82rem;">삭제</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function escapeHtmlAdmin(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function openAdminReply(id) {
+    currentAdminInquiryId = id;
+    try {
+        const res = await api('/admin/inquiries/' + id);
+        const data = await res.json();
+        document.getElementById('adminReplyTitle').textContent = data.title;
+        const d = data.created_at ? new Date(data.created_at) : null;
+        const dateStr = d ? (d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')) : '';
+        document.getElementById('adminReplyMeta').textContent = data.author_name + ' | ' + dateStr + ' | ' + (data.status === 'answered' ? '답변완료' : '대기중');
+        document.getElementById('adminReplyContent').textContent = data.content;
+        const repliesEl = document.getElementById('adminExistingReplies');
+        if (data.replies && data.replies.length > 0) {
+            repliesEl.innerHTML = data.replies.map(rp => {
+                const rd = rp.created_at ? new Date(rp.created_at) : null;
+                const rdStr = rd ? (rd.getFullYear()+'-'+String(rd.getMonth()+1).padStart(2,'0')+'-'+String(rd.getDate()).padStart(2,'0')) : '';
+                return '<div style="background:#fffbf0;border-top:3px solid #f0a500;border-radius:8px;padding:14px;margin-bottom:8px;">'
+                    + '<strong style="color:#f0a500;">관리자 답변</strong><br>'
+                    + '<div style="margin-top:6px;white-space:pre-wrap;">' + escapeHtmlAdmin(rp.content) + '</div>'
+                    + '<div style="font-size:0.82rem;color:#94a3b8;margin-top:6px;">' + rdStr + '</div>'
+                    + '</div>';
+            }).join('');
+        } else {
+            repliesEl.innerHTML = '';
+        }
+        document.getElementById('adminReplyText').value = '';
+        document.getElementById('adminReplyPanel').style.display = '';
+    } catch (e) {
+        alert('문의 상세 로드 실패: ' + e.message);
+    }
+}
+
+function closeAdminReply() {
+    document.getElementById('adminReplyPanel').style.display = 'none';
+    currentAdminInquiryId = null;
+}
+
+async function submitAdminReply() {
+    const content = document.getElementById('adminReplyText').value.trim();
+    if (!content) { alert('답변 내용을 입력해주세요.'); return; }
+    try {
+        const res = await api('/admin/inquiries/' + currentAdminInquiryId + '/reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: content })
+        });
+        if (!res.ok) { const err = await res.json(); alert(err.detail || '답변 등록 실패'); return; }
+        alert('답변이 등록되었습니다.');
+        closeAdminReply();
+        loadAdminInquiries();
+    } catch (e) {
+        alert('오류: ' + e.message);
+    }
+}
+
+async function deleteAdminInquiry(id) {
+    if (!confirm('이 문의를 삭제하시겠습니까?')) return;
+    try {
+        const res = await api('/admin/inquiries/' + id, { method: 'DELETE' });
+        if (!res.ok) { const err = await res.json(); alert(err.detail || '삭제 실패'); return; }
+        closeAdminReply();
+        loadAdminInquiries();
+    } catch (e) {
+        alert('오류: ' + e.message);
     }
 }
 
