@@ -9,7 +9,10 @@
       "Bash(python3 -m pip install:*)",
       "Bash(/usr/bin/python3 -c \"\nimport socket, ssl\n\n# 간단한 PostgreSQL 쿼리 \\(asyncpg 없이 raw socket으로는 복잡하므로 psycopg2-binary 대안 확인\\)\n# pip 없으니 순수 파이썬으로 HTTP API 호출\nimport urllib.request, json\n\nurl = ''https://marine-parts-production-60a3.up.railway.app/admin/login''\ndata = json.dumps\\({''password'': ''''}\\).encode\\(\\)\n\n# 일단 서버 health check\nhealth_url = ''https://marine-parts-production-60a3.up.railway.app/api/health''\nreq = urllib.request.Request\\(health_url\\)\nresp = urllib.request.urlopen\\(req\\)\nprint\\(''Health:'', json.loads\\(resp.read\\(\\)\\)\\)\n\")",
       "Bash(/usr/bin/python3:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(xxd:*)",
+      "Bash(python:*)",
+      "Bash(curl:*)"
     ]
   }
 }

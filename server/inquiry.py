@@ -1,6 +1,7 @@
 """견적문의 게시판 API"""
 
-import bcrypt
+import hashlib
+import secrets
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 
@@ -8,6 +9,23 @@ import db
 from admin import verify_token
 
 router = APIRouter(tags=["inquiry"])
+
+
+def _hash_password(password: str) -> str:
+    """PBKDF2-SHA256으로 비밀번호 해시 (salt 포함)."""
+    salt = secrets.token_hex(16)
+    h = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100_000)
+    return salt + ":" + h.hex()
+
+
+def _verify_password(password: str, stored_hash: str) -> bool:
+    """저장된 해시와 비밀번호 비교."""
+    parts = stored_hash.split(":", 1)
+    if len(parts) != 2:
+        return False
+    salt, expected = parts
+    h = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100_000)
+    return h.hex() == expected
 
 
 # --- 요청 모델 ---
@@ -60,7 +78,7 @@ async def list_inquiries(page: int = 1, size: int = 10):
 async def create_inquiry(body: InquiryCreate):
     if not db.pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
-    pw_hash = bcrypt.hashpw(body.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    pw_hash = _hash_password(body.password)
     async with db.pool.acquire() as conn:
         row = await conn.fetchrow(
             "INSERT INTO inquiries (author_name, password_hash, title, content) VALUES ($1, $2, $3, $4) RETURNING id, created_at",
@@ -84,7 +102,7 @@ async def verify_inquiry(inquiry_id: int, body: InquiryVerify):
         if row["author_name"] != body.author_name:
             raise HTTPException(status_code=403, detail="작성자 이름 또는 비밀번호가 올바르지 않습니다")
 
-        if not bcrypt.checkpw(body.password.encode("utf-8"), row["password_hash"].encode("utf-8")):
+        if not _verify_password(body.password, row["password_hash"]):
             raise HTTPException(status_code=403, detail="작성자 이름 또는 비밀번호가 올바르지 않습니다")
 
         replies = await conn.fetch(
