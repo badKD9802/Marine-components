@@ -363,7 +363,7 @@
         .modal .close-btn:hover { color: var(--text-dark); }
 
         /* ============================================
-           RAG 채팅 탭 — 모던 3컬럼 레이아웃
+           문서 내 Q&A 탭 — 모던 3컬럼 레이아웃
            ============================================ */
         .rag-layout {
             display: flex;
@@ -1536,6 +1536,134 @@
             .mail-incoming-split { flex-direction: column; max-height: 360px; }
             .mail-incoming-split .incoming-pane + .incoming-pane { border-left: none; border-top: 1px solid var(--border-light); }
         }
+        /* ===== 청크 수정 ===== */
+        .chunk-edit-btn {
+            float: right;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: 0.72rem;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        .chunk-edit-btn:hover { background: var(--primary-light); border-color: var(--accent); }
+        .chunk-textarea {
+            width: 100%;
+            min-height: 100px;
+            border: 1.5px solid var(--accent);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .chunk-save-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+            justify-content: flex-end;
+        }
+        .chunk-save-actions button {
+            padding: 5px 14px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+        .chunk-save-actions .save-btn { background: var(--primary); color: white; }
+        .chunk-save-actions .save-btn:hover { background: var(--primary-dark); }
+        .chunk-save-actions .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .chunk-save-actions .cancel-btn { background: var(--bg-gray); color: var(--text-light); border: 1px solid var(--border); }
+        .chunk-save-actions .cancel-btn:hover { background: var(--bg-gray-100); }
+
+        /* ===== 채팅 UI 개선 ===== */
+        .chat-messages { scroll-behavior: smooth; }
+        .msg-avatar { border-radius: 50%; }
+        .msg-row.assistant .msg-bubble {
+            border: 1px solid var(--border-light);
+            border-radius: 18px 18px 18px 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .msg-row.user .msg-bubble {
+            border-radius: 18px 18px 4px 18px;
+            box-shadow: 0 2px 8px rgba(0,51,102,0.2);
+        }
+        @keyframes msgFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg-time {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            padding: 0 2px;
+        }
+
+        /* ===== 대화 케밥 메뉴 ===== */
+        .conv-kebab {
+            position: relative;
+            opacity: 0;
+            transition: opacity 0.15s;
+            flex-shrink: 0;
+        }
+        .conv-item:hover .conv-kebab { opacity: 1; }
+        .conv-kebab.open { opacity: 1; }
+        .conv-kebab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            line-height: 1;
+            transition: all 0.15s;
+        }
+        .conv-kebab-btn:hover { background: var(--bg-gray-100); color: var(--text-dark); }
+        .conv-kebab-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow-md);
+            min-width: 140px;
+            z-index: 100;
+            overflow: hidden;
+            animation: kebabFadeIn 0.15s ease;
+        }
+        @keyframes kebabFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .conv-kebab-menu.open { display: block; }
+        .conv-kebab-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            font-size: 0.8rem;
+            color: var(--text-regular);
+            cursor: pointer;
+            transition: background 0.1s;
+            border: none;
+            background: none;
+            width: 100%;
+            font-family: inherit;
+            text-align: left;
+        }
+        .conv-kebab-menu-item:hover { background: var(--bg-gray); }
+        .conv-kebab-menu-item.danger { color: var(--error); }
+        .conv-kebab-menu-item.danger:hover { background: #fff0f0; }
     </style>
 </head>
 <body>
@@ -1559,7 +1687,7 @@
 
         <div class="tab-nav">
             <button class="active" onclick="switchTab('guide')">서비스 안내</button>
-            <button onclick="switchTab('rag')">RAG 채팅</button>
+            <button onclick="switchTab('rag')">문서 내 Q&A</button>
             <button onclick="switchTab('mail')">메일 작성</button>
             <button onclick="switchTab('inquiry')">견적문의</button>
             <button onclick="switchTab('docs')">문서 관리</button>
@@ -1576,8 +1704,8 @@
                 <div class="guide-cards">
                     <div class="guide-card" onclick="switchTab('rag')">
                         <div class="card-icon">&#128172;</div>
-                        <div class="card-title">RAG 채팅</div>
-                        <div class="card-desc">업로드된 문서 기반<br>AI Q&A 상담</div>
+                        <div class="card-title">문서 내 Q&A</div>
+                        <div class="card-desc">업로드된 문서 기반<br>문서 내 Q&A</div>
                         <span class="card-link">바로가기 &rarr;</span>
                     </div>
                     <div class="guide-card" onclick="switchTab('mail')">
@@ -1653,17 +1781,17 @@
                 <div class="upload-section">
                     <div class="upload-card" id="uploadConsultant">
                         <input type="file" id="fileInputConsultant" accept=".pdf,.jpg,.jpeg,.png" multiple />
-                        <span class="purpose-label purpose-consultant">AI 상담사용</span>
+                        <span class="purpose-label purpose-consultant">AI 상담</span>
                         <div class="icon">&#128206;</div>
-                        <div class="title">AI 상담사 문서 업로드</div>
+                        <div class="title">AI 상담 문서 업로드</div>
                         <div class="subtitle">랜딩 페이지 채팅에서 참조</div>
                     </div>
                     <div class="upload-card" id="uploadRag">
                         <input type="file" id="fileInputRag" accept=".pdf,.jpg,.jpeg,.png" multiple />
-                        <span class="purpose-label purpose-rag">RAG 세션용</span>
+                        <span class="purpose-label purpose-rag">RAG / 메일</span>
                         <div class="icon">&#128218;</div>
-                        <div class="title">RAG 세션 문서 업로드</div>
-                        <div class="subtitle">관리자 RAG 채팅에서 참조</div>
+                        <div class="title">RAG / 메일 문서 업로드</div>
+                        <div class="subtitle">문서 내 Q&A · 메일 작성에서 참조</div>
                     </div>
                 </div>
 
@@ -1684,7 +1812,7 @@
             </div>
         </div>
 
-        <!-- ===== RAG 채팅 탭 ===== -->
+        <!-- ===== 문서 내 Q&A 탭 ===== -->
         <div id="tabRag" class="tab-content">
             <div class="rag-layout">
                 <!-- 왼쪽: 대화 목록 -->
@@ -1712,7 +1840,7 @@
                     <div class="chat-messages" id="chatMessages">
                         <div class="chat-welcome" id="chatWelcome">
                             <div class="chat-welcome-icon">&#9875;</div>
-                            <h3>RAG 문서 Q&A</h3>
+                            <h3>문서 내 Q&A</h3>
                             <p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p>
                             <div class="welcome-docs" id="welcomeDocs"></div>
                             <div class="welcome-input-wrap">
@@ -2036,8 +2164,8 @@ function renderDocuments(docs) {
         return `<span class="badge ${cls}">${label}</span>`;
     };
     const purposeBadge = p => p === 'rag_session'
-        ? '<span class="badge purpose-rag" style="margin-left:4px">RAG</span>'
-        : '<span class="badge purpose-consultant" style="margin-left:4px">상담</span>';
+        ? '<span class="badge purpose-rag" style="margin-left:4px">RAG / 메일</span>'
+        : '<span class="badge purpose-consultant" style="margin-left:4px">AI 상담</span>';
 
     let html = '<table><thead><tr><th>파일명</th><th>유형</th><th>용도</th><th>상태</th><th>업로드일</th><th>작업</th></tr></thead><tbody>';
     for (const d of docs) {
@@ -2080,11 +2208,49 @@ async function viewDocument(docId) {
         const doc = await (await api(`/admin/documents/${docId}`)).json();
         document.getElementById('modalTitle').textContent = doc.filename;
         let html = `<p style="margin-bottom:12px;color:var(--text-light);font-size:0.85rem">상태: ${doc.status} | 청크: ${doc.chunks.length}개</p>`;
-        if (doc.chunks.length) { for (const c of doc.chunks) html += `<div class="chunk-label">청크 #${c.chunk_index+1}</div><div class="chunk">${esc(c.chunk_text)}</div>`; }
-        else html += '<p style="color:var(--text-muted)">청크가 없습니다</p>';
+        if (doc.chunks.length) {
+            for (const c of doc.chunks) {
+                html += `<div class="chunk-label">청크 #${c.chunk_index+1} <button class="chunk-edit-btn" onclick="startChunkEdit(${docId},${c.id},this)">수정</button></div>`;
+                html += `<div class="chunk" id="chunk-${c.id}">${esc(c.chunk_text)}</div>`;
+            }
+        } else html += '<p style="color:var(--text-muted)">청크가 없습니다</p>';
         document.getElementById('modalContent').innerHTML = html;
         document.getElementById('docModal').classList.add('active');
     } catch (e) { console.error('문서 상세 조회 실패:', e); }
+}
+
+function startChunkEdit(docId, chunkId, btn) {
+    const chunkDiv = document.getElementById('chunk-' + chunkId);
+    if (!chunkDiv) return;
+    const originalText = chunkDiv.textContent;
+    chunkDiv.innerHTML = `<textarea class="chunk-textarea">${esc(originalText)}</textarea>
+        <div class="chunk-save-actions">
+            <button class="cancel-btn" onclick="cancelChunkEdit(${docId})">취소</button>
+            <button class="save-btn" onclick="saveChunkEdit(${docId},${chunkId},this)">저장</button>
+        </div>`;
+    btn.style.display = 'none';
+}
+
+function cancelChunkEdit(docId) {
+    viewDocument(docId);
+}
+
+async function saveChunkEdit(docId, chunkId, btn) {
+    const chunkDiv = document.getElementById('chunk-' + chunkId);
+    const textarea = chunkDiv.querySelector('.chunk-textarea');
+    const newText = textarea.value.trim();
+    if (!newText) { alert('텍스트를 입력하세요'); return; }
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+    try {
+        const res = await api(`/admin/documents/${docId}/chunks/${chunkId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chunk_text: newText }),
+        });
+        if (!res.ok) { const d = await res.json(); alert('수정 실패: ' + d.detail); btn.disabled = false; btn.textContent = '저장'; return; }
+        viewDocument(docId);
+    } catch (e) { console.error('청크 수정 실패:', e); alert('수정 실패'); btn.disabled = false; btn.textContent = '저장'; }
 }
 
 function closeModal() { document.getElementById('docModal').classList.remove('active'); }
@@ -2096,7 +2262,7 @@ async function deleteDocument(docId) {
 }
 
 // ============================================================
-//  RAG 채팅 탭
+//  문서 내 Q&A 탭
 // ============================================================
 async function loadConversations() {
     try { renderConversations(await (await api('/admin/rag/conversations')).json()); }
@@ -2234,6 +2400,17 @@ function renderEmptyChat() {
         </div>`;
 }
 
+function renderMd(str) {
+    let s = esc(str);
+    s = s.replace(/```([\s\S]*?)```/g, '<pre style="background:var(--bg-gray);padding:8px 10px;border-radius:6px;overflow-x:auto;font-size:0.82rem;margin:6px 0">$1</pre>');
+    s = s.replace(/`([^`]+)`/g, '<code style="background:var(--bg-gray-100);padding:1px 5px;border-radius:4px;font-size:0.84em">$1</code>');
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    s = s.replace(/^[-•]\s+(.+)$/gm, '<li style="margin-left:16px;list-style:disc">$1</li>');
+    s = s.replace(/^\d+\.\s+(.+)$/gm, '<li style="margin-left:16px;list-style:decimal">$1</li>');
+    return s;
+}
+
 function renderChatMessages(messages) {
     const c = document.getElementById('chatMessages');
     if (!messages.length) { renderEmptyChat(); return; }
@@ -2241,10 +2418,13 @@ function renderChatMessages(messages) {
     for (const m of messages) {
         const refs = m.references || [];
         const avatar = m.role === 'user' ? 'U' : 'AI';
+        const content = m.role === 'assistant' ? renderMd(m.content) : esc(m.content);
+        const time = m.created_at ? new Date(m.created_at).toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) : '';
         html += `<div class="msg-row ${m.role}">
             <div class="msg-avatar">${avatar}</div>
             <div class="msg-content">
-                <div class="msg-bubble">${esc(m.content)}</div>
+                <div class="msg-bubble">${content}</div>
+                ${time ? `<span class="msg-time">${time}</span>` : ''}
                 ${m.role === 'assistant' && refs.length ? `<span class="msg-refs-link" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g,"&#39;")})'>&#128196; 참조 ${refs.length}건 보기</span>` : ''}
             </div>
         </div>`;
@@ -2423,7 +2603,7 @@ function showWelcomeScreen() {
     c.innerHTML = `
         <div class="chat-welcome" id="chatWelcome">
             <div class="chat-welcome-icon">&#9875;</div>
-            <h3>RAG 문서 Q&A</h3>
+            <h3>문서 내 Q&A</h3>
             <p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p>
             <div class="welcome-docs" id="welcomeDocs"></div>
             <div class="welcome-input-wrap">
@@ -2490,7 +2670,7 @@ async function sendRagMessage() {
     } catch (e) {
         removeEl(loadingId);
         appendMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
-        console.error('RAG 채팅 오류:', e);
+        console.error('문서 내 Q&A 오류:', e);
     } finally {
         setChatEnabled(true);
     }
@@ -2511,13 +2691,16 @@ function appendMsg(role, content, refs) {
 
     const id = 'msg-' + (++_mc);
     const avatar = role === 'user' ? 'U' : 'AI';
+    const rendered = role === 'assistant' ? renderMd(content) : esc(content);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
     const refsHtml = (role === 'assistant' && refs && refs.length)
         ? `<span class="msg-refs-link" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g,"&#39;")})'>&#128196; 참조 ${refs.length}건 보기</span>` : '';
 
     const div = document.createElement('div');
     div.className = `msg-row ${role}`;
     div.id = id;
-    div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-content"><div class="msg-bubble">${esc(content)}</div>${refsHtml}</div>`;
+    div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-content"><div class="msg-bubble">${rendered}</div><span class="msg-time">${timeStr}</span>${refsHtml}</div>`;
     c.appendChild(div);
     c.scrollTop = c.scrollHeight;
     return id;

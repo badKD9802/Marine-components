@@ -166,7 +166,14 @@ def send_email(addr: str, app_password: str, to: str, subject: str, body: str, r
     msg = MIMEMultipart("alternative")
     msg["From"] = addr
     msg["To"] = to
-    msg["Subject"] = subject if not reply_to_subject else f"Re: {reply_to_subject}"
+    if reply_to_subject:
+        # 기존 "Re: " 접두사 제거 후 한 번만 추가
+        clean_subj = reply_to_subject
+        while clean_subj.startswith("Re: "):
+            clean_subj = clean_subj[4:]
+        msg["Subject"] = f"Re: {clean_subj}"
+    else:
+        msg["Subject"] = subject
 
     msg.attach(MIMEText(body, "plain", "utf-8"))
 

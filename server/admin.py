@@ -9,7 +9,7 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, H
 
 import db
 from ocr import extract_text
-from rag import chunk_text, store_chunks
+from rag import chunk_text, store_chunks, get_embeddings
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -186,6 +186,30 @@ async def upload_document(
         # 임시 파일 삭제
         if file_path.exists():
             file_path.unlink()
+
+
+# --- 청크 텍스트 수정 ---
+
+@router.patch("/documents/{doc_id}/chunks/{chunk_id}")
+async def update_chunk(doc_id: int, chunk_id: int, body: dict, _=Depends(verify_token)):
+    new_text = body.get("chunk_text", "").strip()
+    if not new_text:
+        raise HTTPException(status_code=400, detail="chunk_text가 비어있습니다")
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT id FROM document_chunks WHERE id = $1 AND document_id = $2",
+            chunk_id, doc_id,
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="해당 청크를 찾을 수 없습니다")
+        embedding = get_embeddings([new_text])[0]
+        await conn.execute(
+            "UPDATE document_chunks SET chunk_text = $1, embedding = $2::vector WHERE id = $3 AND document_id = $4",
+            new_text, str(embedding), chunk_id, doc_id,
+        )
+    return {"message": "청크 수정 완료"}
 
 
 # --- 문서 삭제 ---
