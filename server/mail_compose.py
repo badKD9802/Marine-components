@@ -68,7 +68,7 @@ async def compose_mail(req: ComposeRequest, _=Depends(verify_token)):
     ]
 
     # 2. AI로 분석 + 한국어 초안 생성
-    result = _generate_mail_draft(req.incoming_email, references, req.tone)
+    result = await _generate_mail_draft(req.incoming_email, references, req.tone)
 
     return {
         "detected_lang": result["detected_lang"],
@@ -207,12 +207,12 @@ async def delete_history_item(comp_id: int, _=Depends(verify_token)):
 
 # --- AI 함수들 ---
 
-def _generate_mail_draft(
+async def _generate_mail_draft(
     incoming_email: str,
     references: list[dict],
     tone: str,
 ) -> dict:
-    """수신 메일을 분석하고 한국어 답장 초안을 생성한다."""
+    """수신 메일을 분석하고 한국어 답장 초안을 생성한다. (비동기 버전)"""
     from decouple import config
     import google.genai as genai
     from google.genai import types
@@ -224,6 +224,26 @@ def _generate_mail_draft(
             "korean_draft": "API Key가 설정되지 않았습니다.",
             "analysis": "",
         }
+
+    # DB에서 프롬프트 예시 로드 (Few-shot learning용)
+    examples = []
+    if db.vector_pool:
+        try:
+            async with db.vector_pool.acquire() as conn:
+                rows = await conn.fetch(
+                    "SELECT incoming_text, reply_text FROM mail_prompt_examples ORDER BY sort_order, id LIMIT 5"
+                )
+                examples = [{"incoming": r["incoming_text"], "reply": r["reply_text"]} for r in rows]
+        except Exception as e:
+            print(f"프롬프트 예시 로드 실패 (무시): {e}", flush=True)
+
+    # Few-shot 예시 섹션 구성
+    examples_section = ""
+    if examples:
+        examples_lines = []
+        for i, ex in enumerate(examples, 1):
+            examples_lines.append(f"### 예시 {i}\n**수신 메일**:\n{ex['incoming']}\n\n**답장**:\n{ex['reply']}")
+        examples_section = f"\n\n## 작성 예시 (참고)\n" + "\n\n".join(examples_lines)
 
     # 참조 문서 컨텍스트
     context_lines = []
@@ -250,6 +270,7 @@ def _generate_mail_draft(
 
 ## 톤
 {tone_desc}
+{examples_section}
 
 ## 응답 형식 (반드시 JSON)
 {{
@@ -268,14 +289,17 @@ def _generate_mail_draft(
     client = genai.Client(api_key=api_key)
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[{"role": "user", "parts": [{"text": incoming_email}]}],
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                temperature=0.4,
-                response_mime_type="application/json",
-            ),
+        # 동기 API를 asyncio.to_thread로 래핑
+        response = await asyncio.to_thread(
+            lambda: client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[{"role": "user", "parts": [{"text": incoming_email}]}],
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.4,
+                    response_mime_type="application/json",
+                ),
+            )
         )
         result = json.loads(response.text)
         return {
@@ -603,7 +627,7 @@ async def gmail_auto_check_loop():
                     ]
 
                     # AI 초안 생성
-                    result = _generate_mail_draft(incoming_text, references, "formal")
+                    result = await _generate_mail_draft(incoming_text, references, "formal")
 
                     # 번역
                     detected_lang = result.get("detected_lang", "en")
@@ -708,3 +732,83 @@ def _translate_text(text: str, target_lang: str, source_lang: str = "ko") -> str
     except Exception as e:
         print(f"번역 오류: {e}", flush=True)
         return f"번역 중 오류가 발생했습니다: {e}"
+
+
+# ============================================================
+#  프롬프트 예시 관리 (Few-shot learning용)
+# ============================================================
+
+class PromptExampleCreate(BaseModel):
+    incoming_text: str
+    reply_text: str
+    sort_order: int = 0
+
+
+@router.get("/prompt-examples")
+async def list_prompt_examples(_=Depends(verify_token)):
+    """프롬프트 예시 목록 조회 (sort_order 순)"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT id, incoming_text, reply_text, sort_order, created_at FROM mail_prompt_examples ORDER BY sort_order, id"
+        )
+    return [
+        {
+            "id": row["id"],
+            "incoming_text": row["incoming_text"],
+            "reply_text": row["reply_text"],
+            "sort_order": row["sort_order"],
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+        }
+        for row in rows
+    ]
+
+
+@router.post("/prompt-examples")
+async def create_prompt_example(req: PromptExampleCreate, _=Depends(verify_token)):
+    """프롬프트 예시 생성"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """INSERT INTO mail_prompt_examples (incoming_text, reply_text, sort_order)
+               VALUES ($1, $2, $3) RETURNING id, created_at""",
+            req.incoming_text, req.reply_text, req.sort_order,
+        )
+    return {
+        "id": row["id"],
+        "message": "프롬프트 예시 생성 완료",
+        "created_at": row["created_at"].isoformat(),
+    }
+
+
+@router.put("/prompt-examples/{example_id}")
+async def update_prompt_example(example_id: int, req: PromptExampleCreate, _=Depends(verify_token)):
+    """프롬프트 예시 수정"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        result = await conn.execute(
+            """UPDATE mail_prompt_examples
+               SET incoming_text = $1, reply_text = $2, sort_order = $3
+               WHERE id = $4""",
+            req.incoming_text, req.reply_text, req.sort_order, example_id,
+        )
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="프롬프트 예시를 찾을 수 없습니다")
+    return {"message": "프롬프트 예시 수정 완료"}
+
+
+@router.delete("/prompt-examples/{example_id}")
+async def delete_prompt_example(example_id: int, _=Depends(verify_token)):
+    """프롬프트 예시 삭제"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        result = await conn.execute(
+            "DELETE FROM mail_prompt_examples WHERE id = $1", example_id
+        )
+    if result == "DELETE 0":
+        raise HTTPException(status_code=404, detail="프롬프트 예시를 찾을 수 없습니다")
+    return {"message": "삭제 완료"}

@@ -249,6 +249,17 @@ async def create_vector_tables():
             );
         """)
 
+        # 메일 프롬프트 예시 테이블 (Few-shot learning용)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS mail_prompt_examples (
+                id             SERIAL PRIMARY KEY,
+                incoming_text  TEXT NOT NULL,
+                reply_text     TEXT NOT NULL,
+                sort_order     INTEGER DEFAULT 0,
+                created_at     TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
         print("pgvector + RAG 테이블 생성 완료")
 
 
