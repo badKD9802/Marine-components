@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 IMAP_HOST = "imap.gmail.com"
 IMAP_PORT = 993
 SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
+SMTP_PORT = 465  # SSL 직접 연결 (Railway에서 587 차단됨)
 
 
 def _clean_password(app_password: str) -> str:
@@ -49,10 +49,13 @@ def _decode_mime_words(s: str | None) -> str:
     return " ".join(decoded)
 
 
-def _extract_body(msg: email.message.Message) -> str:
-    """이메일 메시지에서 텍스트 본문을 추출한다."""
+def _extract_body(msg: email.message.Message) -> dict:
+    """이메일 메시지에서 텍스트 본문과 HTML 본문을 추출한다.
+
+    Returns:
+        dict: {"text": str, "html": str | None}
+    """
     if msg.is_multipart():
-        # text/plain 우선, 없으면 text/html
         plain_parts = []
         html_parts = []
         for part in msg.walk():
@@ -70,17 +73,22 @@ def _extract_body(msg: email.message.Message) -> str:
                 if payload:
                     charset = part.get_content_charset() or "utf-8"
                     html_parts.append(payload.decode(charset, errors="replace"))
-        if plain_parts:
-            return "\n".join(plain_parts)
-        if html_parts:
-            return "\n".join(html_parts)
-        return ""
+
+        text_body = "\n".join(plain_parts) if plain_parts else ("\n".join(html_parts) if html_parts else "")
+        html_body = "\n".join(html_parts) if html_parts else None
+
+        return {"text": text_body, "html": html_body}
     else:
         payload = msg.get_payload(decode=True)
         if payload:
             charset = msg.get_content_charset() or "utf-8"
-            return payload.decode(charset, errors="replace")
-        return ""
+            decoded = payload.decode(charset, errors="replace")
+            ct = msg.get_content_type()
+            if ct == "text/html":
+                return {"text": decoded, "html": decoded}
+            else:
+                return {"text": decoded, "html": None}
+        return {"text": "", "html": None}
 
 
 def fetch_new_emails(addr: str, app_password: str, since_date: datetime | None = None) -> list[dict]:
@@ -139,15 +147,16 @@ def fetch_new_emails(addr: str, app_password: str, since_date: datetime | None =
             except Exception:
                 received_at = None
 
-            # 본문
-            body = _extract_body(msg)
+            # 본문 (텍스트 + HTML)
+            body_data = _extract_body(msg)
 
             results.append({
                 "uid": uid,
                 "from_addr": from_addr_parsed,
                 "from_name": from_name,
                 "subject": subject,
-                "body": body,
+                "body": body_data["text"],
+                "body_html": body_data["html"],
                 "received_at": received_at,
             })
 
@@ -177,8 +186,8 @@ def send_email(addr: str, app_password: str, to: str, subject: str, body: str, r
 
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
-        server.starttls()
+    # SMTP_SSL 직접 연결 (starttls 불필요)
+    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=30) as server:
         server.login(addr, app_password)
         server.sendmail(addr, to, msg.as_string())
 

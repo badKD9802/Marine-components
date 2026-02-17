@@ -1,7 +1,9 @@
 """RAG 세션 전용 채팅 API 라우터"""
 
 import json
+import asyncio
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 import db
@@ -284,6 +286,95 @@ async def rag_chat(req: RagChatRequest, _=Depends(verify_token)):
     }
 
 
+# --- RAG 채팅 스트리밍 (SSE) ---
+
+@router.post("/chat/stream")
+async def rag_chat_stream(req: RagChatRequest, _=Depends(verify_token)):
+    """RAG 채팅 응답을 SSE(Server-Sent Events)로 스트리밍합니다."""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    # 대화 존재 확인
+    async with db.vector_pool.acquire() as conn:
+        conv = await conn.fetchrow(
+            "SELECT id FROM rag_conversations WHERE id = $1", req.conversation_id
+        )
+        if not conv:
+            raise HTTPException(status_code=404, detail="대화를 찾을 수 없습니다")
+
+    # 유사 청크 검색
+    chunks = await search_similar_chunks(
+        query=req.message,
+        top_k=5,
+        purpose="rag_session",
+        document_ids=req.document_ids,
+    )
+
+    # 참조 정보 구성
+    references = [
+        {
+            "filename": c["filename"],
+            "chunk_text": c["chunk_text"],
+            "similarity": round(c["similarity"], 4),
+        }
+        for c in chunks
+        if c["similarity"] > 0.3
+    ]
+
+    # 이전 대화 이력 가져오기
+    async with db.vector_pool.acquire() as conn:
+        prev_rows = await conn.fetch(
+            "SELECT role, content FROM rag_messages WHERE conversation_id = $1 ORDER BY id DESC LIMIT 10",
+            req.conversation_id,
+        )
+    prev_messages = [{"role": r["role"], "content": r["content"]} for r in reversed(prev_rows)]
+
+    # 사용자 메시지 먼저 저장
+    async with db.vector_pool.acquire() as conn:
+        await conn.execute(
+            "INSERT INTO rag_messages (conversation_id, role, content) VALUES ($1, 'user', $2)",
+            req.conversation_id,
+            req.message,
+        )
+
+    # 스트리밍 응답 생성
+    async def event_stream():
+        """SSE 스트림 생성기"""
+        full_response = ""
+
+        async for chunk in _generate_rag_answer_stream(req.message, references, prev_messages):
+            full_response += chunk
+            # SSE 형식: "data: {json}\n\n"
+            yield f"data: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
+
+        # 스트림 완료 후 DB에 저장
+        refs_json = json.dumps(references, ensure_ascii=False)
+        async with db.vector_pool.acquire() as conn:
+            await conn.execute(
+                "INSERT INTO rag_messages (conversation_id, role, content, refs) VALUES ($1, 'assistant', $2, $3::jsonb)",
+                req.conversation_id,
+                full_response,
+                refs_json,
+            )
+            # 대화 업데이트
+            title_update = req.message[:30] + ("..." if len(req.message) > 30 else "")
+            await conn.execute(
+                """
+                UPDATE rag_conversations
+                SET updated_at = NOW(),
+                    title = CASE WHEN title = '새 대화' THEN $2 ELSE title END
+                WHERE id = $1
+                """,
+                req.conversation_id,
+                title_update,
+            )
+
+        # 완료 이벤트 + 참조 문서 전송
+        yield f"data: {json.dumps({'done': True, 'references': references}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
 def _generate_rag_answer(
     user_message: str,
     references: list[dict],
@@ -334,3 +425,66 @@ def _generate_rag_answer(
     except Exception as e:
         print(f"RAG 채팅 AI 오류: {e}", flush=True)
         return "AI 답변 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+
+
+async def _generate_rag_answer_stream(
+    user_message: str,
+    references: list[dict],
+    prev_messages: list[dict],
+):
+    """Gemini로 RAG 기반 답변을 스트리밍으로 생성합니다 (비동기 제너레이터)."""
+    from decouple import config
+    import google.genai as genai
+    from google.genai import types
+
+    api_key = config("GOOGLE_API_KEY", default="")
+    if not api_key:
+        yield "API Key가 설정되지 않았습니다."
+        return
+
+    # 참조 문서 컨텍스트 구성
+    context_lines = []
+    for ref in references:
+        context_lines.append(f"[{ref['filename']}] {ref['chunk_text']}")
+    context = "\n---\n".join(context_lines) if context_lines else "(관련 문서 내용 없음)"
+
+    system_prompt = f"""당신은 기술 문서 Q&A 어시스턴트입니다.
+아래 참조 문서를 바탕으로 사용자의 질문에 정확하게 답변하세요.
+문서에 없는 내용은 추측하지 말고 "해당 내용은 문서에서 찾을 수 없습니다"라고 답하세요.
+답변은 한국어로 작성하세요.
+
+## 참조 문서
+{context}
+"""
+
+    client = genai.Client(api_key=api_key)
+
+    contents = []
+    for m in prev_messages:
+        role = "model" if m["role"] == "assistant" else m["role"]
+        contents.append({"role": role, "parts": [{"text": m["content"]}]})
+    contents.append({"role": "user", "parts": [{"text": user_message}]})
+
+    try:
+        # 동기 스트리밍을 asyncio.to_thread로 래핑
+        def _sync_stream():
+            """동기 제너레이터 → 큐로 전송"""
+            stream = client.models.generate_content_stream(
+                model="gemini-2.5-flash",
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.3,
+                ),
+            )
+            for chunk in stream:
+                if chunk.text:
+                    yield chunk.text
+
+        # 동기 제너레이터를 비동기로 변환
+        for chunk in await asyncio.to_thread(lambda: list(_sync_stream())):
+            yield chunk
+
+    except Exception as e:
+        print(f"RAG 스트리밍 오류: {e}", flush=True)
+        yield "AI 답변 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."

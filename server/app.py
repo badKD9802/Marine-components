@@ -279,6 +279,17 @@ async def api_create_product(product: ProductCreate):
     return serialize_product(created)
 
 
+@app.get("/api/site-settings")
+async def get_site_settings():
+    """사이트 설정 조회 (공개 엔드포인트 - 홈페이지용)"""
+    from db import vector_pool
+    if not vector_pool:
+        return {}
+    async with vector_pool.acquire() as conn:
+        rows = await conn.fetch("SELECT key, value FROM site_settings")
+    return {row["key"]: row["value"] for row in rows}
+
+
 # 실행 방법 주석:
 # 터미널에서: uvicorn app:app --reload
 

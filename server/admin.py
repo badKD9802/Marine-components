@@ -237,3 +237,59 @@ async def _update_doc_status(doc_id: int, status: str, error_msg: str | None):
             error_msg,
             doc_id,
         )
+
+
+# ============================================================
+#  사이트 설정 관리 (로고, 히어로, 회사 정보 등)
+# ============================================================
+
+@router.get("/settings")
+async def get_settings(_=Depends(verify_token)):
+    """전체 사이트 설정 조회 (관리자용)"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        rows = await conn.fetch("SELECT key, value, updated_at FROM site_settings")
+    return {
+        row["key"]: {
+            "value": row["value"],
+            "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+        }
+        for row in rows
+    }
+
+
+@router.put("/settings/{key}")
+async def update_setting(key: str, body: dict, _=Depends(verify_token)):
+    """개별 설정 업데이트"""
+    value = body.get("value", "")
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        await conn.execute(
+            """INSERT INTO site_settings (key, value, updated_at)
+               VALUES ($1, $2, NOW())
+               ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()""",
+            key, value,
+        )
+    return {"message": "설정 저장 완료", "key": key}
+
+
+@router.post("/settings/logo")
+async def upload_logo(body: dict, _=Depends(verify_token)):
+    """로고 업로드 (base64 data URI)"""
+    logo_data = body.get("logo", "")
+    if not logo_data:
+        raise HTTPException(status_code=400, detail="로고 데이터가 필요합니다")
+
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.vector_pool.acquire() as conn:
+        await conn.execute(
+            """INSERT INTO site_settings (key, value, updated_at)
+               VALUES ('logo', $1, NOW())
+               ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()""",
+            logo_data,
+        )
+    return {"message": "로고 저장 완료"}

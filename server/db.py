@@ -226,6 +226,29 @@ async def create_vector_tables():
             );
         """)
 
+        # body_html 컬럼 추가 (없으면)
+        await conn.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'inbox_emails' AND column_name = 'body_html'
+                ) THEN
+                    ALTER TABLE inbox_emails ADD COLUMN body_html TEXT;
+                END IF;
+            END $$;
+        """)
+
+        # 사이트 설정 테이블 (로고, 히어로 섹션, 회사 정보 등)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS site_settings (
+                id         SERIAL PRIMARY KEY,
+                key        TEXT UNIQUE NOT NULL,
+                value      TEXT,
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
         print("pgvector + RAG 테이블 생성 완료")
 
 

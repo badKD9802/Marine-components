@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영마린테크 관리자</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Markdown 렌더링 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
     <style>
         :root {
             --primary: #003366;
@@ -416,12 +419,9 @@
         .conv-item.active .conv-item-icon { background: rgba(0,153,204,0.15); }
         .conv-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .conv-actions {
-            display: flex;
-            gap: 2px;
-            opacity: 0;
-            transition: opacity 0.15s;
+            display: none;
         }
-        .conv-item:hover .conv-actions { opacity: 1; }
+        .conv-item:hover .conv-actions { display: none; }
         .conv-act-btn {
             background: none;
             border: none;
@@ -1586,7 +1586,9 @@
 
         /* ===== 채팅 UI 개선 ===== */
         .chat-messages { scroll-behavior: smooth; }
-        .msg-avatar { border-radius: 50%; }
+        .msg-avatar { border-radius: 50%; overflow: hidden; }
+        .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .msg-row.user .msg-avatar { display: none; }  /* 사용자 아이콘 숨김 */
         .msg-row.assistant .msg-bubble {
             border: 1px solid var(--border-light);
             border-radius: 18px 18px 18px 4px;
@@ -1925,6 +1927,14 @@
                             </div>
                         </div>
                         <textarea id="mailIncoming" placeholder="수신된 견적/문의 메일 내용을 붙여넣으세요...&#10;&#10;예: Dear Young Marine Tech, We would like to request a quotation for the following spare parts..."></textarea>
+                        <!-- HTML 메일 프리뷰 (body_html 있을 때만 표시) -->
+                        <div id="mailIncomingHtml" style="display:none;background:white;border:1px solid var(--border);border-radius:8px;margin:8px;padding:12px;max-height:400px;overflow:auto;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border-light);">
+                                <span style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">&#128279; HTML 메일</span>
+                                <button onclick="toggleMailHtmlView()" style="font-size:0.7rem;padding:3px 8px;background:var(--bg-gray);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-regular);">텍스트 보기</button>
+                            </div>
+                            <iframe id="mailHtmlFrame" sandbox="allow-same-origin" style="width:100%;min-height:300px;border:none;border-radius:4px;background:white;"></iframe>
+                        </div>
                         <!-- 수신 메일 분할 번역 뷰 (초기 숨김) -->
                         <div class="mail-incoming-split" id="mailIncomingSplit">
                             <div class="incoming-pane">
@@ -2056,11 +2066,13 @@ const API_BASE = 'https://marine-parts-production-60a3.up.railway.app';
 let authToken = sessionStorage.getItem('admin_token') || '';
 let currentConvId = null;
 let ragDocuments = [];
+let siteLogoUrl = null;  // AI 아바타용 로고
 
 // ============================================================
 //  초기화
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+    loadSiteLogo();  // 로고 로드
     if (authToken) showDashboard();
 
     document.getElementById('passwordInput').addEventListener('keydown', e => {
@@ -2104,6 +2116,23 @@ function switchTab(tab) {
     if (tab === 'rag') { loadConversations(); loadRagDocuments(); }
     if (tab === 'mail') { loadMailDocuments(); loadMailHistory(); loadGmailStatus(); }
     if (tab === 'inquiry') { loadAdminInquiries(); }
+}
+
+// ============================================================
+//  사이트 로고 로드
+// ============================================================
+async function loadSiteLogo() {
+    try {
+        const res = await fetch(API_BASE + '/api/site-settings');
+        if (res.ok) {
+            const settings = await res.json();
+            if (settings.logo) {
+                siteLogoUrl = settings.logo;
+            }
+        }
+    } catch (e) {
+        console.log('로고 로드 실패 (무시):', e);
+    }
 }
 
 async function api(path, options = {}) {
@@ -2313,10 +2342,13 @@ function renderConversations(convs) {
                     <span class="conv-title">${savedIcon}${esc(cv.title)}</span>
                     <div class="conv-age">${ageText}</div>
                 </div>
-                <div class="conv-actions" onclick="event.stopPropagation()">
-                    <button class="conv-act-btn save" onclick="toggleSaveFromList(${cv.id})" title="${cv.saved?'저장 해제':'저장'}">${cv.saved?'&#11088;':'&#9734;'}</button>
-                    <button class="conv-act-btn edit" onclick="startRename(${cv.id},'${esc(cv.title).replace(/'/g,"\\&#39;")}')" title="이름 변경">&#9998;</button>
-                    <button class="conv-act-btn del" onclick="deleteConversation(${cv.id})" title="삭제">&#10005;</button>
+                <div class="conv-kebab" id="kebab-${cv.id}" onclick="event.stopPropagation()">
+                    <button class="conv-kebab-btn" onclick="toggleKebab(event,${cv.id})">&#8943;</button>
+                    <div class="conv-kebab-menu" id="kebab-menu-${cv.id}">
+                        <button class="conv-kebab-menu-item" onclick="toggleSaveFromList(${cv.id});closeAllKebabs()">${cv.saved?'&#11088; 저장 해제':'&#9734; 저장'}</button>
+                        <button class="conv-kebab-menu-item" onclick="closeAllKebabs();startRename(${cv.id},'${esc(cv.title).replace(/'/g,"\\&#39;")}')">&#9998; 이름 변경</button>
+                        <button class="conv-kebab-menu-item danger" onclick="closeAllKebabs();deleteConversation(${cv.id})">&#128465; 삭제</button>
+                    </div>
                 </div>
             </div>`;
         }
@@ -2401,6 +2433,23 @@ function renderEmptyChat() {
 }
 
 function renderMd(str) {
+    if (!str) return '';
+
+    // marked.js 설정
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({
+            gfm: true, // GitHub Flavored Markdown
+            breaks: true, // 줄바꿈을 <br>로 변환
+            headerIds: false,
+            mangle: false
+        });
+
+        // marked로 파싱 후 DOMPurify로 정화
+        const rawHtml = marked.parse(str);
+        return DOMPurify.sanitize(rawHtml);
+    }
+
+    // Fallback (라이브러리 로드 실패 시)
     let s = esc(str);
     s = s.replace(/```([\s\S]*?)```/g, '<pre style="background:var(--bg-gray);padding:8px 10px;border-radius:6px;overflow-x:auto;font-size:0.82rem;margin:6px 0">$1</pre>');
     s = s.replace(/`([^`]+)`/g, '<code style="background:var(--bg-gray-100);padding:1px 5px;border-radius:4px;font-size:0.84em">$1</code>');
@@ -2417,7 +2466,10 @@ function renderChatMessages(messages) {
     let html = '';
     for (const m of messages) {
         const refs = m.references || [];
-        const avatar = m.role === 'user' ? 'U' : 'AI';
+        // AI 아바타: 로고 있으면 이미지, 없으면 "AI" 텍스트
+        const avatar = m.role === 'user'
+            ? 'U'
+            : (siteLogoUrl ? `<img src="${siteLogoUrl}" alt="AI">` : 'AI');
         const content = m.role === 'assistant' ? renderMd(m.content) : esc(m.content);
         const time = m.created_at ? new Date(m.created_at).toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) : '';
         html += `<div class="msg-row ${m.role}">
@@ -2515,6 +2567,26 @@ async function toggleSaveConversation() {
         saveBtn.disabled = false;
     }
 }
+
+// --- 케밥 메뉴 ---
+function toggleKebab(event, convId) {
+    event.stopPropagation();
+    const menu = document.getElementById('kebab-menu-' + convId);
+    const kebab = document.getElementById('kebab-' + convId);
+    const isOpen = menu.classList.contains('open');
+    closeAllKebabs();
+    if (!isOpen) {
+        menu.classList.add('open');
+        kebab.classList.add('open');
+    }
+}
+
+function closeAllKebabs() {
+    document.querySelectorAll('.conv-kebab-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.conv-kebab.open').forEach(k => k.classList.remove('open'));
+}
+
+document.addEventListener('click', closeAllKebabs);
 
 async function toggleSaveFromList(convId) {
     try {
@@ -2654,23 +2726,68 @@ async function sendRagMessage() {
     setChatEnabled(false);
 
     appendMsg('user', msg);
-    const loadingId = showTyping();
+
+    // SSE 스트리밍으로 AI 답변 받기
+    let fullResponse = '';
+    let assistantMsgId = null;
+    let references = [];
 
     try {
-        const data = await (await api('/admin/rag/chat', {
+        const res = await api('/admin/rag/chat/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ conversation_id: currentConvId, message: msg, document_ids: getSelectedDocIds() }),
-        })).json();
+        });
 
-        removeEl(loadingId);
-        appendMsg('assistant', data.reply, data.references || []);
-        showRefChunks(data.references || []);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const jsonStr = line.substring(6);
+                    try {
+                        const data = JSON.parse(jsonStr);
+
+                        if (data.chunk) {
+                            fullResponse += data.chunk;
+                            // AI 메시지 생성 또는 업데이트
+                            if (!assistantMsgId) {
+                                assistantMsgId = appendMsg('assistant', fullResponse);
+                            } else {
+                                updateMsg(assistantMsgId, fullResponse);
+                            }
+                        }
+
+                        if (data.done) {
+                            references = data.references || [];
+                            // 참조 문서 표시
+                            if (references.length > 0) {
+                                addRefsToMsg(assistantMsgId, references);
+                            }
+                            showRefChunks(references);
+                        }
+                    } catch (e) {
+                        console.error('SSE 파싱 오류:', e);
+                    }
+                }
+            }
+        }
+
         await loadConversations();
     } catch (e) {
-        removeEl(loadingId);
-        appendMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
-        console.error('문서 내 Q&A 오류:', e);
+        if (assistantMsgId) {
+            updateMsg(assistantMsgId, fullResponse || '오류가 발생했습니다. 다시 시도해주세요.');
+        } else {
+            appendMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
+        }
+        console.error('스트리밍 오류:', e);
     } finally {
         setChatEnabled(true);
     }
@@ -2690,7 +2807,10 @@ function appendMsg(role, content, refs) {
     if (welcome) welcome.remove();
 
     const id = 'msg-' + (++_mc);
-    const avatar = role === 'user' ? 'U' : 'AI';
+    // AI 아바타: 로고 있으면 이미지, 없으면 "AI" 텍스트
+    const avatar = role === 'user'
+        ? 'U'
+        : (siteLogoUrl ? `<img src="${siteLogoUrl}" alt="AI">` : 'AI');
     const rendered = role === 'assistant' ? renderMd(content) : esc(content);
     const now = new Date();
     const timeStr = now.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
@@ -2706,13 +2826,43 @@ function appendMsg(role, content, refs) {
     return id;
 }
 
+function updateMsg(msgId, content) {
+    const el = document.getElementById(msgId);
+    if (!el) return;
+    const bubble = el.querySelector('.msg-bubble');
+    if (bubble) {
+        bubble.innerHTML = renderMd(content);
+    }
+    const c = document.getElementById('chatMessages');
+    c.scrollTop = c.scrollHeight;
+}
+
+function addRefsToMsg(msgId, refs) {
+    const el = document.getElementById(msgId);
+    if (!el || !refs || !refs.length) return;
+    const msgContent = el.querySelector('.msg-content');
+    if (!msgContent) return;
+
+    // 이미 참조 링크가 있으면 제거
+    const existingLink = msgContent.querySelector('.msg-refs-link');
+    if (existingLink) existingLink.remove();
+
+    // 새 참조 링크 추가
+    const refsLink = document.createElement('span');
+    refsLink.className = 'msg-refs-link';
+    refsLink.textContent = `📄 참조 ${refs.length}건 보기`;
+    refsLink.onclick = () => showRefChunks(refs);
+    msgContent.appendChild(refsLink);
+}
+
 function showTyping() {
     const c = document.getElementById('chatMessages');
     const id = 'typing-' + (++_mc);
+    const aiAvatar = siteLogoUrl ? `<img src="${siteLogoUrl}" alt="AI">` : 'AI';
     const div = document.createElement('div');
     div.className = 'msg-row assistant';
     div.id = id;
-    div.innerHTML = `<div class="msg-avatar">AI</div><div class="msg-content"><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div></div>`;
+    div.innerHTML = `<div class="msg-avatar">${aiAvatar}</div><div class="msg-content"><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div></div>`;
     c.appendChild(div);
     c.scrollTop = c.scrollHeight;
     return id;
@@ -3418,6 +3568,18 @@ async function loadInboxItem(id) {
         const bodyText = `From: ${data.from_name || ''} <${data.from_addr}>\nSubject: ${data.subject || ''}\n\n${data.body || ''}`;
         document.getElementById('mailIncoming').value = bodyText;
 
+        // HTML 메일이 있으면 iframe에 표시
+        const htmlDiv = document.getElementById('mailIncomingHtml');
+        const htmlFrame = document.getElementById('mailHtmlFrame');
+        if (data.body_html) {
+            htmlFrame.srcdoc = data.body_html;
+            htmlDiv.style.display = '';
+            document.getElementById('mailIncoming').style.display = 'none';
+        } else {
+            htmlDiv.style.display = 'none';
+            document.getElementById('mailIncoming').style.display = '';
+        }
+
         // 초안이 있으면 채우기
         if (data.draft) {
             document.getElementById('mailKoreanDraft').value = data.draft.korean_draft || '';
@@ -3438,7 +3600,6 @@ async function loadInboxItem(id) {
         // 분석 숨기기 + 번역 분할 뷰 리셋
         document.getElementById('mailAnalysis').classList.remove('visible');
         document.getElementById('mailIncomingSplit').classList.remove('visible');
-        document.getElementById('mailIncoming').style.display = '';
 
         // 발송 버튼 활성화 (번역본이 있을 때)
         const sendBtn = document.getElementById('mailSendBtn');
@@ -3456,6 +3617,23 @@ async function loadInboxItem(id) {
     } catch (e) {
         console.error('수신 메일 로드 실패:', e);
         alert('수신 메일을 불러오는데 실패했습니다.');
+    }
+}
+
+// HTML/텍스트 뷰 전환
+function toggleMailHtmlView() {
+    const htmlDiv = document.getElementById('mailIncomingHtml');
+    const textarea = document.getElementById('mailIncoming');
+    const btn = htmlDiv.querySelector('button');
+
+    if (htmlDiv.style.display !== 'none') {
+        htmlDiv.style.display = 'none';
+        textarea.style.display = '';
+        btn.textContent = 'HTML 보기';
+    } else {
+        htmlDiv.style.display = '';
+        textarea.style.display = 'none';
+        btn.textContent = '텍스트 보기';
     }
 }
 

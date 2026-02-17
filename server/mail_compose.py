@@ -398,10 +398,10 @@ async def gmail_fetch(_=Depends(verify_token)):
             if exists:
                 continue
             await conn.execute(
-                """INSERT INTO inbox_emails (gmail_uid, from_addr, from_name, subject, body, received_at)
-                   VALUES ($1, $2, $3, $4, $5, $6)""",
+                """INSERT INTO inbox_emails (gmail_uid, from_addr, from_name, subject, body, body_html, received_at)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7)""",
                 em["uid"], em["from_addr"], em["from_name"],
-                em["subject"], em["body"], em["received_at"],
+                em["subject"], em["body"], em.get("body_html"), em["received_at"],
             )
             saved_count += 1
         # last_checked_at 갱신
@@ -454,6 +454,7 @@ async def gmail_inbox_detail(inbox_id: int, _=Depends(verify_token)):
             "from_name": row["from_name"],
             "subject": row["subject"],
             "body": row["body"],
+            "body_html": row.get("body_html"),
             "received_at": row["received_at"].isoformat() if row["received_at"] else None,
             "status": row["status"],
             "composition_id": row["composition_id"],
@@ -543,12 +544,11 @@ async def gmail_link_composition(inbox_id: int, composition_id: int, _=Depends(v
 # ============================================================
 
 async def gmail_auto_check_loop():
-    """매 60초마다 자동 체크 설정을 확인하고, 조건 충족 시 메일 fetch + 자동 초안 생성."""
-    last_checked_date = None
+    """10분마다 자동 체크 설정을 확인하고, auto_reply_enabled일 때 메일 fetch + 자동 초안 생성."""
 
     while True:
         try:
-            await asyncio.sleep(60)
+            await asyncio.sleep(600)  # 10분 대기
 
             if not db.vector_pool:
                 continue
@@ -559,27 +559,7 @@ async def gmail_auto_check_loop():
             if not config or not config["auto_reply_enabled"]:
                 continue
 
-            now = datetime.now(timezone.utc)
-            today_str = now.strftime("%Y-%m-%d")
-
-            # 오늘 이미 체크했으면 skip
-            if last_checked_date == today_str:
-                continue
-
-            # 현재 시각이 check_time 이전이면 skip
-            check_time = config["check_time"] or "09:00"
-            try:
-                check_h, check_m = map(int, check_time.split(":"))
-            except ValueError:
-                check_h, check_m = 9, 0
-
-            # UTC+9 (KST) 기준으로 비교
-            kst_hour = (now.hour + 9) % 24
-            kst_minute = now.minute
-            if kst_hour < check_h or (kst_hour == check_h and kst_minute < check_m):
-                continue
-
-            print(f"[Gmail 자동 체크] 실행 중... ({today_str} {check_time})", flush=True)
+            print(f"[Gmail 자동 체크] 실행 중...", flush=True)
 
             # 1. 새 메일 fetch
             since = config["last_checked_at"]
@@ -596,10 +576,10 @@ async def gmail_auto_check_loop():
                     if exists:
                         continue
                     row = await conn.fetchrow(
-                        """INSERT INTO inbox_emails (gmail_uid, from_addr, from_name, subject, body, received_at)
-                           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id""",
+                        """INSERT INTO inbox_emails (gmail_uid, from_addr, from_name, subject, body, body_html, received_at)
+                           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id""",
                         em["uid"], em["from_addr"], em["from_name"],
-                        em["subject"], em["body"], em["received_at"],
+                        em["subject"], em["body"], em.get("body_html"), em["received_at"],
                     )
                     new_emails.append({"inbox_id": row["id"], **em})
 
@@ -652,7 +632,6 @@ async def gmail_auto_check_loop():
                 except Exception as e:
                     print(f"[Gmail 자동 체크] 초안 생성 실패 ({em['subject']}): {e}", flush=True)
 
-            last_checked_date = today_str
             print(f"[Gmail 자동 체크] 완료 — 새 메일 {len(new_emails)}건 처리", flush=True)
 
         except asyncio.CancelledError:
@@ -660,7 +639,7 @@ async def gmail_auto_check_loop():
             break
         except Exception as e:
             print(f"[Gmail 자동 체크] 오류: {e}", flush=True)
-            await asyncio.sleep(60)
+            await asyncio.sleep(600)  # 오류 발생 시에도 10분 대기
 
 
 # ============================================================
