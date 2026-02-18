@@ -812,3 +812,165 @@ async def delete_prompt_example(example_id: int, _=Depends(verify_token)):
     if result == "DELETE 0":
         raise HTTPException(status_code=404, detail="프롬프트 예시를 찾을 수 없습니다")
     return {"message": "삭제 완료"}
+
+
+# ============================================================
+#  서명 관리
+# ============================================================
+
+class SignatureCreate(BaseModel):
+    name: str
+    content: str
+    is_default: bool = False
+
+
+class TemplateCreate(BaseModel):
+    name: str
+    category: str = "general"
+    content: str
+    variables: list[str] | None = None
+
+
+@router.get("/signatures")
+async def list_signatures(_=Depends(verify_token)):
+    """서명 목록 조회"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT id, name, content, is_default, created_at FROM mail_signatures ORDER BY is_default DESC, id DESC"
+        )
+    return [
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "content": row["content"],
+            "is_default": row["is_default"],
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+        }
+        for row in rows
+    ]
+
+
+@router.post("/signatures")
+async def create_signature(req: SignatureCreate, _=Depends(verify_token)):
+    """서명 생성"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        # 기본 서명으로 설정하는 경우, 기존 기본 서명을 해제
+        if req.is_default:
+            await conn.execute("UPDATE mail_signatures SET is_default = FALSE")
+
+        row = await conn.fetchrow(
+            "INSERT INTO mail_signatures (name, content, is_default) VALUES ($1, $2, $3) RETURNING id",
+            req.name, req.content, req.is_default
+        )
+    return {"id": row["id"], "message": "서명 생성 완료"}
+
+
+@router.put("/signatures/{signature_id}")
+async def update_signature(signature_id: int, req: SignatureCreate, _=Depends(verify_token)):
+    """서명 수정"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        # 기본 서명으로 설정하는 경우, 기존 기본 서명을 해제
+        if req.is_default:
+            await conn.execute("UPDATE mail_signatures SET is_default = FALSE WHERE id != $1", signature_id)
+
+        result = await conn.execute(
+            "UPDATE mail_signatures SET name = $1, content = $2, is_default = $3 WHERE id = $4",
+            req.name, req.content, req.is_default, signature_id
+        )
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="서명을 찾을 수 없습니다")
+    return {"message": "서명 수정 완료"}
+
+
+@router.delete("/signatures/{signature_id}")
+async def delete_signature(signature_id: int, _=Depends(verify_token)):
+    """서명 삭제"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        result = await conn.execute(
+            "DELETE FROM mail_signatures WHERE id = $1", signature_id
+        )
+    if result == "DELETE 0":
+        raise HTTPException(status_code=404, detail="서명을 찾을 수 없습니다")
+    return {"message": "삭제 완료"}
+
+
+# ============================================================
+#  메일 템플릿 관리
+# ============================================================
+
+@router.get("/templates")
+async def list_templates(category: str = None, _=Depends(verify_token)):
+    """템플릿 목록 조회"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        if category:
+            rows = await conn.fetch(
+                "SELECT id, name, category, content, variables, created_at FROM mail_templates WHERE category = $1 ORDER BY id DESC",
+                category
+            )
+        else:
+            rows = await conn.fetch(
+                "SELECT id, name, category, content, variables, created_at FROM mail_templates ORDER BY id DESC"
+            )
+    return [
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "category": row["category"],
+            "content": row["content"],
+            "variables": row["variables"] or [],
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+        }
+        for row in rows
+    ]
+
+
+@router.post("/templates")
+async def create_template(req: TemplateCreate, _=Depends(verify_token)):
+    """템플릿 생성"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "INSERT INTO mail_templates (name, category, content, variables) VALUES ($1, $2, $3, $4) RETURNING id",
+            req.name, req.category, req.content, req.variables or []
+        )
+    return {"id": row["id"], "message": "템플릿 생성 완료"}
+
+
+@router.put("/templates/{template_id}")
+async def update_template(template_id: int, req: TemplateCreate, _=Depends(verify_token)):
+    """템플릿 수정"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        result = await conn.execute(
+            "UPDATE mail_templates SET name = $1, category = $2, content = $3, variables = $4 WHERE id = $5",
+            req.name, req.category, req.content, req.variables or [], template_id
+        )
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다")
+    return {"message": "템플릿 수정 완료"}
+
+
+@router.delete("/templates/{template_id}")
+async def delete_template(template_id: int, _=Depends(verify_token)):
+    """템플릿 삭제"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        result = await conn.execute(
+            "DELETE FROM mail_templates WHERE id = $1", template_id
+        )
+    if result == "DELETE 0":
+        raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다")
+    return {"message": "삭제 완료"}

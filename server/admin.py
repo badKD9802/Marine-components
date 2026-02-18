@@ -293,3 +293,288 @@ async def upload_logo(body: dict, _=Depends(verify_token)):
             logo_data,
         )
     return {"message": "로고 저장 완료"}
+
+
+# ============================================================
+#  대시보드 통계
+# ============================================================
+
+@router.get("/stats")
+async def get_dashboard_stats(_=Depends(verify_token)):
+    """대시보드 통계 조회"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.vector_pool.acquire() as conn:
+        # 문서 통계
+        total_docs = await conn.fetchval("SELECT COUNT(*) FROM documents")
+        docs_by_purpose = await conn.fetch(
+            "SELECT purpose, COUNT(*) as count FROM documents GROUP BY purpose"
+        )
+
+        # 메일 통계
+        total_mails = await conn.fetchval("SELECT COUNT(*) FROM mail_compositions")
+        mails_today = await conn.fetchval(
+            "SELECT COUNT(*) FROM mail_compositions WHERE created_at::date = CURRENT_DATE"
+        )
+        mails_this_week = await conn.fetchval(
+            "SELECT COUNT(*) FROM mail_compositions WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'"
+        )
+        mails_this_month = await conn.fetchval(
+            "SELECT COUNT(*) FROM mail_compositions WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+        )
+
+        # RAG 대화 통계
+        total_conversations = await conn.fetchval("SELECT COUNT(*) FROM conversations")
+        conversations_today = await conn.fetchval(
+            "SELECT COUNT(*) FROM conversations WHERE created_at::date = CURRENT_DATE"
+        )
+
+        # 프롬프트 예시 & 서명 개수
+        prompt_examples_count = await conn.fetchval("SELECT COUNT(*) FROM mail_prompt_examples")
+        signatures_count = await conn.fetchval("SELECT COUNT(*) FROM mail_signatures")
+
+    # 견적문의 통계 (일반 DB)
+    total_inquiries = 0
+    inquiries_today = 0
+    if db.pool:
+        async with db.pool.acquire() as conn:
+            total_inquiries = await conn.fetchval("SELECT COUNT(*) FROM inquiries")
+            inquiries_today = await conn.fetchval(
+                "SELECT COUNT(*) FROM inquiries WHERE created_at::date = CURRENT_DATE"
+            )
+
+    return {
+        "documents": {
+            "total": total_docs,
+            "by_purpose": {row["purpose"]: row["count"] for row in docs_by_purpose},
+        },
+        "mails": {
+            "total": total_mails,
+            "today": mails_today,
+            "this_week": mails_this_week,
+            "this_month": mails_this_month,
+        },
+        "conversations": {
+            "total": total_conversations,
+            "today": conversations_today,
+        },
+        "inquiries": {
+            "total": total_inquiries,
+            "today": inquiries_today,
+        },
+        "settings": {
+            "prompt_examples": prompt_examples_count,
+            "signatures": signatures_count,
+        },
+    }
+
+
+@router.get("/logs/mail")
+async def get_mail_logs(limit: int = 50, _=Depends(verify_token)):
+    """메일 작성 로그 조회"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.vector_pool.acquire() as conn:
+        rows = await conn.fetch(
+            """SELECT id, incoming_email, korean_draft, translated_draft,
+                      detected_lang, tone, created_at
+               FROM mail_compositions
+               ORDER BY created_at DESC
+               LIMIT $1""",
+            limit
+        )
+
+    return [
+        {
+            "id": row["id"],
+            "incoming_preview": row["incoming_email"][:100] + "..." if len(row["incoming_email"]) > 100 else row["incoming_email"],
+            "draft_preview": row["korean_draft"][:100] + "..." if len(row["korean_draft"]) > 100 else row["korean_draft"],
+            "detected_lang": row["detected_lang"],
+            "tone": row["tone"],
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+        }
+        for row in rows
+    ]
+
+
+# ============================================================
+#  카테고리 관리
+# ============================================================
+
+@router.get("/categories")
+async def get_categories(_=Depends(verify_token)):
+    """카테고리 목록 조회"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        rows = await conn.fetch("SELECT * FROM categories ORDER BY id")
+
+    return [dict(row) for row in rows]
+
+
+@router.post("/categories")
+async def create_category(body: dict, _=Depends(verify_token)):
+    """카테고리 생성"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    code = body.get("code", "").strip()
+    name_ko = body.get("name_ko", "").strip()
+    name_en = body.get("name_en", "").strip()
+
+    if not code or not name_ko:
+        raise HTTPException(status_code=400, detail="코드와 한글명은 필수입니다")
+
+    async with db.pool.acquire() as conn:
+        try:
+            row = await conn.fetchrow(
+                "INSERT INTO categories (code, name_ko, name_en) VALUES ($1, $2, $3) RETURNING id",
+                code, name_ko, name_en
+            )
+            return {"id": row["id"], "message": "카테고리 생성 완료"}
+        except Exception as e:
+            if "unique" in str(e).lower():
+                raise HTTPException(status_code=400, detail="이미 존재하는 카테고리 코드입니다")
+            raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/categories/{category_id}")
+async def delete_category(category_id: int, _=Depends(verify_token)):
+    """카테고리 삭제"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        result = await conn.execute("DELETE FROM categories WHERE id = $1", category_id)
+
+    if result == "DELETE 0":
+        raise HTTPException(status_code=404, detail="카테고리를 찾을 수 없습니다")
+
+    return {"message": "삭제 완료"}
+
+
+# ============================================================
+#  이미지 업로드
+# ============================================================
+
+@router.post("/upload-image")
+async def upload_image(body: dict, _=Depends(verify_token)):
+    """이미지 업로드 (Base64)"""
+    image_data = body.get("image", "")
+
+    if not image_data:
+        raise HTTPException(status_code=400, detail="이미지 데이터가 필요합니다")
+
+    # Base64 data URI 형식 확인
+    if not image_data.startswith("data:image/"):
+        raise HTTPException(status_code=400, detail="올바른 이미지 형식이 아닙니다")
+
+    # 이미지를 그대로 반환 (data URI)
+    return {"url": image_data}
+
+
+# ============================================================
+#  상품 관리
+# ============================================================
+
+@router.get("/products")
+async def get_products(category: str = None, search: str = None, _=Depends(verify_token)):
+    """상품 목록 조회"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    products = await db.get_all_products(category, search)
+    return products
+
+
+@router.get("/products/{product_id}")
+async def get_product(product_id: int, _=Depends(verify_token)):
+    """상품 상세 조회"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        product = await conn.fetchrow("SELECT * FROM products WHERE id = $1", product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다")
+
+    return dict(product)
+
+
+@router.post("/products")
+async def create_product(body: dict, _=Depends(verify_token)):
+    """상품 생성"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """INSERT INTO products (image, part_no, price, brand, category, name, description,
+                                      category_name, detail_info, specs, compatibility)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+               RETURNING id""",
+            body.get("image", ""),
+            body.get("part_no", ""),
+            body.get("price", ""),
+            body.get("brand", ""),
+            body.get("category", ""),
+            body.get("name", {}),
+            body.get("description", {}),
+            body.get("category_name", {}),
+            body.get("detail_info", {}),
+            body.get("specs", {}),
+            body.get("compatibility", {})
+        )
+
+    return {"id": row["id"], "message": "상품 생성 완료"}
+
+
+@router.put("/products/{product_id}")
+async def update_product(product_id: int, body: dict, _=Depends(verify_token)):
+    """상품 수정"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        result = await conn.execute(
+            """UPDATE products
+               SET image = $1, part_no = $2, price = $3, brand = $4, category = $5,
+                   name = $6, description = $7, category_name = $8, detail_info = $9,
+                   specs = $10, compatibility = $11, updated_at = NOW()
+               WHERE id = $12""",
+            body.get("image", ""),
+            body.get("part_no", ""),
+            body.get("price", ""),
+            body.get("brand", ""),
+            body.get("category", ""),
+            body.get("name", {}),
+            body.get("description", {}),
+            body.get("category_name", {}),
+            body.get("detail_info", {}),
+            body.get("specs", {}),
+            body.get("compatibility", {}),
+            product_id
+        )
+
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다")
+
+    return {"message": "상품 수정 완료"}
+
+
+@router.delete("/products/{product_id}")
+async def delete_product(product_id: int, _=Depends(verify_token)):
+    """상품 삭제"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        result = await conn.execute("DELETE FROM products WHERE id = $1", product_id)
+
+    if result == "DELETE 0":
+        raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다")
+
+    return {"message": "상품 삭제 완료"}

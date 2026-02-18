@@ -5,1668 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영마린테크 관리자</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
     <!-- Markdown 렌더링 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
-    <style>
-        :root {
-            --primary: #003366;
-            --primary-dark: #001f3f;
-            --primary-light: #e6f2ff;
-            --accent: #0099cc;
-            --accent-light: #00b8e6;
-            --success: #28a745;
-            --warning: #ff9800;
-            --error: #dc3545;
-            --text-dark: #1a1a1a;
-            --text-regular: #333333;
-            --text-light: #666666;
-            --text-muted: #999999;
-            --bg-white: #ffffff;
-            --bg-gray: #f8f9fa;
-            --bg-gray-100: #f1f3f5;
-            --border: #e9ecef;
-            --border-light: #f0f0f0;
-            --gradient: linear-gradient(135deg, #003366 0%, #0099cc 100%);
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Noto Sans KR', 'Segoe UI', sans-serif;
-            background: var(--bg-gray);
-            color: var(--text-regular);
-            min-height: 100vh;
-        }
-
-        /* ===== 헤더 ===== */
-        .header {
-            background: var(--gradient);
-            color: white;
-            padding: 14px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,51,102,0.3);
-            position: relative;
-            z-index: 10;
-        }
-        .header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.3px; }
-        .header .logout-btn {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 6px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .header .logout-btn:hover { background: rgba(255,255,255,0.25); }
-
-        /* ===== 로그인 ===== */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-        }
-        .login-box {
-            background: white;
-            border-radius: 16px;
-            padding: 48px 40px;
-            box-shadow: var(--shadow-lg);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-        .login-box h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 6px; font-weight: 700; }
-        .login-box p { color: var(--text-light); font-size: 0.875rem; margin-bottom: 32px; }
-        .login-box input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            font-size: 0.95rem;
-            margin-bottom: 16px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .login-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,153,204,0.1); }
-        .login-box .error { color: var(--error); font-size: 0.8rem; margin-bottom: 12px; display: none; }
-
-        /* ===== 버튼 ===== */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 10px 22px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .btn-accent { background: var(--gradient); color: white; }
-        .btn-accent:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-danger { background: var(--error); color: white; font-size: 0.78rem; padding: 5px 12px; border-radius: 6px; }
-        .btn-danger:hover { background: #c82333; }
-        .btn-ghost { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
-        .btn-ghost:hover { background: var(--bg-gray); }
-        .btn-sm { font-size: 0.8rem; padding: 7px 16px; }
-
-        /* ===== 대시보드 ===== */
-        .dashboard { display: none; }
-
-        /* ===== 탭 네비게이션 ===== */
-        .tab-nav {
-            display: flex;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
-        }
-        .tab-nav button {
-            background: none;
-            border: none;
-            padding: 14px 28px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-bottom: 2.5px solid transparent;
-            margin-bottom: -1px;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .tab-nav button.active { color: var(--primary); border-bottom-color: var(--accent); }
-        .tab-nav button:hover { color: var(--primary); }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .content { max-width: 960px; margin: 0 auto; padding: 24px; }
-
-        /* ===== 서비스 안내 탭 ===== */
-        .guide-container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
-        .guide-hero {
-            background: var(--gradient);
-            color: white;
-            border-radius: 16px;
-            padding: 48px 36px;
-            text-align: center;
-            margin-bottom: 32px;
-            box-shadow: var(--shadow-md);
-        }
-        .guide-hero .hero-icon { font-size: 2.8rem; margin-bottom: 12px; }
-        .guide-hero h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
-        .guide-hero p { font-size: 0.95rem; opacity: 0.9; line-height: 1.6; }
-        .guide-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
-        .guide-card {
-            background: white;
-            border-radius: 14px;
-            padding: 28px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-        }
-        .guide-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-        .guide-card .card-icon { font-size: 2.2rem; margin-bottom: 12px; }
-        .guide-card .card-title { font-size: 1.05rem; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
-        .guide-card .card-desc { font-size: 0.82rem; color: var(--text-light); line-height: 1.5; margin-bottom: 16px; }
-        .guide-card .card-link {
-            display: inline-block;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--accent);
-            padding: 6px 18px;
-            border: 1.5px solid var(--accent);
-            border-radius: 20px;
-            transition: all 0.2s;
-        }
-        .guide-card:hover .card-link { background: var(--accent); color: white; }
-        .guide-flow {
-            background: white;
-            border-radius: 14px;
-            padding: 24px 28px;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-        }
-        .guide-flow h3 { font-size: 1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 16px; }
-        .guide-flow-steps {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .guide-flow-step {
-            background: var(--primary-light);
-            color: var(--primary);
-            font-size: 0.88rem;
-            font-weight: 500;
-            padding: 10px 20px;
-            border-radius: 10px;
-        }
-        .guide-flow-arrow { color: var(--accent); font-size: 1.2rem; font-weight: 700; }
-        @media (max-width: 768px) {
-            .guide-cards { grid-template-columns: 1fr; }
-            .guide-hero { padding: 32px 20px; }
-            .guide-hero h2 { font-size: 1.3rem; }
-        }
-
-        /* ===== 업로드 영역 ===== */
-        .upload-section { display: flex; gap: 16px; margin-bottom: 24px; }
-        .upload-card {
-            flex: 1;
-            background: white;
-            border: 2px dashed var(--border);
-            border-radius: 14px;
-            padding: 28px 20px;
-            text-align: center;
-            transition: all 0.25s;
-            cursor: pointer;
-        }
-        .upload-card:hover { border-color: var(--accent); background: rgba(0,153,204,0.02); }
-        .upload-card.dragover { border-color: var(--accent); background: var(--primary-light); }
-        .upload-card .icon { font-size: 2rem; margin-bottom: 8px; }
-        .upload-card .title { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; }
-        .upload-card .subtitle { font-size: 0.75rem; color: var(--text-muted); }
-        .upload-card input[type="file"] { display: none; }
-        .purpose-label {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.68rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            letter-spacing: 0.3px;
-        }
-        .purpose-consultant { background: #d4edda; color: #155724; }
-        .purpose-rag { background: #cce5ff; color: #004085; }
-
-        /* ===== 업로드 진행 ===== */
-        .upload-progress {
-            display: none;
-            background: white;
-            border-radius: 10px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow-sm);
-        }
-        .upload-progress .file-name { font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; }
-        .progress-bar { height: 5px; background: var(--bg-gray-100); border-radius: 3px; overflow: hidden; }
-        .progress-bar .fill {
-            height: 100%;
-            background: var(--gradient);
-            border-radius: 3px;
-            animation: progress-indeterminate 1.5s infinite;
-        }
-        @keyframes progress-indeterminate {
-            0% { width: 0%; margin-left: 0; }
-            50% { width: 60%; margin-left: 20%; }
-            100% { width: 0%; margin-left: 100%; }
-        }
-
-        /* ===== 문서 테이블 ===== */
-        .docs-section h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 14px; color: var(--text-dark); }
-        .docs-table {
-            width: 100%;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-        }
-        .docs-table table { width: 100%; border-collapse: collapse; }
-        .docs-table th {
-            text-align: left;
-            padding: 11px 16px;
-            background: var(--bg-gray);
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .docs-table td {
-            padding: 11px 16px;
-            border-top: 1px solid var(--border-light);
-            font-size: 0.85rem;
-        }
-        .docs-table tr:hover td { background: var(--bg-gray); }
-        .badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 0.72rem;
-            font-weight: 500;
-        }
-        .badge-done { background: #d4edda; color: #155724; }
-        .badge-processing { background: #fff3cd; color: #856404; }
-        .badge-error { background: #f8d7da; color: #721c24; }
-        .badge-pending { background: var(--bg-gray-100); color: var(--text-muted); }
-        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
-        .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
-
-        /* ===== 모달 ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: white;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 700px;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 28px;
-            box-shadow: var(--shadow-lg);
-        }
-        .modal h3 { font-size: 1.1rem; margin-bottom: 16px; font-weight: 600; }
-        .modal .chunk {
-            background: var(--bg-gray);
-            border-radius: 8px;
-            padding: 12px 14px;
-            margin-bottom: 8px;
-            font-size: 0.8rem;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-        .modal .chunk-label { font-weight: 600; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
-        .modal .close-btn {
-            float: right;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-muted);
-            transition: color 0.2s;
-        }
-        .modal .close-btn:hover { color: var(--text-dark); }
-
-        /* ============================================
-           문서 내 Q&A 탭 — 모던 3컬럼 레이아웃
-           ============================================ */
-        .rag-layout {
-            display: flex;
-            height: calc(100vh - 105px);
-            background: var(--bg-gray);
-        }
-
-        /* --- 왼쪽 사이드바: 대화 목록 --- */
-        .sidebar-conv {
-            width: 260px;
-            background: white;
-            border-right: 1px solid var(--border-light);
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar-conv-header {
-            padding: 16px 16px 12px;
-            border-bottom: 1px solid var(--border-light);
-        }
-        .sidebar-conv-header button { width: 100%; }
-        .conv-list { flex: 1; overflow-y: auto; padding: 8px; }
-        .conv-list::-webkit-scrollbar { width: 4px; }
-        .conv-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-        .conv-item {
-            padding: 10px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 3px;
-            font-size: 0.84rem;
-            color: var(--text-regular);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.15s;
-            position: relative;
-        }
-        .conv-item:hover { background: var(--bg-gray); }
-        .conv-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
-        .conv-item-icon {
-            width: 32px; height: 32px;
-            background: var(--bg-gray-100);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-        }
-        .conv-item.active .conv-item-icon { background: rgba(0,153,204,0.15); }
-        .conv-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .conv-actions {
-            display: none;
-        }
-        .conv-item:hover .conv-actions { display: none; }
-        .conv-act-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.78rem;
-            padding: 3px 5px;
-            border-radius: 4px;
-            transition: all 0.15s;
-        }
-        .conv-act-btn:hover { background: var(--bg-gray-100); }
-        .conv-act-btn.del:hover { color: var(--error); background: #fee; }
-        .conv-act-btn.edit:hover { color: var(--accent); }
-        .conv-act-btn.save:hover { color: var(--warning); }
-
-        /* 대화 그룹 헤더 */
-        .conv-group-header {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 12px 14px 6px;
-            margin-top: 4px;
-        }
-        .conv-group-header:first-child { margin-top: 0; }
-
-        /* 저장된 대화 아이콘 표시 */
-        .conv-saved-badge {
-            font-size: 0.7rem;
-            color: var(--warning);
-        }
-
-        /* 인라인 이름 편집 */
-        .conv-rename-input {
-            flex: 1;
-            border: 1.5px solid var(--accent);
-            border-radius: 6px;
-            padding: 3px 8px;
-            font-size: 0.82rem;
-            font-family: inherit;
-            outline: none;
-            background: white;
-        }
-
-        /* 채팅 헤더 (대화 선택 시 표시) */
-        .chat-header-bar {
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 24px;
-            background: white;
-            border-bottom: 1px solid var(--border-light);
-        }
-        .chat-header-bar.visible { display: flex; }
-        .chat-header-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .chat-header-actions { display: flex; gap: 6px; }
-        .btn-icon {
-            background: var(--bg-gray);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 0.78rem;
-            color: var(--text-light);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.15s;
-            font-family: inherit;
-        }
-        .btn-icon:hover { background: var(--bg-gray-100); color: var(--text-dark); border-color: var(--accent); }
-        .conv-age {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            margin-top: 1px;
-        }
-
-        /* --- 가운데: 채팅 영역 --- */
-        .chat-center {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            background: var(--bg-gray);
-        }
-
-        /* 채팅 메시지 영역 */
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 28px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .chat-messages::-webkit-scrollbar { width: 5px; }
-        .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-        /* 빈 상태 — 초기 중앙 화면 */
-        .chat-welcome {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: var(--text-muted);
-            padding: 40px 40px 20px;
-        }
-        .chat-welcome-icon {
-            width: 72px; height: 72px;
-            background: var(--gradient);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 16px rgba(0,153,204,0.25);
-        }
-        .chat-welcome h3 {
-            font-size: 1.15rem;
-            color: var(--text-dark);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .chat-welcome p { font-size: 0.85rem; line-height: 1.6; max-width: 320px; }
-
-        /* 초기 화면 문서 칩 */
-        .welcome-docs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 20px;
-            max-width: 480px;
-        }
-        .welcome-doc-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 14px;
-            background: white;
-            border: 1.5px solid var(--border);
-            border-radius: 20px;
-            font-size: 0.78rem;
-            color: var(--text-regular);
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-        .welcome-doc-chip:hover { border-color: var(--accent); background: var(--primary-light); }
-        .welcome-doc-chip.selected { border-color: var(--accent); background: rgba(0,153,204,0.1); color: var(--primary); font-weight: 500; }
-        .welcome-doc-chip .chip-check { font-size: 0.7rem; }
-
-        /* 초기 화면 입력 박스 */
-        .welcome-input-wrap {
-            margin-top: 24px;
-            width: 100%;
-            max-width: 520px;
-        }
-        .welcome-input-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: white;
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            padding: 6px 6px 6px 18px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            box-shadow: var(--shadow-md);
-        }
-        .welcome-input-box:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,153,204,0.1), var(--shadow-md);
-        }
-        .welcome-input-box input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 0.9rem;
-            font-family: inherit;
-            color: var(--text-regular);
-            background: transparent;
-        }
-        .welcome-input-box input::placeholder { color: var(--text-muted); }
-        .welcome-hint {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin-top: 10px;
-        }
-
-        /* 메시지 버블 */
-        .msg-row {
-            display: flex;
-            gap: 10px;
-            max-width: 78%;
-            animation: msgFadeIn 0.3s ease;
-        }
-        @keyframes msgFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
-        .msg-row.assistant { align-self: flex-start; }
-
-        .msg-avatar {
-            width: 34px; height: 34px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-            font-weight: 600;
-            margin-top: 2px;
-        }
-        .msg-row.user .msg-avatar { background: var(--primary); color: white; }
-        .msg-row.assistant .msg-avatar { background: var(--gradient); color: white; }
-
-        .msg-content { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-        .msg-bubble {
-            padding: 12px 16px;
-            font-size: 0.88rem;
-            line-height: 1.65;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .msg-row.user .msg-bubble {
-            background: var(--primary);
-            color: white;
-            border-radius: 16px 16px 4px 16px;
-            box-shadow: 0 2px 8px rgba(0,51,102,0.2);
-        }
-        .msg-row.assistant .msg-bubble {
-            background: white;
-            color: var(--text-regular);
-            border-radius: 16px 16px 16px 4px;
-            box-shadow: var(--shadow-sm);
-        }
-        .msg-refs-link {
-            font-size: 0.75rem;
-            color: var(--accent);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 0;
-            transition: color 0.15s;
-        }
-        .msg-refs-link:hover { color: var(--primary); text-decoration: underline; }
-        .msg-time {
-            font-size: 0.68rem;
-            color: var(--text-muted);
-            padding: 0 2px;
-        }
-
-        /* 타이핑 인디케이터 */
-        .typing-indicator {
-            display: flex;
-            gap: 5px;
-            padding: 14px 18px;
-        }
-        .typing-indicator span {
-            width: 8px; height: 8px;
-            background: var(--text-muted);
-            border-radius: 50%;
-            animation: typingBounce 1.4s infinite ease-in-out both;
-        }
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes typingBounce {
-            0%, 80%, 100% { transform: scale(0.4); opacity: 0.4; }
-            40% { transform: scale(1); opacity: 1; }
-        }
-
-        /* 입력 영역 */
-        .chat-input-wrap {
-            padding: 16px 24px 20px;
-            background: transparent;
-        }
-        .chat-input-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: white;
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            padding: 6px 6px 6px 18px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .chat-input-box:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,153,204,0.1);
-        }
-        .chat-input-box input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 0.9rem;
-            font-family: inherit;
-            color: var(--text-regular);
-            background: transparent;
-        }
-        .chat-input-box input::placeholder { color: var(--text-muted); }
-        .chat-input-box input:disabled { opacity: 0.5; }
-        .chat-send-btn {
-            width: 40px; height: 40px;
-            background: var(--gradient);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1.1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-        .chat-send-btn:hover { opacity: 0.9; transform: scale(1.05); }
-        .chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-        /* --- 오른쪽 사이드바: 참조 문서 --- */
-        .sidebar-ref {
-            width: 280px;
-            background: white;
-            border-left: 1px solid var(--border-light);
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar-ref-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-light);
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .sidebar-ref-header .header-icon {
-            width: 24px; height: 24px;
-            background: var(--primary-light);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-        }
-
-        .ref-doc-list {
-            overflow-y: auto;
-            padding: 10px 12px;
-            flex-shrink: 0;
-            height: 45%;
-        }
-        .ref-doc-list::-webkit-scrollbar { width: 4px; }
-        .ref-doc-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-        /* 리사이저 핸들 */
-        .ref-resizer {
-            height: 7px;
-            background: var(--border-light);
-            cursor: row-resize;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: background 0.15s;
-        }
-        .ref-resizer:hover, .ref-resizer.dragging { background: var(--accent); }
-        .ref-resizer::after {
-            content: '';
-            width: 32px;
-            height: 3px;
-            border-radius: 2px;
-            background: var(--text-muted);
-            opacity: 0.4;
-        }
-        .ref-resizer:hover::after, .ref-resizer.dragging::after { background: white; opacity: 0.9; }
-
-        .ref-doc-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 10px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            color: var(--text-regular);
-            margin-bottom: 2px;
-            transition: background 0.15s;
-        }
-        .ref-doc-item:hover { background: var(--bg-gray); }
-        .ref-doc-item input[type="checkbox"] {
-            width: 16px; height: 16px;
-            accent-color: var(--accent);
-            cursor: pointer;
-        }
-        .ref-doc-item label {
-            cursor: pointer;
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .ref-doc-all { font-weight: 600; color: var(--text-dark); border-bottom: 1px solid var(--border-light); padding-bottom: 10px; margin-bottom: 4px; }
-
-        /* 참조 청크 패널 */
-        .ref-chunks-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 14px 12px;
-            min-height: 60px;
-        }
-        .ref-chunks-area::-webkit-scrollbar { width: 4px; }
-        .ref-chunks-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        .ref-chunks-title {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text-light);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        /* 참조 문서 카드 */
-        .ref-chunk-card {
-            background: var(--bg-gray);
-            border: 1px solid var(--border-light);
-            border-radius: 10px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.15s;
-            font-size: 0.76rem;
-        }
-        .ref-chunk-card:hover { border-color: var(--accent); background: rgba(0,153,204,0.04); }
-        .ref-chunk-card .chunk-file {
-            font-weight: 600;
-            color: var(--accent);
-            font-size: 0.74rem;
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .ref-chunk-card .chunk-score {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-        .score-bar {
-            width: 40px; height: 4px;
-            background: var(--bg-gray-100);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .score-bar-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 2px;
-        }
-
-        /* 참조 문서 팝업 */
-        .ref-popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.45);
-            backdrop-filter: blur(4px);
-            z-index: 1100;
-            justify-content: center;
-            align-items: center;
-            padding: 24px;
-            animation: refPopFadeIn 0.2s ease;
-        }
-        .ref-popup-overlay.active { display: flex; }
-        @keyframes refPopFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .ref-popup {
-            background: white;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 560px;
-            max-height: 75vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.2);
-            animation: refPopSlideUp 0.25s ease;
-        }
-        @keyframes refPopSlideUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .ref-popup-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 18px 22px 14px;
-            border-bottom: 1px solid var(--border-light);
-        }
-        .ref-popup-header .popup-icon {
-            width: 36px; height: 36px;
-            background: var(--primary-light);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-        .ref-popup-header .popup-info { flex: 1; min-width: 0; }
-        .ref-popup-header .popup-filename {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .ref-popup-header .popup-score {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 2px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .ref-popup-header .popup-score .score-bar { width: 60px; }
-        .ref-popup-close {
-            background: none;
-            border: none;
-            font-size: 1.4rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            transition: all 0.15s;
-            line-height: 1;
-        }
-        .ref-popup-close:hover { color: var(--text-dark); background: var(--bg-gray); }
-        .ref-popup-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 18px 22px 22px;
-            font-size: 0.85rem;
-            line-height: 1.7;
-            color: var(--text-regular);
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .ref-popup-body::-webkit-scrollbar { width: 5px; }
-        .ref-popup-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-
-        /* ============================================
-           메일 작성 탭
-           ============================================ */
-        .mail-layout {
-            display: flex;
-            height: calc(100vh - 105px);
-            background: var(--bg-gray);
-        }
-
-        /* 왼쪽: 메일 작성 영역 */
-        .mail-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            overflow: hidden;
-        }
-
-        /* 수신 메일 입력 영역 */
-        .mail-incoming {
-            background: white;
-            border-bottom: none;
-            padding: 16px 20px;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-
-        /* 수신 메일 ↔ 초안 리사이즈 핸들 */
-        .mail-resize-handle {
-            height: 6px;
-            background: var(--border-light);
-            cursor: row-resize;
-            flex-shrink: 0;
-            position: relative;
-            transition: background 0.15s;
-        }
-        .mail-resize-handle:hover,
-        .mail-resize-handle.active {
-            background: var(--accent);
-        }
-        .mail-resize-handle::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 32px;
-            height: 3px;
-            border-radius: 2px;
-            background: var(--text-muted);
-            opacity: 0.5;
-        }
-        .mail-resize-handle:hover::after,
-        .mail-resize-handle.active::after {
-            background: white;
-            opacity: 0.9;
-        }
-        .mail-incoming-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        .mail-incoming-header h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .mail-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .mail-controls select {
-            padding: 6px 10px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-family: inherit;
-            color: var(--text-regular);
-            background: white;
-            cursor: pointer;
-            outline: none;
-        }
-        .mail-controls select:focus { border-color: var(--accent); }
-        .mail-incoming textarea {
-            width: 100%;
-            height: 100%;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 14px;
-            font-size: 0.85rem;
-            font-family: inherit;
-            line-height: 1.6;
-            color: var(--text-regular);
-            resize: none;
-            outline: none;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
-        }
-        .mail-incoming textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,153,204,0.08); }
-        .mail-incoming textarea::placeholder { color: var(--text-muted); }
-
-        /* 수신 메일 분할 번역 뷰 */
-        .mail-incoming-split {
-            display: none;
-            gap: 0;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            height: 100%;
-            box-sizing: border-box;
-        }
-        .mail-incoming-split.visible {
-            display: flex;
-        }
-        .mail-incoming-split .incoming-pane {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-        .mail-incoming-split .incoming-pane + .incoming-pane {
-            border-left: 1px solid var(--border-light);
-        }
-        .mail-incoming-split .incoming-pane-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 6px 12px;
-            background: var(--bg-gray);
-            border-bottom: 1px solid var(--border-light);
-            flex-shrink: 0;
-        }
-        .mail-incoming-split .incoming-pane-title {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .mail-incoming-split textarea {
-            flex: 1;
-            width: 100%;
-            border: none;
-            padding: 10px 12px;
-            font-size: 0.83rem;
-            font-family: inherit;
-            line-height: 1.6;
-            color: var(--text-regular);
-            resize: none;
-            outline: none;
-            background: var(--bg-white);
-        }
-        .mail-incoming-split textarea:read-only {
-            background: var(--bg-gray);
-            color: var(--text-light);
-        }
-
-        /* 분석 결과 */
-        .mail-analysis {
-            display: none;
-            background: var(--primary-light);
-            border: 1px solid rgba(0,153,204,0.2);
-            border-radius: 10px;
-            padding: 12px 14px;
-            margin-top: 10px;
-            font-size: 0.82rem;
-            line-height: 1.6;
-            color: var(--primary-dark);
-        }
-        .mail-analysis.visible { display: block; }
-        .mail-analysis-label {
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: var(--accent);
-            margin-bottom: 4px;
-        }
-
-        /* 편집 영역 (분할 뷰) */
-        .mail-editor {
-            flex: 1;
-            display: flex;
-            gap: 0;
-            overflow: hidden;
-        }
-        .mail-pane {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-        .mail-pane + .mail-pane { border-left: 1px solid var(--border-light); }
-        .mail-pane-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 16px;
-            background: white;
-            border-bottom: 1px solid var(--border-light);
-            flex-shrink: 0;
-        }
-        .mail-pane-title {
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .mail-pane-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.68rem;
-            font-weight: 600;
-        }
-        .badge-ko { background: #d4edda; color: #155724; }
-        .badge-lang { background: #cce5ff; color: #004085; }
-        .mail-pane textarea {
-            flex: 1;
-            width: 100%;
-            border: none;
-            padding: 16px;
-            font-size: 0.85rem;
-            font-family: inherit;
-            line-height: 1.7;
-            color: var(--text-regular);
-            resize: none;
-            outline: none;
-            background: var(--bg-white);
-        }
-        .mail-pane textarea:read-only {
-            background: var(--bg-gray);
-            color: var(--text-light);
-        }
-        .mail-pane textarea::placeholder { color: var(--text-muted); }
-
-        /* 하단 액션 바 */
-        .mail-actions {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 20px;
-            background: white;
-            border-top: 1px solid var(--border-light);
-            flex-shrink: 0;
-        }
-        .mail-actions-left { display: flex; gap: 8px; }
-        .mail-actions-right { display: flex; gap: 8px; }
-
-        /* 오른쪽: 참조 문서 + 이력 사이드바 */
-        .mail-sidebar {
-            width: 280px;
-            background: white;
-            border-left: 1px solid var(--border-light);
-            display: flex;
-            flex-direction: column;
-        }
-        .mail-sidebar-section {
-            display: flex;
-            flex-direction: column;
-        }
-        .mail-sidebar-section:first-child {
-            flex-shrink: 0;
-            max-height: 45%;
-        }
-        .mail-sidebar-section:last-child {
-            flex: 1;
-            border-top: 1px solid var(--border-light);
-            min-height: 0;
-        }
-        .mail-sidebar-header {
-            padding: 12px 14px;
-            font-weight: 600;
-            font-size: 0.82rem;
-            color: var(--text-dark);
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-        .mail-doc-list {
-            overflow-y: auto;
-            padding: 8px 10px;
-            flex: 1;
-        }
-        .mail-doc-list::-webkit-scrollbar { width: 4px; }
-        .mail-doc-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        .mail-history-list {
-            overflow-y: auto;
-            padding: 8px 10px;
-            flex: 1;
-        }
-        .mail-history-list::-webkit-scrollbar { width: 4px; }
-        .mail-history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        .mail-history-item {
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 3px;
-            transition: all 0.15s;
-            position: relative;
-        }
-        .mail-history-item:hover { background: var(--bg-gray); }
-        .mail-history-item.active { background: var(--primary-light); }
-        .mail-history-title {
-            font-size: 0.8rem;
-            color: var(--text-regular);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            margin-bottom: 2px;
-        }
-        .mail-history-meta {
-            font-size: 0.68rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .mail-history-del {
-            position: absolute;
-            top: 8px; right: 8px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.75rem;
-            padding: 2px 5px;
-            border-radius: 4px;
-            opacity: 0;
-            transition: all 0.15s;
-        }
-        .mail-history-item:hover .mail-history-del { opacity: 1; }
-        .mail-history-del:hover { color: var(--error); background: #fee; }
-
-        /* 메일 로딩 오버레이 */
-        .mail-loading {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.8);
-            z-index: 10;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .mail-loading.active { display: flex; }
-        .mail-loading-spinner {
-            width: 36px; height: 36px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .mail-loading-text {
-            font-size: 0.85rem;
-            color: var(--text-light);
-        }
-
-        /* Gmail 연동 바 */
-        .gmail-bar {
-            background: white;
-            border-bottom: 1px solid var(--border-light);
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            flex-shrink: 0;
-        }
-        .gmail-bar-title {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-dark);
-            white-space: nowrap;
-        }
-        .gmail-bar input[type="text"],
-        .gmail-bar input[type="password"] {
-            padding: 6px 10px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-family: inherit;
-            outline: none;
-            width: 180px;
-        }
-        .gmail-bar input:focus { border-color: var(--accent); }
-        .gmail-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.78rem;
-            color: var(--text-light);
-        }
-        .gmail-status-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        .gmail-status-dot.connected { background: #28a745; }
-        .gmail-status-dot.disconnected { background: #dc3545; }
-        .gmail-auto-settings {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.78rem;
-            color: var(--text-light);
-            margin-left: auto;
-        }
-        .gmail-auto-settings select {
-            padding: 4px 8px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-family: inherit;
-        }
-        .gmail-toggle {
-            position: relative;
-            width: 36px; height: 20px;
-            background: var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .gmail-toggle.active { background: #28a745; }
-        .gmail-toggle::after {
-            content: '';
-            position: absolute;
-            top: 2px; left: 2px;
-            width: 16px; height: 16px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.2s;
-        }
-        .gmail-toggle.active::after { transform: translateX(16px); }
-
-        /* 수신함 탭 전환 */
-        .mail-sidebar-tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-light);
-            flex-shrink: 0;
-        }
-        .mail-sidebar-tab {
-            flex: 1;
-            padding: 10px 8px;
-            text-align: center;
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text-light);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.15s;
-            background: none;
-            border-top: none;
-            border-left: none;
-            border-right: none;
-        }
-        .mail-sidebar-tab:hover { color: var(--text-dark); background: var(--bg-gray); }
-        .mail-sidebar-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-        .mail-sidebar-tab .tab-count {
-            display: inline-block;
-            background: var(--accent);
-            color: white;
-            font-size: 0.65rem;
-            padding: 1px 6px;
-            border-radius: 8px;
-            margin-left: 4px;
-        }
-
-        /* 수신함 아이템 */
-        .inbox-item {
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 3px;
-            transition: all 0.15s;
-            position: relative;
-        }
-        .inbox-item:hover { background: var(--bg-gray); }
-        .inbox-item.active { background: var(--primary-light); }
-        .inbox-item-from {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 2px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .inbox-item-subject {
-            font-size: 0.75rem;
-            color: var(--text-regular);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            margin-bottom: 2px;
-        }
-        .inbox-item-meta {
-            font-size: 0.68rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .badge-status {
-            display: inline-block;
-            padding: 1px 6px;
-            border-radius: 8px;
-            font-size: 0.65rem;
-            font-weight: 600;
-        }
-        .badge-new { background: #cce5ff; color: #004085; }
-        .badge-draft-ready { background: #fff3cd; color: #856404; }
-        .badge-replied { background: #d4edda; color: #155724; }
-        .badge-ignored { background: #e2e3e5; color: #383d41; }
-
-        /* ===== 반응형 ===== */
-        @media (max-width: 1024px) {
-            .sidebar-ref { display: none; }
-            .mail-sidebar { display: none; }
-        }
-        @media (max-width: 768px) {
-            .rag-layout { flex-direction: column; height: auto; min-height: calc(100vh - 105px); }
-            .sidebar-conv { width: 100%; max-height: 180px; border-right: none; border-bottom: 1px solid var(--border-light); }
-            .upload-section { flex-direction: column; }
-            .content { padding: 16px; }
-            .mail-layout { flex-direction: column; height: auto; min-height: calc(100vh - 105px); }
-            .mail-editor { flex-direction: column; }
-            .mail-pane + .mail-pane { border-left: none; border-top: 1px solid var(--border-light); }
-            .mail-incoming-split { flex-direction: column; max-height: 360px; }
-            .mail-incoming-split .incoming-pane + .incoming-pane { border-left: none; border-top: 1px solid var(--border-light); }
-        }
-        /* ===== 청크 수정 ===== */
-        .chunk-edit-btn {
-            float: right;
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 3px 10px;
-            font-size: 0.72rem;
-            color: var(--accent);
-            cursor: pointer;
-            transition: all 0.15s;
-            font-family: inherit;
-        }
-        .chunk-edit-btn:hover { background: var(--primary-light); border-color: var(--accent); }
-        .chunk-textarea {
-            width: 100%;
-            min-height: 100px;
-            border: 1.5px solid var(--accent);
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 0.8rem;
-            font-family: inherit;
-            line-height: 1.6;
-            resize: vertical;
-            outline: none;
-            box-sizing: border-box;
-        }
-        .chunk-save-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 6px;
-            justify-content: flex-end;
-        }
-        .chunk-save-actions button {
-            padding: 5px 14px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            font-family: inherit;
-            cursor: pointer;
-            border: none;
-            transition: all 0.15s;
-        }
-        .chunk-save-actions .save-btn { background: var(--primary); color: white; }
-        .chunk-save-actions .save-btn:hover { background: var(--primary-dark); }
-        .chunk-save-actions .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .chunk-save-actions .cancel-btn { background: var(--bg-gray); color: var(--text-light); border: 1px solid var(--border); }
-        .chunk-save-actions .cancel-btn:hover { background: var(--bg-gray-100); }
-
-        /* ===== 채팅 UI 개선 ===== */
-        .chat-messages { scroll-behavior: smooth; }
-        .msg-avatar { border-radius: 50%; overflow: hidden; }
-        .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .msg-row.user .msg-avatar { display: none; }  /* 사용자 아이콘 숨김 */
-        .msg-row.assistant .msg-bubble {
-            border: 1px solid var(--border-light);
-            border-radius: 18px 18px 18px 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .msg-row.user .msg-bubble {
-            border-radius: 18px 18px 4px 18px;
-            box-shadow: 0 2px 8px rgba(0,51,102,0.2);
-        }
-        @keyframes msgFadeIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .msg-time {
-            font-size: 0.68rem;
-            color: var(--text-muted);
-            padding: 0 2px;
-        }
-
-        /* ===== 대화 케밥 메뉴 ===== */
-        .conv-kebab {
-            position: relative;
-            opacity: 0;
-            transition: opacity 0.15s;
-            flex-shrink: 0;
-        }
-        .conv-item:hover .conv-kebab { opacity: 1; }
-        .conv-kebab.open { opacity: 1; }
-        .conv-kebab-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 2px 6px;
-            border-radius: 6px;
-            line-height: 1;
-            transition: all 0.15s;
-        }
-        .conv-kebab-btn:hover { background: var(--bg-gray-100); color: var(--text-dark); }
-        .conv-kebab-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            box-shadow: var(--shadow-md);
-            min-width: 140px;
-            z-index: 100;
-            overflow: hidden;
-            animation: kebabFadeIn 0.15s ease;
-        }
-        @keyframes kebabFadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .conv-kebab-menu.open { display: block; }
-        .conv-kebab-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 9px 14px;
-            font-size: 0.8rem;
-            color: var(--text-regular);
-            cursor: pointer;
-            transition: background 0.1s;
-            border: none;
-            background: none;
-            width: 100%;
-            font-family: inherit;
-            text-align: left;
-        }
-        .conv-kebab-menu-item:hover { background: var(--bg-gray); }
-        .conv-kebab-menu-item.danger { color: var(--error); }
-        .conv-kebab-menu-item.danger:hover { background: #fff0f0; }
-    </style>
 </head>
 <body>
     <!-- ===== 로그인 ===== -->
@@ -1684,25 +26,77 @@
     <div id="dashboardView" class="dashboard">
         <div class="header">
             <h1>Young Marine Tech 관리자</h1>
-            <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <button onclick="toggleDarkMode()" style="background:var(--bg-gray);border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:1.2rem;" title="다크 모드 전환">🌓</button>
+                <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+            </div>
         </div>
 
         <div class="tab-nav">
-            <button class="active" onclick="switchTab('guide')">서비스 안내</button>
-            <button onclick="switchTab('rag')">문서 내 Q&A</button>
-            <button onclick="switchTab('mail')">메일 작성</button>
-            <button onclick="switchTab('inquiry')">견적문의</button>
-            <button onclick="switchTab('docs')">문서 관리</button>
+            <!-- 운영 관리 -->
+            <button class="active" onclick="switchTab('guide')">📊 대시보드</button>
+            <button onclick="switchTab('products')">📦 상품</button>
+            <button onclick="switchTab('inquiry')">📋 견적문의</button>
+            <span class="tab-divider"></span>
+            <!-- AI 기능 -->
+            <button onclick="switchTab('mail')">✉️ 메일</button>
+            <button onclick="switchTab('rag')">💬 Q&A</button>
+            <button onclick="switchTab('docs')">📁 문서</button>
+            <span class="tab-divider"></span>
+            <!-- 시스템 -->
+            <button onclick="switchTab('homepage')">🏠 설정</button>
+            <button onclick="switchTab('logs')">📝 로그</button>
         </div>
 
-        <!-- ===== 서비스 안내 탭 ===== -->
+        <!-- ===== 대시보드 탭 ===== -->
         <div id="tabGuide" class="tab-content active">
             <div class="guide-container">
                 <div class="guide-hero">
-                    <div class="hero-icon">&#9875;</div>
-                    <h2>Young Marine Tech 관리자 시스템</h2>
-                    <p>해양 엔진 부품 B2B를 위한<br>AI 문서 관리 · 상담 · 메일 자동화 플랫폼</p>
+                    <div class="hero-icon">&#128200;</div>
+                    <h2>대시보드</h2>
+                    <p>시스템 현황을 한눈에 확인하세요</p>
                 </div>
+
+                <!-- 통계 위젯 -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:30px;">
+                    <!-- 메일 작성 -->
+                    <div style="background:var(--bg-white);border:1px solid var(--border);padding:20px;border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">메일 작성</span>
+                            <span style="font-size:1.2rem;opacity:0.6;">📧</span>
+                        </div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--text-dark);margin-bottom:6px;" id="statMailTotal">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-light);">오늘 <span id="statMailToday" style="font-weight:600;color:var(--text-regular)">-</span> · 이번 주 <span id="statMailWeek" style="font-weight:600;color:var(--text-regular)">-</span></div>
+                    </div>
+                    <!-- 문서 관리 -->
+                    <div style="background:var(--bg-white);border:1px solid var(--border);padding:20px;border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">문서 관리</span>
+                            <span style="font-size:1.2rem;opacity:0.6;">📁</span>
+                        </div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--text-dark);margin-bottom:6px;" id="statDocTotal">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-light);">컨설턴트 <span id="statDocConsultant" style="font-weight:600;color:var(--text-regular)">-</span> · RAG <span id="statDocRag" style="font-weight:600;color:var(--text-regular)">-</span></div>
+                    </div>
+                    <!-- RAG 대화 -->
+                    <div style="background:var(--bg-white);border:1px solid var(--border);padding:20px;border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">RAG 대화</span>
+                            <span style="font-size:1.2rem;opacity:0.6;">💬</span>
+                        </div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--text-dark);margin-bottom:6px;" id="statConvTotal">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-light);">오늘 <span id="statConvToday" style="font-weight:600;color:var(--text-regular)">-</span></div>
+                    </div>
+                    <!-- 견적문의 -->
+                    <div style="background:var(--bg-white);border:1px solid var(--border);padding:20px;border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">견적문의</span>
+                            <span style="font-size:1.2rem;opacity:0.6;">📋</span>
+                        </div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--text-dark);margin-bottom:6px;" id="statInqTotal">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-light);">오늘 <span id="statInqToday" style="font-weight:600;color:var(--text-regular)">-</span></div>
+                    </div>
+                </div>
+
                 <div class="guide-cards">
                     <div class="guide-card" onclick="switchTab('rag')">
                         <div class="card-icon">&#128172;</div>
@@ -1729,17 +123,43 @@
                         <span class="card-link">바로가기 &rarr;</span>
                     </div>
                 </div>
-                <div class="guide-flow">
-                    <h3>&#128161; 사용 흐름</h3>
-                    <div class="guide-flow-steps">
-                        <span class="guide-flow-step">&#10102; 문서 업로드</span>
-                        <span class="guide-flow-arrow">&rarr;</span>
-                        <span class="guide-flow-step">&#10103; AI 문서 상담</span>
-                        <span class="guide-flow-arrow">&rarr;</span>
-                        <span class="guide-flow-step">&#10104; 메일 자동화</span>
-                        <span class="guide-flow-arrow">&rarr;</span>
-                        <span class="guide-flow-step">&#10105; 견적문의 답변</span>
-                    </div>
+            </div>
+        </div>
+
+        <!-- ===== 상품 관리 탭 ===== -->
+        <div id="tabProducts" class="tab-content">
+            <div class="tab-header">
+                <h2>📦 상품 관리</h2>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <input type="text" id="productSearchInput" placeholder="상품명, 부품번호 검색..." style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;width:250px;">
+                    <select id="productCategoryFilter" onchange="loadProducts()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;">
+                        <option value="">전체 카테고리</option>
+                    </select>
+                    <button class="btn btn-ghost" onclick="toggleCategoryManage()">🏷️ 카테고리 관리</button>
+                    <button class="btn btn-primary" onclick="showProductForm()">➕ 상품 추가</button>
+                </div>
+            </div>
+
+            <!-- 카테고리 관리 패널 -->
+            <div id="categoryManagePanel" style="display:none;background:var(--bg-gray);padding:20px;margin:0 20px 20px;border-radius:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h3 style="margin:0;font-size:1rem;">카테고리 관리</h3>
+                    <button class="btn btn-ghost btn-sm" onclick="toggleCategoryManage()">닫기</button>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;margin-bottom:16px;">
+                    <input type="text" id="newCategoryCode" placeholder="코드 (예: engine)" style="padding:8px;border:1px solid var(--border);border-radius:6px;">
+                    <input type="text" id="newCategoryNameKo" placeholder="한글명 (예: 엔진)" style="padding:8px;border:1px solid var(--border);border-radius:6px;">
+                    <input type="text" id="newCategoryNameEn" placeholder="영문명 (예: Engine)" style="padding:8px;border:1px solid var(--border);border-radius:6px;">
+                    <button class="btn btn-primary" onclick="addCategory()">추가</button>
+                </div>
+                <div id="categoryList" style="display:flex;flex-wrap:wrap;gap:8px;">
+                    <div style="color:var(--text-muted);font-size:0.85rem;">로드 중...</div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div id="productList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+                    <div class="empty-state" style="grid-column:1/-1;padding:60px 20px;">상품 로드 중...</div>
                 </div>
             </div>
         </div>
@@ -1910,20 +330,68 @@
                 </div>
             </div>
             <div class="mail-layout">
-                <!-- 메인 영역 -->
-                <div class="mail-main" style="position:relative">
+                <!-- 왼쪽: 기능 사이드바 -->
+                <div class="mail-left-sidebar" id="mailLeftSidebar">
+                    <div class="mail-sidebar-toggle" onclick="toggleMailSidebar()" title="사이드바 고정/해제">☰</div>
+
+                    <!-- 작업 그룹 -->
+                    <div class="mail-sidebar-group">
+                        <div class="mail-sidebar-group-title">작업</div>
+                        <div class="mail-sidebar-item active" onclick="showMailPanel('compose')" id="sidebarCompose" title="메일 작성">
+                            <div class="mail-sidebar-item-icon">✉️</div>
+                            <div class="mail-sidebar-item-text">메일 작성</div>
+                        </div>
+                        <div class="mail-sidebar-item" onclick="showMailPanel('inbox')" id="sidebarInbox" title="Gmail 수신함 보기">
+                            <div class="mail-sidebar-item-icon">📥</div>
+                            <div class="mail-sidebar-item-text">수신함</div>
+                        </div>
+                    </div>
+
+                    <!-- 참고자료 그룹 -->
+                    <div class="mail-sidebar-group">
+                        <div class="mail-sidebar-group-title">참고자료</div>
+                        <div class="mail-sidebar-item" onclick="showMailPanel('docs')" id="sidebarDocs" title="참조할 문서 선택">
+                            <div class="mail-sidebar-item-icon">📁</div>
+                            <div class="mail-sidebar-item-text">문서</div>
+                        </div>
+                        <div class="mail-sidebar-item" onclick="showMailPanel('templates')" id="sidebarTemplates" title="메일 템플릿 관리">
+                            <div class="mail-sidebar-item-icon">📝</div>
+                            <div class="mail-sidebar-item-text">템플릿</div>
+                        </div>
+                        <div class="mail-sidebar-item" onclick="showMailPanel('history')" id="sidebarHistory" title="메일 작성 이력">
+                            <div class="mail-sidebar-item-icon">🕐</div>
+                            <div class="mail-sidebar-item-text">이력</div>
+                        </div>
+                    </div>
+
+                    <!-- 설정 그룹 -->
+                    <div class="mail-sidebar-group">
+                        <div class="mail-sidebar-group-title">설정</div>
+                        <div class="mail-sidebar-item" onclick="showMailPanel('prompts')" id="sidebarPrompts" title="프롬프트 예시 관리">
+                            <div class="mail-sidebar-item-icon">💬</div>
+                            <div class="mail-sidebar-item-text">예시</div>
+                        </div>
+                        <div class="mail-sidebar-item" onclick="showMailPanel('signatures')" id="sidebarSignatures" title="서명 관리">
+                            <div class="mail-sidebar-item-icon">✍️</div>
+                            <div class="mail-sidebar-item-text">서명</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 중앙: 메인 작업 영역 -->
+                <div class="mail-main" style="position:relative;flex:1;">
                     <!-- 수신 메일 입력 -->
                     <div class="mail-incoming">
                         <div class="mail-incoming-header">
-                            <h3>&#128233; 수신 메일</h3>
+                            <h3>📨 수신 메일</h3>
                             <div class="mail-controls">
                                 <select id="mailTone">
-                                    <option value="formal">격식체</option>
-                                    <option value="friendly">친근체</option>
-                                    <option value="concise">간결체</option>
+                                    <option value="formal">격식</option>
+                                    <option value="friendly">친근</option>
+                                    <option value="concise">간결</option>
                                 </select>
-                                <button class="btn btn-primary btn-sm" id="mailTranslateIncomingBtn" onclick="translateIncoming()">&#127472;&#127479; 번역</button>
-                                <button class="btn btn-accent btn-sm" id="mailComposeBtn" onclick="composeMail()">&#9998; 답장 생성</button>
+                                <button class="btn btn-primary btn-sm" id="mailTranslateIncomingBtn" onclick="translateIncoming()">🇰🇷 번역</button>
+                                <button class="btn btn-accent btn-sm" id="mailComposeBtn" onclick="composeMail()">✍️ 답장 생성</button>
                             </div>
                         </div>
                         <textarea id="mailIncoming" placeholder="수신된 견적/문의 메일 내용을 붙여넣으세요...&#10;&#10;예: Dear Young Marine Tech, We would like to request a quotation for the following spare parts..."></textarea>
@@ -1964,6 +432,12 @@
                         <div class="mail-pane">
                             <div class="mail-pane-header">
                                 <span class="mail-pane-title">&#9998; 한국어 초안 <span class="mail-pane-badge badge-ko">KO</span></span>
+                                <div style="display:flex;gap:6px;align-items:center;">
+                                    <select id="mailSignatureSelect" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.75rem;font-family:inherit">
+                                        <option value="">서명 선택...</option>
+                                    </select>
+                                    <button onclick="insertSignature()" style="padding:4px 8px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:0.7rem;cursor:pointer;" title="서명 삽입">&#10133; 삽입</button>
+                                </div>
                             </div>
                             <textarea id="mailKoreanDraft" placeholder="답장 생성 버튼을 클릭하면 한국어 초안이 여기에 표시됩니다.&#10;수정 후 번역 버튼을 눌러주세요."></textarea>
                         </div>
@@ -1986,6 +460,7 @@
                     <!-- 하단 액션 -->
                     <div class="mail-actions">
                         <div class="mail-actions-left">
+                            <button class="btn btn-ghost btn-sm" id="mailRecomposeBtn" onclick="recomposeMail()" disabled>&#128260; 재작성</button>
                             <button class="btn btn-primary btn-sm" id="mailTranslateBtn" onclick="translateMail()" disabled>&#127760; 번역</button>
                             <button class="btn btn-ghost btn-sm" id="mailRetranslateBtn" onclick="translateMail()" disabled>&#128260; 재번역</button>
                         </div>
@@ -2004,13 +479,12 @@
                     </div>
                 </div>
 
-                <!-- 오른쪽 사이드바 -->
-                <div class="mail-sidebar">
-                    <!-- 탭 전환: 수신함 / 참조문서 / 이력 -->
-                    <div class="mail-sidebar-tabs">
-                        <button class="mail-sidebar-tab active" onclick="switchMailSidebarTab('inbox')" id="mailSideTabInbox">&#128229; 수신함 <span class="tab-count" id="inboxCount" style="display:none">0</span></button>
-                        <button class="mail-sidebar-tab" onclick="switchMailSidebarTab('docs')" id="mailSideTabDocs">&#128196; 문서</button>
-                        <button class="mail-sidebar-tab" onclick="switchMailSidebarTab('history')" id="mailSideTabHistory">&#128336; 이력</button>
+                <!-- 오른쪽: 상세 패널 -->
+                <div class="mail-sidebar" id="mailRightPanel">
+                    <!-- 패널 헤더 -->
+                    <div style="padding:16px;border-bottom:1px solid var(--border);background:var(--bg-gray);display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:1rem;margin:0;" id="mailPanelTitle">📨 메일 작성</h3>
+                        <button onclick="hideMailPanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);" title="닫기">×</button>
                     </div>
 
                     <!-- 수신함 패널 -->
@@ -2026,10 +500,241 @@
                         </div>
                     </div>
 
+                    <!-- 템플릿 패널 -->
+                    <div id="mailSidePanelTemplates" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
+                        <div style="margin-bottom:8px;">
+                            <button class="btn btn-primary btn-sm" onclick="showTemplateForm()" style="width:100%">&#10133; 템플릿 추가</button>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <select id="templateCategoryFilter" onchange="filterTemplates()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;">
+                                <option value="">전체 카테고리</option>
+                                <option value="general">일반</option>
+                                <option value="quotation">견적</option>
+                                <option value="inquiry">문의</option>
+                                <option value="follow-up">후속</option>
+                            </select>
+                        </div>
+                        <div id="templateForm" style="display:none;background:var(--bg-gray);padding:10px;border-radius:8px;margin-bottom:10px;">
+                            <input type="hidden" id="templateId" value="">
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">템플릿 이름</label>
+                                <input type="text" id="templateName" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;" placeholder="예: 견적 요청 답변">
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">카테고리</label>
+                                <select id="templateCategory" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;">
+                                    <option value="general">일반</option>
+                                    <option value="quotation">견적</option>
+                                    <option value="inquiry">문의</option>
+                                    <option value="follow-up">후속</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">내용 (변수: {{고객명}}, {{제품명}} 등)</label>
+                                <textarea id="templateContent" rows="5" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:inherit;resize:vertical;" placeholder="안녕하세요 {{고객명}}님,&#10;{{제품명}} 견적을 보내드립니다..."></textarea>
+                            </div>
+                            <div style="display:flex;gap:6px;">
+                                <button class="btn btn-accent btn-sm" onclick="saveTemplate()" style="flex:1">저장</button>
+                                <button class="btn btn-ghost btn-sm" onclick="hideTemplateForm()">취소</button>
+                            </div>
+                        </div>
+                        <div id="templateList">
+                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">템플릿 로드 중...</div>
+                        </div>
+                    </div>
+
                     <!-- 이력 패널 -->
                     <div id="mailSidePanelHistory" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
                         <div class="mail-history-list" id="mailHistoryList">
                             <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">저장된 이력이 없습니다</div>
+                        </div>
+                    </div>
+
+                    <!-- 프롬프트 예시 패널 -->
+                    <div id="mailSidePanelPrompts" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
+                        <div style="margin-bottom:8px;">
+                            <button class="btn btn-primary btn-sm" onclick="showPromptExampleForm()" style="width:100%">&#10133; 예시 추가</button>
+                        </div>
+                        <div id="promptExampleForm" style="display:none;background:var(--bg-gray);padding:10px;border-radius:8px;margin-bottom:10px;">
+                            <input type="hidden" id="promptExampleId" value="">
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">수신 메일 예시</label>
+                                <textarea id="promptIncomingText" rows="3" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:inherit;resize:vertical;" placeholder="예: I need a quotation for..."></textarea>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">답장 예시</label>
+                                <textarea id="promptReplyText" rows="3" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:inherit;resize:vertical;" placeholder="예: 견적서를 확인해주세요..."></textarea>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">정렬 순서</label>
+                                <input type="number" id="promptSortOrder" value="0" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;">
+                            </div>
+                            <div style="display:flex;gap:6px;">
+                                <button class="btn btn-accent btn-sm" onclick="savePromptExample()" style="flex:1">저장</button>
+                                <button class="btn btn-ghost btn-sm" onclick="hidePromptExampleForm()">취소</button>
+                            </div>
+                        </div>
+                        <div id="promptExampleList">
+                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">예시 로드 중...</div>
+                        </div>
+                    </div>
+
+                    <!-- 서명 패널 -->
+                    <div id="mailSidePanelSignatures" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
+                        <div style="margin-bottom:8px;">
+                            <button class="btn btn-primary btn-sm" onclick="showSignatureForm()" style="width:100%">&#10133; 서명 추가</button>
+                        </div>
+                        <div id="signatureForm" style="display:none;background:var(--bg-gray);padding:10px;border-radius:8px;margin-bottom:10px;">
+                            <input type="hidden" id="signatureId" value="">
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">서명 이름</label>
+                                <input type="text" id="signatureName" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;" placeholder="예: 기본 서명, 영문 서명">
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">서명 내용</label>
+                                <textarea id="signatureContent" rows="5" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:inherit;resize:vertical;" placeholder="예:&#10;Best regards,&#10;홍길동&#10;영마린테크&#10;Tel: 02-1234-5678"></textarea>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;">
+                                    <input type="checkbox" id="signatureIsDefault" style="cursor:pointer;">
+                                    <span>기본 서명으로 설정</span>
+                                </label>
+                            </div>
+                            <div style="display:flex;gap:6px;">
+                                <button class="btn btn-accent btn-sm" onclick="saveSignature()" style="flex:1">저장</button>
+                                <button class="btn btn-ghost btn-sm" onclick="hideSignatureForm()">취소</button>
+                            </div>
+                        </div>
+                        <div id="signatureList">
+                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">서명 로드 중...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 시스템 로그 탭 ===== -->
+        <div id="tabLogs" class="tab-content">
+            <div class="tab-header">
+                <h2>&#128221; 시스템 로그</h2>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px;">메일 작성 이력 및 시스템 활동 로그</p>
+            </div>
+
+            <div style="max-width:1200px;margin:0 auto;padding:20px;">
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;font-size:1.1rem;">&#9993; 메일 작성 이력</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="loadMailLogs()">&#128260; 새로고침</button>
+                    </div>
+                    <div id="mailLogsList" style="max-height:600px;overflow-y:auto;">
+                        <div class="empty-state" style="padding:40px 20px;">로그 로드 중...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 홈페이지 관리 탭 ===== -->
+        <div id="tabHomepage" class="tab-content">
+            <div class="tab-header">
+                <h2>&#127968; 홈페이지 관리</h2>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px;">사이트 로고, 회사 정보, 히어로 섹션 등을 관리합니다.</p>
+            </div>
+
+            <div style="max-width:900px;margin:0 auto;padding:20px;">
+                <!-- 로고 설정 -->
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <h3 style="margin:0 0 16px 0;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <span>&#128444;</span> 로고 이미지
+                    </h3>
+                    <div style="display:flex;gap:20px;align-items:start;">
+                        <div style="flex:1;">
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">현재 로고</label>
+                                <div id="currentLogo" style="border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;background:var(--bg-gray);min-height:120px;display:flex;align-items:center;justify-content:center;">
+                                    <span style="color:var(--text-muted);font-size:0.85rem;">로고 로드 중...</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">새 로고 업로드</label>
+                                <!-- 드래그앤드롭 영역 -->
+                                <div id="logoDropZone" style="border:2px dashed var(--border);border-radius:8px;padding:30px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg-gray);" onclick="document.getElementById('logoFileInput').click()">
+                                    <div style="font-size:2rem;margin-bottom:8px;">📁</div>
+                                    <div style="font-size:0.85rem;color:var(--text-regular);margin-bottom:4px;">이미지 파일을 드래그하거나 클릭하세요</div>
+                                    <div style="font-size:0.75rem;color:var(--text-muted);">PNG, JPG, GIF 지원</div>
+                                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
+                                </div>
+                                <div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted);text-align:center;">또는</div>
+                                <input type="text" id="logoInput" placeholder="이미지 URL 입력 (https://...)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;margin-top:8px;">
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" onclick="saveLogo()">로고 저장</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 회사 정보 -->
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <h3 style="margin:0 0 16px 0;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <span>&#128188;</span> 회사 정보
+                    </h3>
+                    <div style="display:grid;gap:12px;">
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">회사명</label>
+                            <input type="text" id="companyName" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">주소</label>
+                            <input type="text" id="companyAddress" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div>
+                                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">전화번호</label>
+                                <input type="text" id="companyPhone" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">이메일</label>
+                                <input type="text" id="companyEmail" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                            </div>
+                        </div>
+                        <div style="text-align:right;margin-top:8px;">
+                            <button class="btn btn-primary" onclick="saveCompanyInfo()">회사 정보 저장</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 히어로 섹션 -->
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <h3 style="margin:0 0 16px 0;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <span>&#127775;</span> 히어로 섹션
+                    </h3>
+                    <div style="display:grid;gap:12px;">
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">메인 제목</label>
+                            <input type="text" id="heroTitle" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: 해양 엔진 부품 전문">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">부제목</label>
+                            <textarea id="heroSubtitle" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="예: 신뢰할 수 있는 해양 엔진 부품 공급업체"></textarea>
+                        </div>
+                        <div style="text-align:right;margin-top:8px;">
+                            <button class="btn btn-primary" onclick="saveHeroSection()">히어로 섹션 저장</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 기타 설정 -->
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;">
+                    <h3 style="margin:0 0 16px 0;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <span>&#9881;</span> 기타 설정
+                    </h3>
+                    <div style="display:grid;gap:12px;">
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">푸터 저작권 문구</label>
+                            <input type="text" id="footerCopyright" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="© 2024 영마린테크. All rights reserved.">
+                        </div>
+                        <div style="text-align:right;margin-top:8px;">
+                            <button class="btn btn-primary" onclick="saveOtherSettings()">설정 저장</button>
                         </div>
                     </div>
                 </div>
@@ -2043,6 +748,85 @@
             <button class="close-btn" onclick="closeModal()">&times;</button>
             <h3 id="modalTitle">문서 상세</h3>
             <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- ===== 상품 추가/수정 모달 ===== -->
+    <div class="modal-overlay" id="productModal" style="display:none;">
+        <div class="modal" style="max-width:700px;max-height:90vh;overflow-y:auto;">
+            <button class="close-btn" onclick="closeProductModal()">&times;</button>
+            <h3 id="productModalTitle">상품 추가</h3>
+            <div style="margin-top:20px;">
+                <input type="hidden" id="productId">
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상품 이미지</label>
+                    <div id="imageDropZone" style="border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;background:var(--bg-gray);transition:all 0.2s;" onclick="document.getElementById('imageFileInput').click()">
+                        <div id="imagePreview" style="display:none;margin-bottom:10px;">
+                            <img id="previewImg" src="" style="max-width:100%;max-height:200px;border-radius:6px;">
+                        </div>
+                        <div id="dropZonePlaceholder">
+                            <div style="font-size:2rem;margin-bottom:8px;">📷</div>
+                            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:4px;">이미지를 드래그하거나 클릭하여 업로드</div>
+                            <div style="font-size:0.75rem;color:var(--text-light);">JPG, PNG, GIF (최대 5MB)</div>
+                        </div>
+                    </div>
+                    <input type="file" id="imageFileInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+                    <input type="hidden" id="productImage">
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">부품번호</label>
+                        <input type="text" id="productPartNo" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: ABC-1234">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">가격</label>
+                        <input type="text" id="productPrice" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: ₩150,000">
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">브랜드</label>
+                        <input type="text" id="productBrand" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: Volvo Penta">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">카테고리</label>
+                        <select id="productCategory" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                            <!-- 동적으로 로드됨 -->
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상품명 (한국어)</label>
+                    <input type="text" id="productNameKo" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: 볼보펜타 엔진 오일 필터">
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상품명 (영어)</label>
+                    <input type="text" id="productNameEn" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: Volvo Penta Engine Oil Filter">
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">설명 (한국어)</label>
+                    <textarea id="productDescKo" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="상품 설명을 입력하세요"></textarea>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">설명 (영어)</label>
+                    <textarea id="productDescEn" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="Product description"></textarea>
+                </div>
+
+                <div style="display:flex;gap:10px;justify-content:space-between;">
+                    <button class="btn btn-ghost" onclick="deleteProductConfirm()" id="productDeleteBtn" style="background:var(--error);color:white;display:none;">🗑️ 삭제</button>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-ghost" onclick="closeProductModal()">취소</button>
+                        <button class="btn btn-primary" onclick="saveProduct()">저장</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2061,1752 +845,18 @@
         </div>
     </div>
 
-<script>
-const API_BASE = 'https://marine-parts-production-60a3.up.railway.app';
-let authToken = sessionStorage.getItem('admin_token') || '';
-let currentConvId = null;
-let ragDocuments = [];
-let siteLogoUrl = null;  // AI 아바타용 로고
 
-// ============================================================
-//  초기화
-// ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    loadSiteLogo();  // 로고 로드
-    if (authToken) showDashboard();
-
-    document.getElementById('passwordInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter') handleLogin();
-    });
-
-    setupUploadCard('uploadConsultant', 'fileInputConsultant', 'consultant');
-    setupUploadCard('uploadRag', 'fileInputRag', 'rag_session');
-
-    document.getElementById('ragInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.shiftKey) sendRagMessage();
-    });
-    document.getElementById('welcomeInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.shiftKey) sendRagMessage();
-    });
-});
-
-function setupUploadCard(cardId, inputId, purpose) {
-    const card = document.getElementById(cardId);
-    const input = document.getElementById(inputId);
-    card.addEventListener('click', e => { if (e.target.tagName !== 'INPUT') input.click(); });
-    card.addEventListener('dragover', e => { e.preventDefault(); card.classList.add('dragover'); });
-    card.addEventListener('dragleave', () => card.classList.remove('dragover'));
-    card.addEventListener('drop', e => { e.preventDefault(); card.classList.remove('dragover'); handleFiles(e.dataTransfer.files, purpose); });
-    input.addEventListener('change', e => { handleFiles(e.target.files, purpose); e.target.value = ''; });
-}
-
-// ============================================================
-//  탭 / 인증
-// ============================================================
-function switchTab(tab) {
-    const tabMap = { guide: 0, rag: 1, mail: 2, inquiry: 3, docs: 4 };
-    document.querySelectorAll('.tab-nav button').forEach((btn, i) => {
-        btn.classList.toggle('active', i === tabMap[tab]);
-    });
-    document.getElementById('tabGuide').classList.toggle('active', tab === 'guide');
-    document.getElementById('tabDocs').classList.toggle('active', tab === 'docs');
-    document.getElementById('tabRag').classList.toggle('active', tab === 'rag');
-    document.getElementById('tabMail').classList.toggle('active', tab === 'mail');
-    document.getElementById('tabInquiry').classList.toggle('active', tab === 'inquiry');
-    if (tab === 'rag') { loadConversations(); loadRagDocuments(); }
-    if (tab === 'mail') { loadMailDocuments(); loadMailHistory(); loadGmailStatus(); }
-    if (tab === 'inquiry') { loadAdminInquiries(); }
-}
-
-// ============================================================
-//  사이트 로고 로드
-// ============================================================
-async function loadSiteLogo() {
-    try {
-        const res = await fetch(API_BASE + '/api/site-settings');
-        if (res.ok) {
-            const settings = await res.json();
-            if (settings.logo) {
-                siteLogoUrl = settings.logo;
-            }
-        }
-    } catch (e) {
-        console.log('로고 로드 실패 (무시):', e);
-    }
-}
-
-async function api(path, options = {}) {
-    const res = await fetch(API_BASE + path, {
-        ...options,
-        headers: { ...(options.headers || {}), 'Authorization': 'Bearer ' + authToken },
-    });
-    if (res.status === 401) { handleLogout(); throw new Error('인증 만료'); }
-    return res;
-}
-
-async function handleLogin() {
-    const pw = document.getElementById('passwordInput').value;
-    const errEl = document.getElementById('loginError');
-    errEl.style.display = 'none';
-    try {
-        const res = await fetch(API_BASE + '/admin/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: pw }),
-        });
-        if (!res.ok) { const d = await res.json(); errEl.textContent = d.detail || '로그인 실패'; errEl.style.display = 'block'; return; }
-        const d = await res.json();
-        authToken = d.token;
-        sessionStorage.setItem('admin_token', authToken);
-        showDashboard();
-    } catch { errEl.textContent = '서버 연결 실패'; errEl.style.display = 'block'; }
-}
-
-function handleLogout() {
-    authToken = '';
-    sessionStorage.removeItem('admin_token');
-    document.getElementById('loginView').style.display = 'flex';
-    document.getElementById('dashboardView').style.display = 'none';
-}
-
-function showDashboard() {
-    document.getElementById('loginView').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'block';
-    loadDocuments();
-}
-
-// ============================================================
-//  문서 관리 탭
-// ============================================================
-async function loadDocuments() {
-    try { const res = await api('/admin/documents'); renderDocuments(await res.json()); }
-    catch (e) { console.error('문서 목록 로드 실패:', e); }
-}
-
-function renderDocuments(docs) {
-    const c = document.getElementById('docsTable');
-    if (!docs.length) { c.innerHTML = '<div class="empty-state"><div class="icon">&#128196;</div><div>아직 업로드된 문서가 없습니다</div></div>'; return; }
-
-    const statusBadge = s => {
-        const m = { done: ['badge-done','완료'], processing: ['badge-processing','처리중'], error: ['badge-error','오류'], pending: ['badge-pending','대기'] };
-        const [cls, label] = m[s] || ['badge-pending', s];
-        return `<span class="badge ${cls}">${label}</span>`;
-    };
-    const purposeBadge = p => p === 'rag_session'
-        ? '<span class="badge purpose-rag" style="margin-left:4px">RAG / 메일</span>'
-        : '<span class="badge purpose-consultant" style="margin-left:4px">AI 상담</span>';
-
-    let html = '<table><thead><tr><th>파일명</th><th>유형</th><th>용도</th><th>상태</th><th>업로드일</th><th>작업</th></tr></thead><tbody>';
-    for (const d of docs) {
-        const date = d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '-';
-        html += `<tr>
-            <td style="cursor:pointer;color:var(--accent);font-weight:500" onclick="viewDocument(${d.id})">${d.file_type==='pdf'?'&#128196;':'&#128247;'} ${esc(d.filename)}</td>
-            <td>${d.file_type.toUpperCase()}</td>
-            <td>${purposeBadge(d.purpose)}</td>
-            <td>${statusBadge(d.status)}${d.error_msg?'<br><small style="color:var(--error)">'+esc(d.error_msg)+'</small>':''}</td>
-            <td style="font-size:0.8rem;color:var(--text-light)">${date}</td>
-            <td><button class="btn btn-danger" onclick="deleteDocument(${d.id})">삭제</button></td>
-        </tr>`;
-    }
-    c.innerHTML = html + '</tbody></table>';
-}
-
-async function handleFiles(fileList, purpose) {
-    for (const f of fileList) await uploadFile(f, purpose);
-}
-
-async function uploadFile(file, purpose) {
-    const prog = document.getElementById('uploadProgress');
-    const fname = document.getElementById('uploadFileName');
-    prog.style.display = 'block';
-    fname.textContent = `처리 중: ${file.name}`;
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('purpose', purpose);
-    try {
-        const res = await api('/admin/upload', { method: 'POST', body: fd });
-        const d = await res.json();
-        if (d.status === 'error') { fname.textContent = `오류: ${file.name} — ${d.error_msg}`; setTimeout(() => prog.style.display='none', 4000); }
-        else { fname.textContent = `완료: ${file.name} (${d.chunks_count}개 청크)`; setTimeout(() => prog.style.display='none', 2000); }
-    } catch { fname.textContent = `업로드 실패: ${file.name}`; setTimeout(() => prog.style.display='none', 4000); }
-    loadDocuments();
-}
-
-async function viewDocument(docId) {
-    try {
-        const doc = await (await api(`/admin/documents/${docId}`)).json();
-        document.getElementById('modalTitle').textContent = doc.filename;
-        let html = `<p style="margin-bottom:12px;color:var(--text-light);font-size:0.85rem">상태: ${doc.status} | 청크: ${doc.chunks.length}개</p>`;
-        if (doc.chunks.length) {
-            for (const c of doc.chunks) {
-                html += `<div class="chunk-label">청크 #${c.chunk_index+1} <button class="chunk-edit-btn" onclick="startChunkEdit(${docId},${c.id},this)">수정</button></div>`;
-                html += `<div class="chunk" id="chunk-${c.id}">${esc(c.chunk_text)}</div>`;
-            }
-        } else html += '<p style="color:var(--text-muted)">청크가 없습니다</p>';
-        document.getElementById('modalContent').innerHTML = html;
-        document.getElementById('docModal').classList.add('active');
-    } catch (e) { console.error('문서 상세 조회 실패:', e); }
-}
-
-function startChunkEdit(docId, chunkId, btn) {
-    const chunkDiv = document.getElementById('chunk-' + chunkId);
-    if (!chunkDiv) return;
-    const originalText = chunkDiv.textContent;
-    chunkDiv.innerHTML = `<textarea class="chunk-textarea">${esc(originalText)}</textarea>
-        <div class="chunk-save-actions">
-            <button class="cancel-btn" onclick="cancelChunkEdit(${docId})">취소</button>
-            <button class="save-btn" onclick="saveChunkEdit(${docId},${chunkId},this)">저장</button>
-        </div>`;
-    btn.style.display = 'none';
-}
-
-function cancelChunkEdit(docId) {
-    viewDocument(docId);
-}
-
-async function saveChunkEdit(docId, chunkId, btn) {
-    const chunkDiv = document.getElementById('chunk-' + chunkId);
-    const textarea = chunkDiv.querySelector('.chunk-textarea');
-    const newText = textarea.value.trim();
-    if (!newText) { alert('텍스트를 입력하세요'); return; }
-    btn.disabled = true;
-    btn.textContent = '저장 중...';
-    try {
-        const res = await api(`/admin/documents/${docId}/chunks/${chunkId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chunk_text: newText }),
-        });
-        if (!res.ok) { const d = await res.json(); alert('수정 실패: ' + d.detail); btn.disabled = false; btn.textContent = '저장'; return; }
-        viewDocument(docId);
-    } catch (e) { console.error('청크 수정 실패:', e); alert('수정 실패'); btn.disabled = false; btn.textContent = '저장'; }
-}
-
-function closeModal() { document.getElementById('docModal').classList.remove('active'); }
-
-async function deleteDocument(docId) {
-    if (!confirm('이 문서를 삭제하시겠습니까?')) return;
-    try { await api(`/admin/documents/${docId}`, { method: 'DELETE' }); loadDocuments(); }
-    catch (e) { console.error('삭제 실패:', e); }
-}
-
-// ============================================================
-//  문서 내 Q&A 탭
-// ============================================================
-async function loadConversations() {
-    try { renderConversations(await (await api('/admin/rag/conversations')).json()); }
-    catch (e) { console.error('대화 목록 로드 실패:', e); }
-}
-
-function renderConversations(convs) {
-    const c = document.getElementById('convList');
-    if (!convs.length) {
-        c.innerHTML = '<div class="empty-state" style="padding:32px 12px;font-size:0.82rem"><div style="font-size:1.3rem;margin-bottom:6px;">&#128172;</div>새 대화를 시작하세요</div>';
-        updateChatHeader(null);
-        return;
-    }
-
-    // 3그룹으로 분류: 저장된 대화, 오늘, 7일 이내
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    const saved = [];
-    const today = [];
-    const recent = [];
-
-    for (const cv of convs) {
-        if (cv.saved) {
-            saved.push(cv);
-        } else {
-            const updated = cv.updated_at ? new Date(cv.updated_at) : new Date();
-            if (updated >= todayStart) {
-                today.push(cv);
-            } else {
-                recent.push(cv);
-            }
-        }
-    }
-
-    let html = '';
-
-    const renderGroup = (label, items, showDaysLeft) => {
-        if (!items.length) return '';
-        let groupHtml = `<div class="conv-group-header">${label}</div>`;
-        for (const cv of items) {
-            const daysLeft = getDaysLeft(cv.updated_at);
-            const savedIcon = cv.saved ? '<span class="conv-saved-badge">&#11088;</span> ' : '';
-            const ageText = cv.saved ? '영구 보관' : `${daysLeft}일 후 삭제`;
-            groupHtml += `<div class="conv-item ${cv.id===currentConvId?'active':''}" onclick="selectConversation(${cv.id})">
-                <div class="conv-item-icon">&#128172;</div>
-                <div style="flex:1;min-width:0">
-                    <span class="conv-title">${savedIcon}${esc(cv.title)}</span>
-                    <div class="conv-age">${ageText}</div>
-                </div>
-                <div class="conv-kebab" id="kebab-${cv.id}" onclick="event.stopPropagation()">
-                    <button class="conv-kebab-btn" onclick="toggleKebab(event,${cv.id})">&#8943;</button>
-                    <div class="conv-kebab-menu" id="kebab-menu-${cv.id}">
-                        <button class="conv-kebab-menu-item" onclick="toggleSaveFromList(${cv.id});closeAllKebabs()">${cv.saved?'&#11088; 저장 해제':'&#9734; 저장'}</button>
-                        <button class="conv-kebab-menu-item" onclick="closeAllKebabs();startRename(${cv.id},'${esc(cv.title).replace(/'/g,"\\&#39;")}')">&#9998; 이름 변경</button>
-                        <button class="conv-kebab-menu-item danger" onclick="closeAllKebabs();deleteConversation(${cv.id})">&#128465; 삭제</button>
-                    </div>
-                </div>
-            </div>`;
-        }
-        return groupHtml;
-    };
-
-    html += renderGroup('&#11088; 저장한 대화내역', saved, false);
-    html += renderGroup('&#128197; 오늘', today, true);
-    html += renderGroup('&#128336; 7일 이내', recent, true);
-
-    c.innerHTML = html;
-    // 현재 대화 헤더 업데이트
-    if (currentConvId) {
-        const current = convs.find(cv => cv.id === currentConvId);
-        updateChatHeader(current);
-    }
-}
-
-function getDaysLeft(updatedAt) {
-    if (!updatedAt) return 7;
-    const updated = new Date(updatedAt);
-    const expiry = new Date(updated.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const now = new Date();
-    const diff = Math.ceil((expiry - now) / (24 * 60 * 60 * 1000));
-    return Math.max(0, diff);
-}
-
-function updateChatHeader(conv) {
-    const bar = document.getElementById('chatHeaderBar');
-    const title = document.getElementById('chatHeaderTitle');
-    const saveBtn = document.getElementById('chatSaveBtn');
-    if (conv) {
-        bar.classList.add('visible');
-        title.textContent = conv.title;
-        if (conv.saved) {
-            saveBtn.innerHTML = '&#11088; 저장됨';
-            saveBtn.style.color = 'var(--warning)';
-            saveBtn.style.borderColor = 'var(--warning)';
-        } else {
-            saveBtn.innerHTML = '&#9734; 저장';
-            saveBtn.style.color = '';
-            saveBtn.style.borderColor = '';
-        }
-    } else {
-        bar.classList.remove('visible');
-    }
-}
-
-async function createConversation() {
-    try {
-        const cv = await (await api('/admin/rag/conversations', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: '새 대화' }),
-        })).json();
-        currentConvId = cv.id;
-        await loadConversations();
-        renderEmptyChat();
-        switchToChatMode();
-        setChatEnabled(true);
-    } catch (e) { console.error('대화 생성 실패:', e); }
-}
-
-async function selectConversation(convId) {
-    currentConvId = convId;
-    await loadConversations();
-    await loadConversation(convId);
-    switchToChatMode();
-    setChatEnabled(true);
-}
-
-async function loadConversation(convId) {
-    try { renderChatMessages((await (await api(`/admin/rag/conversations/${convId}`)).json()).messages); }
-    catch (e) { console.error('대화 로드 실패:', e); }
-}
-
-function renderEmptyChat() {
-    document.getElementById('chatMessages').innerHTML = `
-        <div class="chat-welcome" id="chatWelcome">
-            <div class="chat-welcome-icon">&#9875;</div>
-            <h3>새 대화가 시작되었습니다</h3>
-            <p>오른쪽 패널에서 참조할 문서를 선택하고<br>질문을 입력하세요</p>
-        </div>`;
-}
-
-function renderMd(str) {
-    if (!str) return '';
-
-    // marked.js 설정
-    if (typeof marked !== 'undefined') {
-        marked.setOptions({
-            gfm: true, // GitHub Flavored Markdown
-            breaks: true, // 줄바꿈을 <br>로 변환
-            headerIds: false,
-            mangle: false
-        });
-
-        // marked로 파싱 후 DOMPurify로 정화
-        const rawHtml = marked.parse(str);
-        return DOMPurify.sanitize(rawHtml);
-    }
-
-    // Fallback (라이브러리 로드 실패 시)
-    let s = esc(str);
-    s = s.replace(/```([\s\S]*?)```/g, '<pre style="background:var(--bg-gray);padding:8px 10px;border-radius:6px;overflow-x:auto;font-size:0.82rem;margin:6px 0">$1</pre>');
-    s = s.replace(/`([^`]+)`/g, '<code style="background:var(--bg-gray-100);padding:1px 5px;border-radius:4px;font-size:0.84em">$1</code>');
-    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    s = s.replace(/^[-•]\s+(.+)$/gm, '<li style="margin-left:16px;list-style:disc">$1</li>');
-    s = s.replace(/^\d+\.\s+(.+)$/gm, '<li style="margin-left:16px;list-style:decimal">$1</li>');
-    return s;
-}
-
-function renderChatMessages(messages) {
-    const c = document.getElementById('chatMessages');
-    if (!messages.length) { renderEmptyChat(); return; }
-    let html = '';
-    for (const m of messages) {
-        const refs = m.references || [];
-        // AI 아바타: 로고 있으면 이미지, 없으면 "AI" 텍스트
-        const avatar = m.role === 'user'
-            ? 'U'
-            : (siteLogoUrl ? `<img src="${siteLogoUrl}" alt="AI">` : 'AI');
-        const content = m.role === 'assistant' ? renderMd(m.content) : esc(m.content);
-        const time = m.created_at ? new Date(m.created_at).toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) : '';
-        html += `<div class="msg-row ${m.role}">
-            <div class="msg-avatar">${avatar}</div>
-            <div class="msg-content">
-                <div class="msg-bubble">${content}</div>
-                ${time ? `<span class="msg-time">${time}</span>` : ''}
-                ${m.role === 'assistant' && refs.length ? `<span class="msg-refs-link" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g,"&#39;")})'>&#128196; 참조 ${refs.length}건 보기</span>` : ''}
-            </div>
-        </div>`;
-    }
-    c.innerHTML = html;
-    c.scrollTop = c.scrollHeight;
-}
-
-async function deleteConversation(convId) {
-    if (!confirm('이 대화를 삭제하시겠습니까?')) return;
-    try {
-        await api(`/admin/rag/conversations/${convId}`, { method: 'DELETE' });
-        if (currentConvId === convId) {
-            currentConvId = null;
-            showWelcomeScreen();
-            updateChatHeader(null);
-        }
-        loadConversations();
-    } catch (e) { console.error('대화 삭제 실패:', e); }
-}
-
-// --- 대화 이름 변경 ---
-function startRename(convId, currentTitle) {
-    const item = document.querySelector(`.conv-item[onclick*="selectConversation(${convId})"]`);
-    if (!item) return;
-    const titleArea = item.querySelector('.conv-title');
-    if (!titleArea) return;
-
-    const input = document.createElement('input');
-    input.className = 'conv-rename-input';
-    input.value = currentTitle;
-    input.onclick = e => e.stopPropagation();
-
-    titleArea.replaceWith(input);
-    input.focus();
-    input.select();
-
-    const doRename = async () => {
-        const newTitle = input.value.trim();
-        if (newTitle && newTitle !== currentTitle) {
-            try {
-                await api(`/admin/rag/conversations/${convId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: newTitle }),
-                });
-            } catch (e) { console.error('이름 변경 실패:', e); }
-        }
-        loadConversations();
-    };
-
-    input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); doRename(); }
-        if (e.key === 'Escape') loadConversations();
-    });
-    input.addEventListener('blur', doRename);
-}
-
-function startRenameFromHeader() {
-    if (!currentConvId) return;
-    const title = document.getElementById('chatHeaderTitle').textContent;
-    const newTitle = prompt('대화 이름 변경', title);
-    if (newTitle && newTitle.trim() && newTitle.trim() !== title) {
-        api(`/admin/rag/conversations/${currentConvId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: newTitle.trim() }),
-        }).then(() => loadConversations()).catch(e => console.error('이름 변경 실패:', e));
-    }
-}
-
-// --- 대화 저장/해제 토글 ---
-async function toggleSaveConversation() {
-    if (!currentConvId) return;
-    const saveBtn = document.getElementById('chatSaveBtn');
-    const origText = saveBtn.innerHTML;
-    saveBtn.innerHTML = '&#8987; 처리중...';
-    saveBtn.disabled = true;
-    try {
-        const res = await api(`/admin/rag/conversations/${currentConvId}/save`, { method: 'POST' });
-        if (!res.ok) { alert('저장 토글 실패: ' + (await res.json()).detail); return; }
-        await loadConversations();
-    } catch (e) {
-        console.error('저장 토글 실패:', e);
-        alert('저장 토글에 실패했습니다.');
-        saveBtn.innerHTML = origText;
-    } finally {
-        saveBtn.disabled = false;
-    }
-}
-
-// --- 케밥 메뉴 ---
-function toggleKebab(event, convId) {
-    event.stopPropagation();
-    const menu = document.getElementById('kebab-menu-' + convId);
-    const kebab = document.getElementById('kebab-' + convId);
-    const isOpen = menu.classList.contains('open');
-    closeAllKebabs();
-    if (!isOpen) {
-        menu.classList.add('open');
-        kebab.classList.add('open');
-    }
-}
-
-function closeAllKebabs() {
-    document.querySelectorAll('.conv-kebab-menu.open').forEach(m => m.classList.remove('open'));
-    document.querySelectorAll('.conv-kebab.open').forEach(k => k.classList.remove('open'));
-}
-
-document.addEventListener('click', closeAllKebabs);
-
-async function toggleSaveFromList(convId) {
-    try {
-        const res = await api(`/admin/rag/conversations/${convId}/save`, { method: 'POST' });
-        if (!res.ok) { console.error('저장 토글 실패:', await res.text()); }
-        await loadConversations();
-    } catch (e) { console.error('저장 토글 실패:', e); }
-}
-
-// --- RAG 문서 ---
-async function loadRagDocuments() {
-    try {
-        ragDocuments = await (await api('/admin/rag/documents')).json();
-        renderRagDocuments(ragDocuments);
-        renderWelcomeDocs(ragDocuments);
-    } catch (e) { console.error('RAG 문서 로드 실패:', e); }
-}
-
-function renderRagDocuments(docs) {
-    const c = document.getElementById('refDocList');
-    if (!docs.length) {
-        c.innerHTML = '<div class="empty-state" style="padding:24px 12px;font-size:0.8rem"><div style="font-size:1.2rem;margin-bottom:6px;">&#128196;</div>RAG 세션용 문서가 없습니다<br><span style="font-size:0.72rem">문서 관리에서 업로드하세요</span></div>';
-        return;
-    }
-    let html = `<div class="ref-doc-item ref-doc-all"><input type="checkbox" id="refDocAll" checked onchange="toggleAllDocs(this.checked)" /><label for="refDocAll">전체 문서</label></div>`;
-    for (const d of docs) {
-        html += `<div class="ref-doc-item"><input type="checkbox" class="ref-doc-check" id="refDoc${d.id}" value="${d.id}" checked /><label for="refDoc${d.id}">&#128196; ${esc(d.filename)}</label></div>`;
-    }
-    c.innerHTML = html;
-}
-
-function renderWelcomeDocs(docs) {
-    const c = document.getElementById('welcomeDocs');
-    if (!c) return;
-    if (!docs.length) {
-        c.innerHTML = '<div style="font-size:0.78rem;color:var(--text-muted);padding:8px 0;">문서 관리 탭에서 RAG 세션용 문서를 업로드하세요</div>';
-        return;
-    }
-    let html = '';
-    for (const d of docs) {
-        html += `<div class="welcome-doc-chip selected" data-doc-id="${d.id}" onclick="toggleWelcomeDoc(this)">
-            <span class="chip-check">&#10003;</span>
-            <span>&#128196; ${esc(d.filename)}</span>
-        </div>`;
-    }
-    c.innerHTML = html;
-}
-
-function toggleWelcomeDoc(chip) {
-    chip.classList.toggle('selected');
-    const check = chip.querySelector('.chip-check');
-    check.textContent = chip.classList.contains('selected') ? '\u2713' : '';
-    // 사이드바 체크박스도 동기화
-    const docId = chip.dataset.docId;
-    const sidebarCheck = document.getElementById('refDoc' + docId);
-    if (sidebarCheck) sidebarCheck.checked = chip.classList.contains('selected');
-    // 전체 체크박스 동기화
-    const allCheck = document.getElementById('refDocAll');
-    if (allCheck) allCheck.checked = document.querySelectorAll('.welcome-doc-chip.selected').length === ragDocuments.length;
-}
-
-function toggleAllDocs(checked) {
-    document.querySelectorAll('.ref-doc-check').forEach(cb => cb.checked = checked);
-    document.querySelectorAll('.welcome-doc-chip').forEach(chip => {
-        if (checked) chip.classList.add('selected');
-        else chip.classList.remove('selected');
-        chip.querySelector('.chip-check').textContent = checked ? '\u2713' : '';
-    });
-}
-
-function getSelectedDocIds() {
-    // 웰컴 화면의 칩에서도 선택 상태 확인
-    const welcomeChips = document.querySelectorAll('.welcome-doc-chip.selected');
-    if (welcomeChips.length > 0 && !currentConvId) {
-        const ids = Array.from(welcomeChips).map(c => parseInt(c.dataset.docId));
-        return (ids.length === ragDocuments.length || ids.length === 0) ? null : ids;
-    }
-    const ids = Array.from(document.querySelectorAll('.ref-doc-check:checked')).map(cb => parseInt(cb.value));
-    return (ids.length === ragDocuments.length || ids.length === 0) ? null : ids;
-}
-
-// --- 웰컴 화면 표시/복구 ---
-function showWelcomeScreen() {
-    document.getElementById('chatInputWrap').style.display = 'none';
-    const c = document.getElementById('chatMessages');
-    c.innerHTML = `
-        <div class="chat-welcome" id="chatWelcome">
-            <div class="chat-welcome-icon">&#9875;</div>
-            <h3>문서 내 Q&A</h3>
-            <p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p>
-            <div class="welcome-docs" id="welcomeDocs"></div>
-            <div class="welcome-input-wrap">
-                <div class="welcome-input-box">
-                    <input type="text" id="welcomeInput" placeholder="문서에 대해 질문하세요..." />
-                    <button class="chat-send-btn" id="welcomeSendBtn" onclick="sendRagMessage()">&#10148;</button>
-                </div>
-                <div class="welcome-hint">Enter로 전송 — 대화가 자동 생성됩니다</div>
-            </div>
-        </div>`;
-    // 이벤트 리스너 재등록
-    document.getElementById('welcomeInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.shiftKey) sendRagMessage();
-    });
-    // 문서 칩 렌더링
-    renderWelcomeDocs(ragDocuments);
-}
-
-// --- 메시지 전송 ---
-async function sendRagMessage() {
-    // 웰컴 입력 또는 하단 입력에서 메시지 가져오기
-    const welcomeInput = document.getElementById('welcomeInput');
-    const ragInput = document.getElementById('ragInput');
-    const isFromWelcome = !currentConvId && welcomeInput && welcomeInput.value.trim();
-    const input = isFromWelcome ? welcomeInput : ragInput;
-    const msg = input.value.trim();
-    if (!msg) return;
-
-    input.value = '';
-
-    // 대화가 없으면 자동 생성
-    if (!currentConvId) {
-        try {
-            const cv = await (await api('/admin/rag/conversations', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: '새 대화' }),
-            })).json();
-            currentConvId = cv.id;
-        } catch (e) {
-            console.error('대화 자동 생성 실패:', e);
-            alert('대화 생성에 실패했습니다.');
-            return;
-        }
-    }
-
-    // 웰컴 화면 → 채팅 모드로 전환
-    switchToChatMode();
-    setChatEnabled(false);
-
-    appendMsg('user', msg);
-
-    // SSE 스트리밍으로 AI 답변 받기
-    let fullResponse = '';
-    let assistantMsgId = null;
-    let references = [];
-
-    try {
-        const res = await api('/admin/rag/chat/stream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ conversation_id: currentConvId, message: msg, document_ids: getSelectedDocIds() }),
-        });
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
-
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const jsonStr = line.substring(6);
-                    try {
-                        const data = JSON.parse(jsonStr);
-
-                        if (data.chunk) {
-                            fullResponse += data.chunk;
-                            // AI 메시지 생성 또는 업데이트
-                            if (!assistantMsgId) {
-                                assistantMsgId = appendMsg('assistant', fullResponse);
-                            } else {
-                                updateMsg(assistantMsgId, fullResponse);
-                            }
-                        }
-
-                        if (data.done) {
-                            references = data.references || [];
-                            // 참조 문서 표시
-                            if (references.length > 0) {
-                                addRefsToMsg(assistantMsgId, references);
-                            }
-                            showRefChunks(references);
-                        }
-                    } catch (e) {
-                        console.error('SSE 파싱 오류:', e);
-                    }
-                }
-            }
-        }
-
-        await loadConversations();
-    } catch (e) {
-        if (assistantMsgId) {
-            updateMsg(assistantMsgId, fullResponse || '오류가 발생했습니다. 다시 시도해주세요.');
-        } else {
-            appendMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
-        }
-        console.error('스트리밍 오류:', e);
-    } finally {
-        setChatEnabled(true);
-    }
-}
-
-// 웰컴 화면 → 채팅 모드 전환
-function switchToChatMode() {
-    const welcome = document.getElementById('chatWelcome');
-    if (welcome) welcome.remove();
-    document.getElementById('chatInputWrap').style.display = '';
-}
-
-let _mc = 0;
-function appendMsg(role, content, refs) {
-    const c = document.getElementById('chatMessages');
-    const welcome = c.querySelector('.chat-welcome');
-    if (welcome) welcome.remove();
-
-    const id = 'msg-' + (++_mc);
-    // AI 아바타: 로고 있으면 이미지, 없으면 "AI" 텍스트
-    const avatar = role === 'user'
-        ? 'U'
-        : (siteLogoUrl ? `<img src="${siteLogoUrl}" alt="AI">` : 'AI');
-    const rendered = role === 'assistant' ? renderMd(content) : esc(content);
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
-    const refsHtml = (role === 'assistant' && refs && refs.length)
-        ? `<span class="msg-refs-link" onclick='showRefChunks(${JSON.stringify(refs).replace(/'/g,"&#39;")})'>&#128196; 참조 ${refs.length}건 보기</span>` : '';
-
-    const div = document.createElement('div');
-    div.className = `msg-row ${role}`;
-    div.id = id;
-    div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-content"><div class="msg-bubble">${rendered}</div><span class="msg-time">${timeStr}</span>${refsHtml}</div>`;
-    c.appendChild(div);
-    c.scrollTop = c.scrollHeight;
-    return id;
-}
-
-function updateMsg(msgId, content) {
-    const el = document.getElementById(msgId);
-    if (!el) return;
-    const bubble = el.querySelector('.msg-bubble');
-    if (bubble) {
-        bubble.innerHTML = renderMd(content);
-    }
-    const c = document.getElementById('chatMessages');
-    c.scrollTop = c.scrollHeight;
-}
-
-function addRefsToMsg(msgId, refs) {
-    const el = document.getElementById(msgId);
-    if (!el || !refs || !refs.length) return;
-    const msgContent = el.querySelector('.msg-content');
-    if (!msgContent) return;
-
-    // 이미 참조 링크가 있으면 제거
-    const existingLink = msgContent.querySelector('.msg-refs-link');
-    if (existingLink) existingLink.remove();
-
-    // 새 참조 링크 추가
-    const refsLink = document.createElement('span');
-    refsLink.className = 'msg-refs-link';
-    refsLink.textContent = `📄 참조 ${refs.length}건 보기`;
-    refsLink.onclick = () => showRefChunks(refs);
-    msgContent.appendChild(refsLink);
-}
-
-function showTyping() {
-    const c = document.getElementById('chatMessages');
-    const id = 'typing-' + (++_mc);
-    const aiAvatar = siteLogoUrl ? `<img src="${siteLogoUrl}" alt="AI">` : 'AI';
-    const div = document.createElement('div');
-    div.className = 'msg-row assistant';
-    div.id = id;
-    div.innerHTML = `<div class="msg-avatar">${aiAvatar}</div><div class="msg-content"><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div></div>`;
-    c.appendChild(div);
-    c.scrollTop = c.scrollHeight;
-    return id;
-}
-
-function removeEl(id) { const el = document.getElementById(id); if (el) el.remove(); }
-
-let _lastRefs = [];
-
-function showRefChunks(refs) {
-    _lastRefs = refs || [];
-    const p = document.getElementById('refChunksPanel');
-    if (!refs || !refs.length) {
-        p.innerHTML = `<div class="ref-chunks-title">&#128269; 참조된 문서 내용</div><div style="font-size:0.76rem;color:var(--text-muted);text-align:center;padding:12px 0;">참조된 내용이 없습니다</div>`;
-        return;
-    }
-    let html = `<div class="ref-chunks-title">&#128269; 참조된 문서 내용 (${refs.length}건)</div>`;
-    refs.forEach((r, i) => {
-        const pct = Math.round(r.similarity * 100);
-        html += `<div class="ref-chunk-card" onclick="openRefPopup(${i})">
-            <span class="chunk-file">&#128196; ${esc(r.filename)}</span>
-            <span class="chunk-score">${pct}% <span class="score-bar"><span class="score-bar-fill" style="width:${pct}%"></span></span></span>
-        </div>`;
-    });
-    p.innerHTML = html;
-}
-
-function openRefPopup(idx) {
-    const r = _lastRefs[idx];
-    if (!r) return;
-    const pct = Math.round(r.similarity * 100);
-    document.getElementById('refPopupFilename').textContent = r.filename;
-    document.getElementById('refPopupScore').innerHTML = `유사도 ${pct}% <span class="score-bar"><span class="score-bar-fill" style="width:${pct}%"></span></span>`;
-    document.getElementById('refPopupBody').textContent = r.chunk_text;
-    document.getElementById('refPopup').classList.add('active');
-}
-
-function closeRefPopup() {
-    document.getElementById('refPopup').classList.remove('active');
-}
-
-function setChatEnabled(enabled) {
-    const ragInput = document.getElementById('ragInput');
-    const ragSendBtn = document.getElementById('ragSendBtn');
-    ragInput.disabled = !enabled;
-    ragSendBtn.disabled = !enabled;
-    if (enabled) ragInput.focus();
-}
-
-// ============================================================
-//  유틸
-// ============================================================
-function esc(str) {
-    if (!str) return '';
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-}
-
-document.getElementById('docModal').addEventListener('click', e => {
-    if (e.target === document.getElementById('docModal')) closeModal();
-});
-document.getElementById('refPopup').addEventListener('click', e => {
-    if (e.target === document.getElementById('refPopup')) closeRefPopup();
-});
-
-// --- 사이드바 리사이저 ---
-(function() {
-    const resizer = document.getElementById('refResizer');
-    const docList = document.getElementById('refDocList');
-    const sidebar = docList.closest('.sidebar-ref');
-    let startY, startH;
-
-    resizer.addEventListener('mousedown', e => {
-        e.preventDefault();
-        startY = e.clientY;
-        startH = docList.offsetHeight;
-        resizer.classList.add('dragging');
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    });
-
-    resizer.addEventListener('touchstart', e => {
-        startY = e.touches[0].clientY;
-        startH = docList.offsetHeight;
-        resizer.classList.add('dragging');
-        document.addEventListener('touchmove', onTouchMove);
-        document.addEventListener('touchend', onTouchEnd);
-    }, { passive: true });
-
-    function onMouseMove(e) { resize(e.clientY); }
-    function onTouchMove(e) { resize(e.touches[0].clientY); }
-
-    function resize(currentY) {
-        const delta = currentY - startY;
-        const sidebarH = sidebar.offsetHeight;
-        const headerH = sidebar.querySelector('.sidebar-ref-header').offsetHeight;
-        const resizerH = resizer.offsetHeight;
-        const minDoc = 60;
-        const minChunks = 60;
-        const maxDoc = sidebarH - headerH - resizerH - minChunks;
-        const newH = Math.max(minDoc, Math.min(maxDoc, startH + delta));
-        docList.style.height = newH + 'px';
-    }
-
-    function onMouseUp() {
-        resizer.classList.remove('dragging');
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-    }
-    function onTouchEnd() {
-        resizer.classList.remove('dragging');
-        document.removeEventListener('touchmove', onTouchMove);
-        document.removeEventListener('touchend', onTouchEnd);
-    }
-})();
-
-// ============================================================
-//  메일 작성 탭
-// ============================================================
-let mailDocuments = [];
-let mailDetectedLang = 'en';
-let mailCurrentRefs = [];
-
-// --- 문서 목록 로드 ---
-async function loadMailDocuments() {
-    try {
-        mailDocuments = await (await api('/admin/rag/documents')).json();
-        renderMailDocuments(mailDocuments);
-    } catch (e) { console.error('메일 문서 로드 실패:', e); }
-}
-
-function renderMailDocuments(docs) {
-    const c = document.getElementById('mailDocList');
-    if (!docs.length) {
-        c.innerHTML = '<div class="empty-state" style="padding:20px 10px;font-size:0.8rem"><div style="font-size:1.2rem;margin-bottom:6px;">&#128196;</div>RAG 세션용 문서가 없습니다<br><span style="font-size:0.72rem">문서 관리에서 업로드하세요</span></div>';
-        return;
-    }
-    let html = `<div class="ref-doc-item ref-doc-all"><input type="checkbox" id="mailDocAll" checked onchange="toggleAllMailDocs(this.checked)" /><label for="mailDocAll">전체 문서</label></div>`;
-    for (const d of docs) {
-        html += `<div class="ref-doc-item"><input type="checkbox" class="mail-doc-check" id="mailDoc${d.id}" value="${d.id}" checked /><label for="mailDoc${d.id}">&#128196; ${esc(d.filename)}</label></div>`;
-    }
-    c.innerHTML = html;
-}
-
-function toggleAllMailDocs(checked) {
-    document.querySelectorAll('.mail-doc-check').forEach(cb => cb.checked = checked);
-}
-
-function getMailSelectedDocIds() {
-    const ids = Array.from(document.querySelectorAll('.mail-doc-check:checked')).map(cb => parseInt(cb.value));
-    return (ids.length === mailDocuments.length || ids.length === 0) ? null : ids;
-}
-
-// --- 이력 로드 ---
-async function loadMailHistory() {
-    try {
-        const items = await (await api('/admin/mail/history')).json();
-        renderMailHistory(items);
-    } catch (e) { console.error('메일 이력 로드 실패:', e); }
-}
-
-function renderMailHistory(items) {
-    const c = document.getElementById('mailHistoryList');
-    if (!items.length) {
-        c.innerHTML = '<div class="empty-state" style="padding:20px 10px;font-size:0.8rem">저장된 이력이 없습니다</div>';
-        return;
-    }
-    const langMap = { en: 'EN', ja: 'JA', zh: 'ZH', ko: 'KO', de: 'DE', fr: 'FR', es: 'ES' };
-    let html = '';
-    for (const item of items) {
-        const date = item.created_at ? new Date(item.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-        const lang = langMap[item.detected_lang] || item.detected_lang;
-        html += `<div class="mail-history-item" onclick="loadMailHistoryItem(${item.id})">
-            <div class="mail-history-title">${esc(item.incoming_email)}</div>
-            <div class="mail-history-meta">
-                <span class="mail-pane-badge badge-lang">${lang}</span>
-                <span>${date}</span>
-            </div>
-            <button class="mail-history-del" onclick="event.stopPropagation();deleteMailHistory(${item.id})" title="삭제">&#10005;</button>
-        </div>`;
-    }
-    c.innerHTML = html;
-}
-
-// --- 수신 메일 ↔ 초안 리사이즈 ---
-(function() {
-    const handle = document.getElementById('mailResizeHandle');
-    const mailMain = document.querySelector('.mail-main');
-    const incoming = document.querySelector('.mail-incoming');
-    let dragging = false, startY = 0, startH = 0;
-
-    handle.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        dragging = true;
-        startY = e.clientY;
-        startH = incoming.offsetHeight;
-        handle.classList.add('active');
-        document.body.style.cursor = 'row-resize';
-        document.body.style.userSelect = 'none';
-    });
-    document.addEventListener('mousemove', function(e) {
-        if (!dragging) return;
-        const delta = e.clientY - startY;
-        const newH = Math.max(100, Math.min(startH + delta, mailMain.offsetHeight - 150));
-        incoming.style.height = newH + 'px';
-    });
-    document.addEventListener('mouseup', function() {
-        if (!dragging) return;
-        dragging = false;
-        handle.classList.remove('active');
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-    });
-
-    // 터치 지원
-    handle.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        dragging = true;
-        startY = e.touches[0].clientY;
-        startH = incoming.offsetHeight;
-        handle.classList.add('active');
-    }, { passive: false });
-    document.addEventListener('touchmove', function(e) {
-        if (!dragging) return;
-        const delta = e.touches[0].clientY - startY;
-        const newH = Math.max(100, Math.min(startH + delta, mailMain.offsetHeight - 150));
-        incoming.style.height = newH + 'px';
-    });
-    document.addEventListener('touchend', function() {
-        if (!dragging) return;
-        dragging = false;
-        handle.classList.remove('active');
-    });
-})();
-
-// --- 수신 메일 한국어 번역 ---
-async function translateIncoming() {
-    const incoming = document.getElementById('mailIncoming').value.trim();
-    if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
-
-    showMailLoading('수신 메일을 한국어로 번역하고 있습니다...');
-
-    try {
-        const data = await (await api('/admin/mail/translate-incoming', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ foreign_text: incoming, source_lang: 'auto' }),
-        })).json();
-
-        const translated = data.translated_korean || '';
-
-        // 단일 textarea 숨기고 분할 뷰 표시
-        document.getElementById('mailIncoming').style.display = 'none';
-        const splitView = document.getElementById('mailIncomingSplit');
-        splitView.classList.add('visible');
-
-        // 원문 채우기
-        document.getElementById('mailIncomingOriginal').value = incoming;
-        document.getElementById('mailIncomingTranslated').value = translated;
-
-        // 원문 편집 시 단일 textarea도 동기화
-        document.getElementById('mailIncomingOriginal').oninput = function() {
-            document.getElementById('mailIncoming').value = this.value;
-        };
-
-        // 소스 언어 배지 (감지된 언어가 있으면 표시)
-        const srcBadge = document.getElementById('incomingSrcLangBadge');
-        if (mailDetectedLang && mailDetectedLang !== 'ko') {
-            srcBadge.textContent = mailDetectedLang.toUpperCase();
-        }
-
-    } catch (e) {
-        console.error('수신 메일 번역 오류:', e);
-        alert('번역에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-        hideMailLoading();
-    }
-}
-
-// --- 답장 생성 ---
-async function composeMail() {
-    const incoming = document.getElementById('mailIncoming').value.trim();
-    if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
-
-    const tone = document.getElementById('mailTone').value;
-    const docIds = getMailSelectedDocIds();
-
-    showMailLoading('수신 메일을 분석하고 답장을 생성하고 있습니다...');
-
-    try {
-        const data = await (await api('/admin/mail/compose', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ incoming_email: incoming, document_ids: docIds, tone: tone }),
-        })).json();
-
-        mailDetectedLang = data.detected_lang || 'en';
-        mailCurrentRefs = data.references || [];
-
-        // 분석 결과 표시
-        const analysisEl = document.getElementById('mailAnalysis');
-        if (data.analysis) {
-            document.getElementById('mailAnalysisText').textContent = data.analysis;
-            analysisEl.classList.add('visible');
-        } else {
-            analysisEl.classList.remove('visible');
-        }
-
-        // 한국어 초안
-        document.getElementById('mailKoreanDraft').value = data.korean_draft || '';
-
-        // 번역 대상 언어 자동 설정
-        const langSelect = document.getElementById('mailTargetLang');
-        if (mailDetectedLang && mailDetectedLang !== 'ko') {
-            langSelect.value = mailDetectedLang;
-        }
-        updateTargetLangBadge();
-
-        // 번역본 초기화
-        document.getElementById('mailTranslated').value = '';
-
-        // 버튼 활성화
-        document.getElementById('mailTranslateBtn').disabled = false;
-        document.getElementById('mailSaveBtn').disabled = false;
-
-    } catch (e) {
-        console.error('메일 생성 오류:', e);
-        alert('메일 생성에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-        hideMailLoading();
-    }
-}
-
-// --- 번역 ---
-async function translateMail() {
-    const koreanText = document.getElementById('mailKoreanDraft').value.trim();
-    if (!koreanText) { alert('번역할 한국어 초안이 없습니다.'); return; }
-
-    const targetLang = document.getElementById('mailTargetLang').value;
-
-    showMailLoading('번역 중...');
-
-    try {
-        const data = await (await api('/admin/mail/translate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ korean_text: koreanText, target_lang: targetLang }),
-        })).json();
-
-        document.getElementById('mailTranslated').value = data.translated || '';
-        document.getElementById('mailRetranslateBtn').disabled = false;
-        updateTargetLangBadge();
-
-    } catch (e) {
-        console.error('번역 오류:', e);
-        alert('번역에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-        hideMailLoading();
-    }
-}
-
-// --- 저장 ---
-async function saveMailComposition() {
-    const incoming = document.getElementById('mailIncoming').value.trim();
-    const korean = document.getElementById('mailKoreanDraft').value.trim();
-    const translated = document.getElementById('mailTranslated').value.trim();
-
-    if (!incoming || !korean) { alert('수신 메일과 한국어 초안이 필요합니다.'); return; }
-
-    try {
-        const saveResp = await (await api('/admin/mail/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                incoming_email: incoming,
-                detected_lang: mailDetectedLang,
-                tone: document.getElementById('mailTone').value,
-                korean_draft: korean,
-                translated_draft: translated,
-                document_ids: getMailSelectedDocIds(),
-                refs: mailCurrentRefs,
-            }),
-        })).json();
-
-        // 수신 메일이 선택된 상태면 composition_id 연결
-        if (currentInboxId && saveResp.id) {
-            try {
-                await api(`/admin/mail/gmail/inbox/${currentInboxId}/link?composition_id=${saveResp.id}`, { method: 'POST' });
-                document.getElementById('mailSendBtn').disabled = false;
-                loadInboxEmails();
-            } catch (e) { console.error('초안 연결 실패:', e); }
-        }
-
-        alert('저장되었습니다.');
-        loadMailHistory();
-    } catch (e) {
-        console.error('저장 오류:', e);
-        alert('저장에 실패했습니다.');
-    }
-}
-
-// --- 이력 불러오기 ---
-async function loadMailHistoryItem(id) {
-    try {
-        const data = await (await api(`/admin/mail/history/${id}`)).json();
-
-        document.getElementById('mailIncoming').value = data.incoming_email || '';
-        document.getElementById('mailKoreanDraft').value = data.korean_draft || '';
-        document.getElementById('mailTranslated').value = data.translated_draft || '';
-        document.getElementById('mailTone').value = data.tone || 'formal';
-
-        mailDetectedLang = data.detected_lang || 'en';
-        mailCurrentRefs = data.refs || [];
-
-        if (data.detected_lang && data.detected_lang !== 'ko') {
-            document.getElementById('mailTargetLang').value = data.detected_lang;
-        }
-        updateTargetLangBadge();
-
-        // 분석 숨기기 + 번역 분할 뷰 리셋 (이력에서는 분석 없음)
-        document.getElementById('mailAnalysis').classList.remove('visible');
-        document.getElementById('mailIncomingSplit').classList.remove('visible');
-        document.getElementById('mailIncoming').style.display = '';
-
-        // 버튼 활성화
-        document.getElementById('mailTranslateBtn').disabled = false;
-        document.getElementById('mailRetranslateBtn').disabled = !(data.translated_draft);
-        document.getElementById('mailSaveBtn').disabled = false;
-
-        // 활성 표시
-        document.querySelectorAll('.mail-history-item').forEach(el => el.classList.remove('active'));
-        const clicked = document.querySelector(`.mail-history-item[onclick*="loadMailHistoryItem(${id})"]`);
-        if (clicked) clicked.classList.add('active');
-
-    } catch (e) {
-        console.error('이력 로드 실패:', e);
-        alert('이력을 불러오는데 실패했습니다.');
-    }
-}
-
-// --- 이력 삭제 ---
-async function deleteMailHistory(id) {
-    if (!confirm('이 이력을 삭제하시겠습니까?')) return;
-    try {
-        await api(`/admin/mail/history/${id}`, { method: 'DELETE' });
-        loadMailHistory();
-    } catch (e) { console.error('이력 삭제 실패:', e); }
-}
-
-// --- 복사 ---
-function copyMailDraft(type) {
-    const text = type === 'ko'
-        ? document.getElementById('mailKoreanDraft').value
-        : document.getElementById('mailTranslated').value;
-    if (!text) { alert('복사할 내용이 없습니다.'); return; }
-    navigator.clipboard.writeText(text).then(() => {
-        const label = type === 'ko' ? '한국어 초안' : '번역본';
-        alert(`${label}이 클립보드에 복사되었습니다.`);
-    }).catch(() => {
-        // fallback
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        alert('클립보드에 복사되었습니다.');
-    });
-}
-
-// --- 언어 뱃지 업데이트 ---
-function updateTargetLangBadge() {
-    const langSelect = document.getElementById('mailTargetLang');
-    const badge = document.getElementById('mailTargetLangBadge');
-    const langMap = { en: 'EN', ja: 'JA', zh: 'ZH', ko: 'KO', de: 'DE', fr: 'FR', es: 'ES' };
-    badge.textContent = langMap[langSelect.value] || langSelect.value.toUpperCase();
-}
-
-// 언어 선택 변경 시 뱃지 업데이트
-document.getElementById('mailTargetLang').addEventListener('change', updateTargetLangBadge);
-
-// --- 로딩 표시 ---
-function showMailLoading(text) {
-    document.getElementById('mailLoadingText').textContent = text || '처리 중...';
-    document.getElementById('mailLoading').classList.add('active');
-    document.getElementById('mailComposeBtn').disabled = true;
-    document.getElementById('mailTranslateBtn').disabled = true;
-}
-
-function hideMailLoading() {
-    document.getElementById('mailLoading').classList.remove('active');
-    document.getElementById('mailComposeBtn').disabled = false;
-}
-
-// ============================================================
-//  Gmail 연동
-// ============================================================
-let gmailConnected = false;
-let currentInboxId = null;  // 현재 선택된 수신 메일 ID
-
-// --- Gmail 상태 로드 ---
-async function loadGmailStatus() {
-    try {
-        const data = await (await api('/admin/mail/gmail/status')).json();
-        gmailConnected = data.connected;
-        updateGmailUI(data);
-    } catch (e) {
-        console.error('Gmail 상태 로드 실패:', e);
-    }
-}
-
-function updateGmailUI(data) {
-    const dot = document.getElementById('gmailDot');
-    const statusText = document.getElementById('gmailStatusText');
-    const disconnectBtn = document.getElementById('gmailDisconnectBtn');
-    const fetchBtn = document.getElementById('gmailFetchBtn');
-    const autoSettings = document.getElementById('gmailAutoSettings');
-    const emailInput = document.getElementById('gmailEmail');
-    const pwInput = document.getElementById('gmailAppPassword');
-    const sendBtn = document.getElementById('mailSendBtn');
-
-    if (data.connected) {
-        dot.className = 'gmail-status-dot connected';
-        statusText.textContent = data.email;
-        disconnectBtn.style.display = '';
-        fetchBtn.style.display = '';
-        autoSettings.style.display = '';
-        emailInput.value = data.email;
-        emailInput.disabled = true;
-        pwInput.style.display = 'none';
-        sendBtn.style.display = '';
-
-        // 자동 체크 설정
-        document.getElementById('gmailCheckTime').value = data.check_time || '09:00';
-        const toggle = document.getElementById('gmailAutoToggle');
-        if (data.auto_reply_enabled) {
-            toggle.classList.add('active');
-        } else {
-            toggle.classList.remove('active');
-        }
-
-        // 마지막 체크 시간
-        if (data.last_checked_at) {
-            const d = new Date(data.last_checked_at);
-            document.getElementById('gmailLastChecked').textContent =
-                '마지막: ' + d.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        }
-
-        loadInboxEmails();
-    } else {
-        dot.className = 'gmail-status-dot disconnected';
-        statusText.textContent = '연결 안됨';
-        disconnectBtn.style.display = 'none';
-        fetchBtn.style.display = 'none';
-        autoSettings.style.display = 'none';
-        emailInput.disabled = false;
-        emailInput.value = '';
-        pwInput.style.display = '';
-        pwInput.value = '';
-        sendBtn.style.display = 'none';
-    }
-}
-
-// --- Gmail 연결 ---
-async function gmailConnect() {
-    const email = document.getElementById('gmailEmail').value.trim();
-    const pw = document.getElementById('gmailAppPassword').value.trim();
-    if (!email || !pw) { alert('이메일과 앱 비밀번호를 입력하세요.'); return; }
-
-    try {
-        const resp = await api('/admin/mail/gmail/connect', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, app_password: pw }),
-        });
-        const data = await resp.json();
-        if (!resp.ok) { alert(data.detail || '연결 실패'); return; }
-        alert('Gmail 연결 성공!');
-        loadGmailStatus();
-    } catch (e) {
-        alert('Gmail 연결 오류: ' + e.message);
-    }
-}
-
-// --- Gmail 연결 해제 ---
-async function gmailDisconnect() {
-    if (!confirm('Gmail 연결을 해제하시겠습니까?')) return;
-    try {
-        await api('/admin/mail/gmail/disconnect', { method: 'POST' });
-        gmailConnected = false;
-        currentInboxId = null;
-        loadGmailStatus();
-    } catch (e) { alert('연결 해제 실패: ' + e.message); }
-}
-
-// --- 수동 메일 가져오기 ---
-async function gmailFetch() {
-    showMailLoading('메일을 가져오는 중...');
-    try {
-        const data = await (await api('/admin/mail/gmail/fetch', { method: 'POST' })).json();
-        alert(data.message);
-        loadInboxEmails();
-        loadGmailStatus();
-    } catch (e) {
-        alert('메일 가져오기 실패: ' + e.message);
-    } finally {
-        hideMailLoading();
-    }
-}
-
-// --- 자동 체크 토글 ---
-async function toggleGmailAuto() {
-    const toggle = document.getElementById('gmailAutoToggle');
-    const newState = !toggle.classList.contains('active');
-    const checkTime = document.getElementById('gmailCheckTime').value;
-
-    try {
-        await api('/admin/mail/gmail/settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ check_time: checkTime, auto_reply_enabled: newState }),
-        });
-        toggle.classList.toggle('active', newState);
-    } catch (e) { alert('설정 저장 실패: ' + e.message); }
-}
-
-// 체크 시간 변경 시 자동 저장
-document.getElementById('gmailCheckTime').addEventListener('change', async function () {
-    const toggle = document.getElementById('gmailAutoToggle');
-    const autoEnabled = toggle.classList.contains('active');
-    if (!gmailConnected) return;
-    try {
-        await api('/admin/mail/gmail/settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ check_time: this.value, auto_reply_enabled: autoEnabled }),
-        });
-    } catch (e) { console.error('설정 저장 실패:', e); }
-});
-
-// --- 수신함 로드 ---
-async function loadInboxEmails() {
-    if (!gmailConnected) return;
-    try {
-        const items = await (await api('/admin/mail/gmail/inbox')).json();
-        renderInboxList(items);
-    } catch (e) { console.error('수신함 로드 실패:', e); }
-}
-
-function renderInboxList(items) {
-    const c = document.getElementById('inboxList');
-    const empty = document.getElementById('inboxEmpty');
-    const countBadge = document.getElementById('inboxCount');
-
-    if (!items.length) {
-        c.innerHTML = '';
-        empty.style.display = '';
-        countBadge.style.display = 'none';
-        return;
-    }
-    empty.style.display = 'none';
-
-    // new 카운트
-    const newCount = items.filter(i => i.status === 'new').length;
-    if (newCount > 0) {
-        countBadge.textContent = newCount;
-        countBadge.style.display = '';
-    } else {
-        countBadge.style.display = 'none';
-    }
-
-    const statusMap = {
-        'new': { label: 'NEW', cls: 'badge-new' },
-        'draft_ready': { label: '초안', cls: 'badge-draft-ready' },
-        'replied': { label: '답장', cls: 'badge-replied' },
-        'ignored': { label: '무시', cls: 'badge-ignored' },
-    };
-
-    let html = '';
-    for (const item of items) {
-        const st = statusMap[item.status] || { label: item.status, cls: '' };
-        const date = item.received_at ? new Date(item.received_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-        html += `<div class="inbox-item${currentInboxId === item.id ? ' active' : ''}" onclick="loadInboxItem(${item.id})">
-            <div class="inbox-item-from">${esc(item.from_name || item.from_addr)}</div>
-            <div class="inbox-item-subject">${esc(item.subject || '(제목 없음)')}</div>
-            <div class="inbox-item-meta">
-                <span class="badge-status ${st.cls}">${st.label}</span>
-                <span>${date}</span>
-            </div>
-        </div>`;
-    }
-    c.innerHTML = html;
-}
-
-// --- 수신 메일 클릭 → 본문 채우기 ---
-async function loadInboxItem(id) {
-    try {
-        const data = await (await api(`/admin/mail/gmail/inbox/${id}`)).json();
-        currentInboxId = id;
-
-        // 수신 메일 textarea에 채우기
-        const bodyText = `From: ${data.from_name || ''} <${data.from_addr}>\nSubject: ${data.subject || ''}\n\n${data.body || ''}`;
-        document.getElementById('mailIncoming').value = bodyText;
-
-        // HTML 메일이 있으면 iframe에 표시
-        const htmlDiv = document.getElementById('mailIncomingHtml');
-        const htmlFrame = document.getElementById('mailHtmlFrame');
-        if (data.body_html) {
-            htmlFrame.srcdoc = data.body_html;
-            htmlDiv.style.display = '';
-            document.getElementById('mailIncoming').style.display = 'none';
-        } else {
-            htmlDiv.style.display = 'none';
-            document.getElementById('mailIncoming').style.display = '';
-        }
-
-        // 초안이 있으면 채우기
-        if (data.draft) {
-            document.getElementById('mailKoreanDraft').value = data.draft.korean_draft || '';
-            document.getElementById('mailTranslated').value = data.draft.translated_draft || '';
-            mailDetectedLang = data.draft.detected_lang || 'en';
-            if (data.draft.detected_lang && data.draft.detected_lang !== 'ko') {
-                document.getElementById('mailTargetLang').value = data.draft.detected_lang;
-            }
-            updateTargetLangBadge();
-            document.getElementById('mailTranslateBtn').disabled = false;
-            document.getElementById('mailRetranslateBtn').disabled = !(data.draft.translated_draft);
-            document.getElementById('mailSaveBtn').disabled = false;
-        } else {
-            document.getElementById('mailKoreanDraft').value = '';
-            document.getElementById('mailTranslated').value = '';
-        }
-
-        // 분석 숨기기 + 번역 분할 뷰 리셋
-        document.getElementById('mailAnalysis').classList.remove('visible');
-        document.getElementById('mailIncomingSplit').classList.remove('visible');
-
-        // 발송 버튼 활성화 (번역본이 있을 때)
-        const sendBtn = document.getElementById('mailSendBtn');
-        if (data.draft && (data.draft.translated_draft || data.draft.korean_draft)) {
-            sendBtn.disabled = false;
-        } else {
-            sendBtn.disabled = true;
-        }
-
-        // 활성 표시
-        document.querySelectorAll('.inbox-item').forEach(el => el.classList.remove('active'));
-        const clicked = document.querySelector(`.inbox-item[onclick*="loadInboxItem(${id})"]`);
-        if (clicked) clicked.classList.add('active');
-
-    } catch (e) {
-        console.error('수신 메일 로드 실패:', e);
-        alert('수신 메일을 불러오는데 실패했습니다.');
-    }
-}
-
-// HTML/텍스트 뷰 전환
-function toggleMailHtmlView() {
-    const htmlDiv = document.getElementById('mailIncomingHtml');
-    const textarea = document.getElementById('mailIncoming');
-    const btn = htmlDiv.querySelector('button');
-
-    if (htmlDiv.style.display !== 'none') {
-        htmlDiv.style.display = 'none';
-        textarea.style.display = '';
-        btn.textContent = 'HTML 보기';
-    } else {
-        htmlDiv.style.display = '';
-        textarea.style.display = 'none';
-        btn.textContent = '텍스트 보기';
-    }
-}
-
-// --- 답장 발송 ---
-async function sendMailReply() {
-    if (!currentInboxId) { alert('발송할 수신 메일을 선택하세요.'); return; }
-
-    const translated = document.getElementById('mailTranslated').value.trim();
-    const korean = document.getElementById('mailKoreanDraft').value.trim();
-    if (!translated && !korean) { alert('발송할 답장 내용이 없습니다.'); return; }
-
-    if (!confirm('이 답장을 발송하시겠습니까?')) return;
-
-    showMailLoading('메일을 저장·발송하는 중...');
-    try {
-        // 먼저 저장 (composition_id 연결을 위해)
-        const incoming = document.getElementById('mailIncoming').value.trim();
-        if (incoming && korean) {
-            const saveResp = await (await api('/admin/mail/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    incoming_email: incoming,
-                    detected_lang: mailDetectedLang,
-                    tone: document.getElementById('mailTone').value,
-                    korean_draft: korean,
-                    translated_draft: translated,
-                    document_ids: getMailSelectedDocIds(),
-                    refs: mailCurrentRefs,
-                }),
-            })).json();
-
-            // inbox_emails에 composition_id 연결
-            await api(`/admin/mail/gmail/inbox/${currentInboxId}/link?composition_id=${saveResp.id}`, {
-                method: 'POST',
-            });
-        }
-
-        const resp = await api(`/admin/mail/gmail/send/${currentInboxId}`, { method: 'POST' });
-        const data = await resp.json();
-        if (!resp.ok) { alert(data.detail || '발송 실패'); return; }
-        alert('메일이 발송되었습니다!');
-        loadInboxEmails();
-        loadMailHistory();
-    } catch (e) {
-        alert('메일 발송 오류: ' + e.message);
-    } finally {
-        hideMailLoading();
-    }
-}
-
-// ============================================================
-//  견적문의 관리
-// ============================================================
-let currentAdminInquiryId = null;
-
-async function loadAdminInquiries() {
-    try {
-        const res = await api('/admin/inquiries');
-        const data = await res.json();
-        renderAdminInquiries(data);
-    } catch (e) {
-        console.warn('견적문의 로드 실패:', e);
-    }
-}
-
-function renderAdminInquiries(items) {
-    const tbody = document.getElementById('adminInquiryList');
-    if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">등록된 문의가 없습니다.</td></tr>';
-        return;
-    }
-    tbody.innerHTML = items.map(item => {
-        const statusBadge = item.status === 'answered'
-            ? '<span style="background:#e8f5e9;color:#2e7d32;padding:2px 10px;border-radius:10px;font-size:0.82rem;font-weight:600;">답변완료</span>'
-            : '<span style="background:#fff3e0;color:#e65100;padding:2px 10px;border-radius:10px;font-size:0.82rem;font-weight:600;">대기중</span>';
-        const d = item.created_at ? new Date(item.created_at) : null;
-        const dateStr = d ? (d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')) : '';
-        return `<tr>
-            <td>${item.id}</td>
-            <td>${escapeHtmlAdmin(item.title)}</td>
-            <td>${escapeHtmlAdmin(item.author_name)}</td>
-            <td>${statusBadge}</td>
-            <td>${dateStr}</td>
-            <td>
-                <button onclick="openAdminReply(${item.id})" style="padding:4px 12px;background:#0a2647;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.82rem;margin-right:4px;">보기</button>
-                <button onclick="deleteAdminInquiry(${item.id})" style="padding:4px 12px;background:#ef4444;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.82rem;">삭제</button>
-            </td>
-        </tr>`;
-    }).join('');
-}
-
-function escapeHtmlAdmin(str) {
-    if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-async function openAdminReply(id) {
-    currentAdminInquiryId = id;
-    try {
-        const res = await api('/admin/inquiries/' + id);
-        const data = await res.json();
-        document.getElementById('adminReplyTitle').textContent = data.title;
-        const d = data.created_at ? new Date(data.created_at) : null;
-        const dateStr = d ? (d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')) : '';
-        document.getElementById('adminReplyMeta').textContent = data.author_name + ' | ' + dateStr + ' | ' + (data.status === 'answered' ? '답변완료' : '대기중');
-        document.getElementById('adminReplyContent').textContent = data.content;
-        const repliesEl = document.getElementById('adminExistingReplies');
-        if (data.replies && data.replies.length > 0) {
-            repliesEl.innerHTML = data.replies.map(rp => {
-                const rd = rp.created_at ? new Date(rp.created_at) : null;
-                const rdStr = rd ? (rd.getFullYear()+'-'+String(rd.getMonth()+1).padStart(2,'0')+'-'+String(rd.getDate()).padStart(2,'0')) : '';
-                return '<div style="background:#fffbf0;border-top:3px solid #f0a500;border-radius:8px;padding:14px;margin-bottom:8px;">'
-                    + '<strong style="color:#f0a500;">관리자 답변</strong><br>'
-                    + '<div style="margin-top:6px;white-space:pre-wrap;">' + escapeHtmlAdmin(rp.content) + '</div>'
-                    + '<div style="font-size:0.82rem;color:#94a3b8;margin-top:6px;">' + rdStr + '</div>'
-                    + '</div>';
-            }).join('');
-        } else {
-            repliesEl.innerHTML = '';
-        }
-        document.getElementById('adminReplyText').value = '';
-        document.getElementById('adminReplyPanel').style.display = '';
-    } catch (e) {
-        alert('문의 상세 로드 실패: ' + e.message);
-    }
-}
-
-function closeAdminReply() {
-    document.getElementById('adminReplyPanel').style.display = 'none';
-    currentAdminInquiryId = null;
-}
-
-async function submitAdminReply() {
-    const content = document.getElementById('adminReplyText').value.trim();
-    if (!content) { alert('답변 내용을 입력해주세요.'); return; }
-    try {
-        const res = await api('/admin/inquiries/' + currentAdminInquiryId + '/reply', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: content })
-        });
-        if (!res.ok) { const err = await res.json(); alert(err.detail || '답변 등록 실패'); return; }
-        alert('답변이 등록되었습니다.');
-        closeAdminReply();
-        loadAdminInquiries();
-    } catch (e) {
-        alert('오류: ' + e.message);
-    }
-}
-
-async function deleteAdminInquiry(id) {
-    if (!confirm('이 문의를 삭제하시겠습니까?')) return;
-    try {
-        const res = await api('/admin/inquiries/' + id, { method: 'DELETE' });
-        if (!res.ok) { const err = await res.json(); alert(err.detail || '삭제 실패'); return; }
-        closeAdminReply();
-        loadAdminInquiries();
-    } catch (e) {
-        alert('오류: ' + e.message);
-    }
-}
-
-// --- 사이드바 탭 전환 ---
-function switchMailSidebarTab(tab) {
-    document.getElementById('mailSideTabInbox').classList.toggle('active', tab === 'inbox');
-    document.getElementById('mailSideTabDocs').classList.toggle('active', tab === 'docs');
-    document.getElementById('mailSideTabHistory').classList.toggle('active', tab === 'history');
-    document.getElementById('mailSidePanelInbox').style.display = tab === 'inbox' ? '' : 'none';
-    document.getElementById('mailSidePanelDocs').style.display = tab === 'docs' ? '' : 'none';
-    document.getElementById('mailSidePanelHistory').style.display = tab === 'history' ? '' : 'none';
-}
-
-</script>
+    <!-- Admin JavaScript Modules -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/docs.js"></script>
+    <script src="js/rag.js"></script>
+    <script src="js/inquiry.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/mail.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/logs.js"></script>
+    <script src="js/init.js"></script> <!-- MUST BE LAST -->
 </body>
 </html>

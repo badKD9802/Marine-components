@@ -59,6 +59,14 @@ async def create_tables():
         return
     async with pool.acquire() as conn:
         await conn.execute("""
+            CREATE TABLE IF NOT EXISTS categories (
+                id          SERIAL PRIMARY KEY,
+                code        TEXT UNIQUE NOT NULL,
+                name_ko     TEXT NOT NULL,
+                name_en     TEXT,
+                created_at  TIMESTAMPTZ DEFAULT NOW()
+            );
+
             CREATE TABLE IF NOT EXISTS products (
                 id            SERIAL PRIMARY KEY,
                 image         TEXT NOT NULL,
@@ -257,6 +265,27 @@ async def create_vector_tables():
                 reply_text     TEXT NOT NULL,
                 sort_order     INTEGER DEFAULT 0,
                 created_at     TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS mail_signatures (
+                id          SERIAL PRIMARY KEY,
+                name        TEXT NOT NULL,
+                content     TEXT NOT NULL,
+                is_default  BOOLEAN DEFAULT FALSE,
+                created_at  TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS mail_templates (
+                id          SERIAL PRIMARY KEY,
+                name        TEXT NOT NULL,
+                category    TEXT DEFAULT 'general',
+                content     TEXT NOT NULL,
+                variables   TEXT[],
+                created_at  TIMESTAMPTZ DEFAULT NOW()
             );
         """)
 
