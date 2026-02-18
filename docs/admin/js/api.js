@@ -5,7 +5,7 @@
  */
 
 // API 기본 설정
-var API_BASE = 'https://adminmarine-component-production.up.railway.app';
+var API_BASE = 'https://marine-parts-production-60a3.up.railway.app';
 var authToken = sessionStorage.getItem('admin_token') || '';
 
 // 전역 상태 변수들
