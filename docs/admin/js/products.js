@@ -297,10 +297,12 @@ async function showProductForm() {
     document.getElementById('productNameEn').value = '';
     document.getElementById('productDescKo').value = '';
     document.getElementById('productDescEn').value = '';
-    document.getElementById('productDetailInfo').value = '';
-    document.getElementById('productSpecs').value = '';
-    document.getElementById('productCompatibility').value = '';
     document.getElementById('productDeleteBtn').style.display = 'none';
+
+    // 동적 필드 초기화 (각각 빈 행 1개씩)
+    populateKeyValuePairs('detailInfoList', {}, addDetailInfoRow);
+    populateKeyValuePairs('specsList', {}, addSpecRow);
+    populateKeyValuePairs('compatibilityList', {}, addCompatibilityRow);
 
     // 이미지 미리보기 초기화
     document.getElementById('imagePreview').style.display = 'none';
@@ -334,10 +336,12 @@ async function editProduct(id) {
         document.getElementById('productNameEn').value = product.name?.en || '';
         document.getElementById('productDescKo').value = product.description?.ko || '';
         document.getElementById('productDescEn').value = product.description?.en || '';
-        document.getElementById('productDetailInfo').value = product.detail_info ? JSON.stringify(product.detail_info, null, 2) : '';
-        document.getElementById('productSpecs').value = product.specs ? JSON.stringify(product.specs, null, 2) : '';
-        document.getElementById('productCompatibility').value = product.compatibility ? JSON.stringify(product.compatibility, null, 2) : '';
         document.getElementById('productDeleteBtn').style.display = 'block';
+
+        // 동적 필드 로드
+        populateKeyValuePairs('detailInfoList', product.detail_info || {}, addDetailInfoRow);
+        populateKeyValuePairs('specsList', product.specs || {}, addSpecRow);
+        populateKeyValuePairs('compatibilityList', product.compatibility || {}, addCompatibilityRow);
 
         // 이미지 미리보기 표시
         if (product.image) {
@@ -401,21 +405,10 @@ async function saveProduct() {
     const id = document.getElementById('productId').value;
     console.log('💾 [DEBUG] productId:', id);
 
-    // JSON 필드 파싱 헬퍼 함수
-    function parseJSON(value, defaultValue = {}) {
-        if (!value || !value.trim()) return defaultValue;
-        try {
-            return JSON.parse(value);
-        } catch (e) {
-            console.error('JSON 파싱 에러:', e);
-            alert('JSON 형식이 올바르지 않습니다. 다시 확인해주세요.\n\n' + e.message);
-            throw e;
-        }
-    }
-
-    var detailInfo = parseJSON(document.getElementById('productDetailInfo').value);
-    var specs = parseJSON(document.getElementById('productSpecs').value);
-    var compatibility = parseJSON(document.getElementById('productCompatibility').value);
+    // 동적 필드에서 데이터 수집
+    var detailInfo = collectKeyValuePairs('detailInfoList');
+    var specs = collectKeyValuePairs('specsList');
+    var compatibility = collectKeyValuePairs('compatibilityList');
 
     const data = {
         image: document.getElementById('productImage').value.trim(),
@@ -513,4 +506,84 @@ async function updateProduct(id, data) {
 function closeProductModal() {
     const modal = document.getElementById('productModal');
     if (modal) modal.style.display = 'none';
+}
+
+/**
+ * 동적 키-값 필드 관리
+ */
+
+// 상세 정보 행 추가
+function addDetailInfoRow(key = '', value = '') {
+    var container = document.getElementById('detailInfoList');
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = `
+        <input type="text" placeholder="항목 (예: 원산지)" value="${esc(key)}" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <input type="text" placeholder="값 (예: 독일)" value="${esc(value)}" style="flex:2;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <button type="button" onclick="this.parentElement.remove()" style="padding:8px 12px;background:var(--error);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;">삭제</button>
+    `;
+    container.appendChild(row);
+}
+
+// 스펙 행 추가
+function addSpecRow(key = '', value = '') {
+    var container = document.getElementById('specsList');
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = `
+        <input type="text" placeholder="스펙 (예: 최대압력)" value="${esc(key)}" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <input type="text" placeholder="값 (예: 250bar)" value="${esc(value)}" style="flex:2;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <button type="button" onclick="this.parentElement.remove()" style="padding:8px 12px;background:var(--error);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;">삭제</button>
+    `;
+    container.appendChild(row);
+}
+
+// 호환 정보 행 추가
+function addCompatibilityRow(key = '', value = '') {
+    var container = document.getElementById('compatibilityList');
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = `
+        <input type="text" placeholder="항목 (예: 엔진모델)" value="${esc(key)}" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <input type="text" placeholder="값 (예: D4-180, D6-310)" value="${esc(value)}" style="flex:2;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <button type="button" onclick="this.parentElement.remove()" style="padding:8px 12px;background:var(--error);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;">삭제</button>
+    `;
+    container.appendChild(row);
+}
+
+// 키-값 쌍을 객체로 변환
+function collectKeyValuePairs(containerId) {
+    var container = document.getElementById(containerId);
+    var rows = container.querySelectorAll('div');
+    var result = {};
+
+    rows.forEach(function(row) {
+        var inputs = row.querySelectorAll('input[type="text"]');
+        if (inputs.length >= 2) {
+            var key = inputs[0].value.trim();
+            var value = inputs[1].value.trim();
+            if (key) {
+                result[key] = value;
+            }
+        }
+    });
+
+    return result;
+}
+
+// 객체를 키-값 행으로 표시
+function populateKeyValuePairs(containerId, data, addRowFunction) {
+    var container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    if (data && typeof data === 'object') {
+        Object.keys(data).forEach(function(key) {
+            addRowFunction(key, data[key]);
+        });
+    }
+
+    // 빈 행이면 하나 추가
+    if (container.children.length === 0) {
+        addRowFunction();
+    }
 }
