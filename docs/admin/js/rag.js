@@ -175,6 +175,7 @@ async function selectConversation(convId) {
     currentConvId = convId;
 
     try {
+        console.log('💬 [DEBUG] active 상태 업데이트 중...');
         // active 상태만 업데이트 (전체 재렌더링 제거)
         document.querySelectorAll('.conv-item').forEach(item => {
             item.classList.remove('active');
@@ -182,17 +183,25 @@ async function selectConversation(convId) {
         var activeItem = document.querySelector(`.conv-item[onclick*="${convId}"]`);
         if (activeItem) activeItem.classList.add('active');
 
+        console.log('💬 [DEBUG] 로딩 표시 중...');
         // 로딩 표시
         var chatContainer = document.getElementById('chatMessages');
         chatContainer.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;"><div style="text-align:center;"><div style="font-size:2rem;margin-bottom:10px;">⏳</div><div style="color:var(--text-muted);">대화 로딩 중...</div></div></div>';
 
+        console.log('💬 [DEBUG] loadConversation 호출 전...');
         await loadConversation(convId);
+        console.log('💬 [DEBUG] loadConversation 완료!');
+
+        console.log('💬 [DEBUG] switchToChatMode 호출...');
         switchToChatMode();
+        console.log('💬 [DEBUG] setChatEnabled 호출...');
         setChatEnabled(true);
+        console.log('✅ [DEBUG] selectConversation 완료!');
     } catch (e) {
-        console.error('대화 선택 실패:', e);
-        alert('대화를 불러오는데 실패했습니다.');
+        console.error('❌ [ERROR] 대화 선택 실패:', e);
+        alert('대화를 불러오는데 실패했습니다: ' + e.message);
     } finally {
+        console.log('💬 [DEBUG] finally 블록 - isLoadingConversation = false');
         isLoadingConversation = false;
     }
 }
@@ -200,21 +209,36 @@ async function selectConversation(convId) {
 async function loadConversation(convId) {
     console.log('💬 [DEBUG] loadConversation 시작, convId:', convId);
     try {
+        console.log('💬 [DEBUG] API_BASE:', API_BASE);
+        console.log('💬 [DEBUG] authToken:', authToken ? '있음 (길이: ' + authToken.length + ')' : '없음');
         console.log('💬 [DEBUG] API 호출 중:', `/admin/rag/conversations/${convId}`);
+        console.log('💬 [DEBUG] 전체 URL:', API_BASE + `/admin/rag/conversations/${convId}`);
+
         var res = await api(`/admin/rag/conversations/${convId}`);
-        console.log('💬 [DEBUG] API 응답 받음');
+        console.log('💬 [DEBUG] API 응답 받음, status:', res.status);
 
+        if (!res.ok) {
+            throw new Error('API 응답 실패: ' + res.status);
+        }
+
+        console.log('💬 [DEBUG] JSON 파싱 중...');
         var data = await res.json();
+        console.log('💬 [DEBUG] JSON 파싱 완료');
         console.log('💬 [DEBUG] 메시지 개수:', data.messages?.length);
+        console.log('💬 [DEBUG] 데이터 구조:', Object.keys(data));
 
+        console.log('💬 [DEBUG] renderChatMessages 호출 전...');
         renderChatMessages(data.messages);
+        console.log('✅ [DEBUG] renderChatMessages 완료');
         console.log('✅ [DEBUG] loadConversation 완료');
     } catch (e) {
         console.error('❌ [ERROR] 대화 로드 실패:', e);
+        console.error('❌ [ERROR] 에러 스택:', e.stack);
         var chatContainer = document.getElementById('chatMessages');
         if (chatContainer) {
             chatContainer.innerHTML = '<div style="padding:40px;text-align:center;color:var(--error);">대화 로드 실패<br><small>' + e.message + '</small></div>';
         }
+        throw e; // 상위로 전파
     }
 }
 
@@ -227,131 +251,89 @@ function renderEmptyChat() {
         </div>`;
 }
 
-// Markdown 설정을 한번만 초기화
-var markedInitialized = false;
-function initMarked() {
-    if (markedInitialized || typeof marked === 'undefined') return;
-    marked.setOptions({
-        gfm: true,
-        breaks: true,
-        headerIds: false,
-        mangle: false
-    });
-    markedInitialized = true;
-}
-
 function renderMd(str) {
     if (!str) return '';
 
-    if (typeof marked !== 'undefined') {
-        initMarked();
-        try {
-            var rawHtml = marked.parse(str);
-            return typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawHtml) : rawHtml;
-        } catch (e) {
-            console.error('Markdown 렌더링 실패:', e);
-            return esc(str);
-        }
-    }
+    try {
+        // marked.parse()가 멈추는 문제로 인해 fallback만 사용
+        console.log('📝 [DEBUG] Fallback 마크다운 렌더링 사용');
+        var s = esc(str);
 
-    // Fallback (라이브러리 로드 실패 시)
-    var s = esc(str);
-    s = s.replace(/```([\s\S]*?)```/g, '<pre style="background:var(--bg-gray);padding:8px 10px;border-radius:6px;overflow-x:auto;font-size:0.82rem;margin:6px 0">$1</pre>');
-    s = s.replace(/`([^`]+)`/g, '<code style="background:var(--bg-gray-100);padding:1px 5px;border-radius:4px;font-size:0.84em">$1</code>');
-    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    s = s.replace(/^[-•]\s+(.+)$/gm, '<li style="margin-left:16px;list-style:disc">$1</li>');
-    s = s.replace(/^\d+\.\s+(.+)$/gm, '<li style="margin-left:16px;list-style:decimal">$1</li>');
-    return s;
+        // 코드 블록 (```)
+        s = s.replace(/```([\s\S]*?)```/g, '<pre style="background:var(--bg-gray);padding:8px 10px;border-radius:6px;overflow-x:auto;font-size:0.82rem;margin:6px 0">$1</pre>');
+
+        // 인라인 코드 (`)
+        s = s.replace(/`([^`]+)`/g, '<code style="background:var(--bg-gray-100);padding:1px 5px;border-radius:4px;font-size:0.84em">$1</code>');
+
+        // 굵게 (**)
+        s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+        // 기울임 (*)
+        s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+        // 목록 (-, •)
+        s = s.replace(/^[-•]\s+(.+)$/gm, '<li style="margin-left:16px;list-style:disc">$1</li>');
+
+        // 번호 목록
+        s = s.replace(/^\d+\.\s+(.+)$/gm, '<li style="margin-left:16px;list-style:decimal">$1</li>');
+
+        // 줄바꿈을 <br>로
+        s = s.replace(/\n/g, '<br>');
+
+        return s;
+    } catch (e) {
+        console.error('❌ [ERROR] renderMd 실패:', e);
+        // 에러 발생 시 안전하게 텍스트만 반환
+        return esc(str);
+    }
 }
 
 function renderChatMessages(messages) {
-    console.log('💬 [DEBUG] renderChatMessages 시작, 메시지 수:', messages?.length);
-
+    console.log('🎨 [DEBUG] renderChatMessages 시작, messages:', messages?.length);
     var c = document.getElementById('chatMessages');
     if (!c) {
-        console.error('❌ [ERROR] chatMessages 엘리먼트를 찾을 수 없습니다!');
+        console.error('❌ [ERROR] chatMessages 엘리먼트 없음!');
         return;
     }
 
     if (!messages || !messages.length) {
-        console.log('💬 [DEBUG] 메시지 없음, 빈 채팅 표시');
+        console.log('🎨 [DEBUG] 메시지 없음, renderEmptyChat 호출');
         renderEmptyChat();
         return;
     }
 
-    console.log('💬 [DEBUG] 메시지 렌더링 시작');
-    // 성능 개선: 최근 100개 메시지만 표시
-    var displayMessages = messages.length > 100 ? messages.slice(-100) : messages;
-    console.log('💬 [DEBUG] 표시할 메시지:', displayMessages.length);
-
-    // DocumentFragment 사용 (innerHTML보다 빠름)
-    var fragment = document.createDocumentFragment();
-
-    for (var i = 0; i < displayMessages.length; i++) {
-        var m = displayMessages[i];
+    console.log('🎨 [DEBUG] HTML 생성 시작...');
+    var html = '';
+    for (var i = 0; i < messages.length; i++) {
+        console.log('🎨 [DEBUG] 메시지 #' + i + ' 처리 중...');
+        var m = messages[i];
         var refs = m.references || [];
 
-        // 메시지 컨테이너
-        var msgRow = document.createElement('div');
-        msgRow.className = 'msg-row ' + m.role;
+        // AI 아바타: 로고 있으면 이미지, 없으면 "AI" 텍스트
+        var avatar = m.role === 'user'
+            ? 'U'
+            : (siteLogoUrl ? '<img src="' + siteLogoUrl + '" alt="AI">' : 'AI');
 
-        // 아바타
-        var avatarDiv = document.createElement('div');
-        avatarDiv.className = 'msg-avatar';
-        if (m.role === 'user') {
-            avatarDiv.textContent = 'U';
-        } else {
-            if (siteLogoUrl) {
-                avatarDiv.innerHTML = '<img src="' + siteLogoUrl + '" alt="AI">';
-            } else {
-                avatarDiv.textContent = 'AI';
-            }
-        }
+        console.log('🎨 [DEBUG] 메시지 #' + i + ' 내용 렌더링 중... role:', m.role);
+        var content = m.role === 'assistant' ? renderMd(m.content) : esc(m.content);
+        console.log('🎨 [DEBUG] 메시지 #' + i + ' 내용 렌더링 완료');
 
-        // 메시지 내용
-        var contentDiv = document.createElement('div');
-        contentDiv.className = 'msg-content';
+        var time = m.created_at ? new Date(m.created_at).toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) : '';
 
-        var bubbleDiv = document.createElement('div');
-        bubbleDiv.className = 'msg-bubble';
-        bubbleDiv.innerHTML = m.role === 'assistant' ? renderMd(m.content) : esc(m.content);
-
-        contentDiv.appendChild(bubbleDiv);
-
-        // 시간
-        if (m.created_at) {
-            var timeSpan = document.createElement('span');
-            timeSpan.className = 'msg-time';
-            timeSpan.textContent = new Date(m.created_at).toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'});
-            contentDiv.appendChild(timeSpan);
-        }
-
-        // 참조 링크
-        if (m.role === 'assistant' && refs.length) {
-            var refSpan = document.createElement('span');
-            refSpan.className = 'msg-refs-link';
-            refSpan.innerHTML = '&#128196; 참조 ' + refs.length + '건 보기';
-            refSpan.onclick = function(r) { return function() { showRefChunks(r); }; }(refs);
-            contentDiv.appendChild(refSpan);
-        }
-
-        msgRow.appendChild(avatarDiv);
-        msgRow.appendChild(contentDiv);
-        fragment.appendChild(msgRow);
+        html += '<div class="msg-row ' + m.role + '">' +
+            '<div class="msg-avatar">' + avatar + '</div>' +
+            '<div class="msg-content">' +
+                '<div class="msg-bubble">' + content + '</div>' +
+                (time ? '<span class="msg-time">' + time + '</span>' : '') +
+                (m.role === 'assistant' && refs.length ? '<span class="msg-refs-link" onclick=\'showRefChunks(' + JSON.stringify(refs).replace(/'/g,"&#39;") + ')\'>\&#128196; 참조 ' + refs.length + '건 보기</span>' : '') +
+            '</div>' +
+        '</div>';
     }
-
-    console.log('💬 [DEBUG] DOM에 추가 중...');
-    c.innerHTML = '';
-    c.appendChild(fragment);
-    console.log('💬 [DEBUG] 스크롤 조정 중...');
+    console.log('🎨 [DEBUG] HTML 생성 완료, innerHTML 설정 중...');
+    c.innerHTML = html;
+    console.log('🎨 [DEBUG] innerHTML 설정 완료, 스크롤 조정 중...');
     c.scrollTop = c.scrollHeight;
-
-    // 메시지 개수 표시
-    if (messages.length > 100) {
-        console.log('메시지가 많아 최근 100개만 표시합니다. (전체: ' + messages.length + '개)');
-    }
-    console.log('✅ [DEBUG] renderChatMessages 완료');
+    console.log('✅ [DEBUG] renderChatMessages 완료!');
 }
 
 async function deleteConversation(convId) {
