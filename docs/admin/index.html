@@ -302,311 +302,414 @@
 
         <!-- ===== 메일 작성 탭 ===== -->
         <div id="tabMail" class="tab-content">
-            <!-- Gmail 연동 바 -->
-            <div class="gmail-bar" id="gmailBar">
-                <span class="gmail-bar-title">&#128231; Gmail 연동</span>
-                <input type="text" id="gmailEmail" placeholder="이메일 주소" />
-                <input type="password" id="gmailAppPassword" placeholder="앱 비밀번호" />
-                <button class="btn btn-accent btn-sm" onclick="gmailConnect()">연결</button>
-                <button class="btn btn-ghost btn-sm" onclick="gmailDisconnect()" id="gmailDisconnectBtn" style="display:none">연결 해제</button>
-                <button class="btn btn-primary btn-sm" onclick="gmailFetch()" id="gmailFetchBtn" style="display:none">&#128229; 메일 가져오기</button>
-                <div class="gmail-status" id="gmailStatus">
-                    <span class="gmail-status-dot disconnected" id="gmailDot"></span>
-                    <span id="gmailStatusText">연결 안됨</span>
+            <!-- Gmail 연동 상태바 (개선된 디자인) -->
+            <div class="mail-topbar">
+                <div class="mail-topbar-left">
+                    <div class="mail-topbar-icon">📧</div>
+                    <h3 class="mail-topbar-title">Smart Mail Assistant</h3>
                 </div>
-                <div class="gmail-auto-settings" id="gmailAutoSettings" style="display:none">
-                    <span>자동 체크:</span>
-                    <select id="gmailCheckTime">
-                        <option value="07:00">07:00</option>
-                        <option value="08:00">08:00</option>
-                        <option value="09:00" selected>09:00</option>
-                        <option value="10:00">10:00</option>
-                        <option value="12:00">12:00</option>
-                        <option value="15:00">15:00</option>
-                        <option value="18:00">18:00</option>
-                    </select>
-                    <div class="gmail-toggle" id="gmailAutoToggle" onclick="toggleGmailAuto()"></div>
-                    <span id="gmailLastChecked"></span>
+                <div class="mail-topbar-center" id="gmailAuthSection">
+                    <input type="text" id="gmailEmail" class="mail-topbar-input" placeholder="Gmail 주소" />
+                    <input type="password" id="gmailAppPassword" class="mail-topbar-input" placeholder="앱 비밀번호" />
+                    <button class="btn btn-accent btn-sm" onclick="gmailConnect()">연결</button>
+                </div>
+                <div class="mail-topbar-right">
+                    <div class="gmail-status-badge" id="gmailStatusBadge">
+                        <span class="gmail-status-dot disconnected" id="gmailDot"></span>
+                        <span id="gmailStatusText">연결 안됨</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="gmailFetch()" id="gmailFetchBtn" style="display:none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 019-5M20 15a9 9 0 01-9 5"/></svg>
+                        메일 가져오기
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="gmailDisconnect()" id="gmailDisconnectBtn" style="display:none">연결 해제</button>
                 </div>
             </div>
+            <!-- 메일 메인 레이아웃 (3-Panel Design) -->
             <div class="mail-layout">
-                <!-- 왼쪽: 기능 사이드바 -->
-                <div class="mail-left-sidebar" id="mailLeftSidebar">
-                    <div class="mail-sidebar-toggle" onclick="toggleMailSidebar()" title="사이드바 고정/해제">☰</div>
-
-                    <!-- 작업 그룹 -->
-                    <div class="mail-sidebar-group">
-                        <div class="mail-sidebar-group-title">작업</div>
-                        <div class="mail-sidebar-item active" onclick="showMailPanel('compose')" id="sidebarCompose" title="메일 작성">
-                            <div class="mail-sidebar-item-icon">✉️</div>
-                            <div class="mail-sidebar-item-text">메일 작성</div>
-                        </div>
-                        <div class="mail-sidebar-item" onclick="showMailPanel('inbox')" id="sidebarInbox" title="Gmail 수신함 보기">
-                            <div class="mail-sidebar-item-icon">📥</div>
-                            <div class="mail-sidebar-item-text">수신함</div>
-                        </div>
+                <!-- 왼쪽: 수신함 & 퀵 액션 사이드바 -->
+                <aside class="mail-sidebar-left" id="mailSidebarLeft">
+                    <!-- 사이드바 헤더 -->
+                    <div class="mail-sidebar-header">
+                        <button class="btn btn-primary" style="width:100%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="showQuickActions()">
+                            ⚡ 빠른 작업
+                        </button>
                     </div>
 
-                    <!-- 참고자료 그룹 -->
-                    <div class="mail-sidebar-group">
-                        <div class="mail-sidebar-group-title">참고자료</div>
-                        <div class="mail-sidebar-item" onclick="showMailPanel('docs')" id="sidebarDocs" title="참조할 문서 선택">
-                            <div class="mail-sidebar-item-icon">📁</div>
-                            <div class="mail-sidebar-item-text">문서</div>
+                    <!-- 수신함 목록 -->
+                    <div class="mail-sidebar-section">
+                        <div class="mail-sidebar-section-title">
+                            <span>📥 수신함</span>
+                            <button class="btn-icon-sm" onclick="loadInboxEmails()" title="새로고침">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 019-5M20 15a9 9 0 01-9 5"/></svg>
+                            </button>
                         </div>
-                        <div class="mail-sidebar-item" onclick="showMailPanel('templates')" id="sidebarTemplates" title="메일 템플릿 관리">
-                            <div class="mail-sidebar-item-icon">📝</div>
-                            <div class="mail-sidebar-item-text">템플릿</div>
-                        </div>
-                        <div class="mail-sidebar-item" onclick="showMailPanel('history')" id="sidebarHistory" title="메일 작성 이력">
-                            <div class="mail-sidebar-item-icon">🕐</div>
-                            <div class="mail-sidebar-item-text">이력</div>
+                        <div id="inboxList" class="mail-inbox-list">
+                            <div class="empty-state-sm">Gmail을 연결하면<br/>수신 메일이 표시됩니다</div>
                         </div>
                     </div>
+                </aside>
 
-                    <!-- 설정 그룹 -->
-                    <div class="mail-sidebar-group">
-                        <div class="mail-sidebar-group-title">설정</div>
-                        <div class="mail-sidebar-item" onclick="showMailPanel('prompts')" id="sidebarPrompts" title="프롬프트 예시 관리">
-                            <div class="mail-sidebar-item-icon">💬</div>
-                            <div class="mail-sidebar-item-text">예시</div>
-                        </div>
-                        <div class="mail-sidebar-item" onclick="showMailPanel('signatures')" id="sidebarSignatures" title="서명 관리">
-                            <div class="mail-sidebar-item-icon">✍️</div>
-                            <div class="mail-sidebar-item-text">서명</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 중앙: 메인 작업 영역 -->
-                <div class="mail-main" style="position:relative;flex:1;">
-                    <!-- 수신 메일 입력 -->
-                    <div class="mail-incoming">
-                        <div class="mail-incoming-header">
-                            <h3>📨 수신 메일</h3>
-                            <div class="mail-controls">
-                                <select id="mailTone">
+                <!-- 중앙: 메인 작업 영역 (읽기 + 작성 패널) -->
+                <main class="mail-main-area">
+                    <!-- 읽기 패널 (원문/번역) -->
+                    <section class="mail-read-panel" id="mailReadPanel">
+                        <!-- 패널 헤더 -->
+                        <div class="mail-panel-header">
+                            <div class="mail-panel-tabs">
+                                <button class="mail-tab active" id="tabReadOriginal" onclick="switchMailReadTab('original')">
+                                    <span>📧</span> 원문
+                                </button>
+                                <button class="mail-tab" id="tabReadTranslated" onclick="switchMailReadTab('translated')">
+                                    <span>🇰🇷</span> 번역
+                                </button>
+                            </div>
+                            <div class="mail-panel-actions">
+                                <select id="mailTone" class="mail-select-sm">
                                     <option value="formal">격식</option>
                                     <option value="friendly">친근</option>
                                     <option value="concise">간결</option>
                                 </select>
-                                <button class="btn btn-primary btn-sm" id="mailTranslateIncomingBtn" onclick="translateIncoming()">🇰🇷 번역</button>
-                                <button class="btn btn-accent btn-sm" id="mailComposeBtn" onclick="composeMail()">✍️ 답장 생성</button>
+                                <button class="btn btn-sm btn-primary" id="mailTranslateIncomingBtn" onclick="translateIncoming()">
+                                    🇰🇷 번역
+                                </button>
+                                <button class="btn btn-sm btn-accent" id="mailComposeBtn" onclick="composeMail()">
+                                    ✨ 답장 생성
+                                </button>
+                                <button class="btn-icon-sm" onclick="toggleMailReadPanel()" title="패널 접기">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+                                </button>
                             </div>
                         </div>
-                        <textarea id="mailIncoming" placeholder="수신된 견적/문의 메일 내용을 붙여넣으세요...&#10;&#10;예: Dear Young Marine Tech, We would like to request a quotation for the following spare parts..."></textarea>
-                        <!-- HTML 메일 프리뷰 (body_html 있을 때만 표시) -->
-                        <div id="mailIncomingHtml" style="display:none;background:white;border:1px solid var(--border);border-radius:8px;margin:8px;padding:12px;max-height:400px;overflow:auto;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border-light);">
-                                <span style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">&#128279; HTML 메일</span>
-                                <button onclick="toggleMailHtmlView()" style="font-size:0.7rem;padding:3px 8px;background:var(--bg-gray);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-regular);">텍스트 보기</button>
-                            </div>
-                            <iframe id="mailHtmlFrame" sandbox="allow-same-origin" style="width:100%;min-height:300px;border:none;border-radius:4px;background:white;"></iframe>
-                        </div>
-                        <!-- 수신 메일 분할 번역 뷰 (초기 숨김) -->
-                        <div class="mail-incoming-split" id="mailIncomingSplit">
-                            <div class="incoming-pane">
-                                <div class="incoming-pane-header">
-                                    <span class="incoming-pane-title">&#128196; 원문 <span class="mail-pane-badge badge-lang" id="incomingSrcLangBadge">EN</span></span>
-                                </div>
-                                <textarea id="mailIncomingOriginal" placeholder="원문"></textarea>
-                            </div>
-                            <div class="incoming-pane">
-                                <div class="incoming-pane-header">
-                                    <span class="incoming-pane-title">&#127472;&#127479; 한국어 번역 <span class="mail-pane-badge badge-ko">KO</span></span>
-                                </div>
-                                <textarea id="mailIncomingTranslated" readonly placeholder="번역 결과가 여기에 표시됩니다."></textarea>
-                            </div>
-                        </div>
-                        <div class="mail-analysis" id="mailAnalysis">
-                            <div class="mail-analysis-label">&#128269; 메일 분석</div>
-                            <div id="mailAnalysisText"></div>
-                        </div>
-                    </div>
 
-                    <!-- 리사이즈 핸들 -->
-                    <div class="mail-resize-handle" id="mailResizeHandle"></div>
+                        <!-- 원문 컨텐츠 -->
+                        <div class="mail-read-content" id="mailReadOriginalContent">
+                            <textarea id="mailIncoming" class="mail-incoming-textarea" placeholder="수신된 견적/문의 메일 내용을 붙여넣으세요...&#10;&#10;예: Dear Young Marine Tech, We would like to request a quotation for the following spare parts..."></textarea>
+                            <!-- HTML 메일 프리뷰 -->
+                            <div id="mailIncomingHtml" class="mail-html-preview" style="display:none;">
+                                <div class="mail-html-preview-header">
+                                    <span>📎 HTML 메일</span>
+                                    <button class="btn-text-sm" onclick="toggleMailHtmlView()">텍스트 보기</button>
+                                </div>
+                                <iframe id="mailHtmlFrame" sandbox="allow-same-origin"></iframe>
+                            </div>
+                            <!-- 메일 분석 -->
+                            <div class="mail-analysis" id="mailAnalysis">
+                                <div class="mail-analysis-label">🔍 메일 분석</div>
+                                <div id="mailAnalysisText"></div>
+                            </div>
+                        </div>
 
-                    <!-- 분할 편집 영역 -->
-                    <div class="mail-editor">
-                        <div class="mail-pane">
-                            <div class="mail-pane-header">
-                                <span class="mail-pane-title">&#9998; 한국어 초안 <span class="mail-pane-badge badge-ko">KO</span></span>
-                                <div style="display:flex;gap:6px;align-items:center;">
-                                    <select id="mailSignatureSelect" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.75rem;font-family:inherit">
-                                        <option value="">서명 선택...</option>
-                                    </select>
-                                    <button onclick="insertSignature()" style="padding:4px 8px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:0.7rem;cursor:pointer;" title="서명 삽입">&#10133; 삽입</button>
+                        <!-- 번역 컨텐츠 -->
+                        <div class="mail-read-content" id="mailReadTranslatedContent" style="display:none;">
+                            <div class="mail-split-view">
+                                <div class="mail-split-pane">
+                                    <div class="mail-split-pane-header">
+                                        <span>📄 원문</span>
+                                        <span class="mail-lang-badge" id="incomingSrcLangBadge">EN</span>
+                                    </div>
+                                    <textarea id="mailIncomingOriginal" readonly></textarea>
+                                </div>
+                                <div class="mail-split-pane">
+                                    <div class="mail-split-pane-header">
+                                        <span>🇰🇷 한국어 번역</span>
+                                        <span class="mail-lang-badge badge-ko">KO</span>
+                                    </div>
+                                    <textarea id="mailIncomingTranslated" readonly placeholder="번역 결과가 여기에 표시됩니다."></textarea>
                                 </div>
                             </div>
-                            <textarea id="mailKoreanDraft" placeholder="답장 생성 버튼을 클릭하면 한국어 초안이 여기에 표시됩니다.&#10;수정 후 번역 버튼을 눌러주세요."></textarea>
                         </div>
-                        <div class="mail-pane">
-                            <div class="mail-pane-header">
-                                <span class="mail-pane-title">&#127760; 번역본 <span class="mail-pane-badge badge-lang" id="mailTargetLangBadge">EN</span></span>
-                                <select id="mailTargetLang" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.75rem;font-family:inherit">
-                                    <option value="en">English</option>
-                                    <option value="ja">日本語</option>
-                                    <option value="zh">中文</option>
-                                    <option value="de">Deutsch</option>
-                                    <option value="fr">Français</option>
-                                    <option value="es">Español</option>
-                                </select>
-                            </div>
-                            <textarea id="mailTranslated" readonly placeholder="한국어 초안을 번역하면 여기에 표시됩니다."></textarea>
-                        </div>
-                    </div>
+                    </section>
 
-                    <!-- 하단 액션 -->
-                    <div class="mail-actions">
-                        <div class="mail-actions-left">
-                            <button class="btn btn-ghost btn-sm" id="mailRecomposeBtn" onclick="recomposeMail()" disabled>&#128260; 재작성</button>
-                            <button class="btn btn-primary btn-sm" id="mailTranslateBtn" onclick="translateMail()" disabled>&#127760; 번역</button>
-                            <button class="btn btn-ghost btn-sm" id="mailRetranslateBtn" onclick="translateMail()" disabled>&#128260; 재번역</button>
+                    <!-- 읽기 패널 펼치기 버튼 (접혔을 때만 표시) -->
+                    <button class="mail-panel-expand-btn" id="mailReadExpandBtn" style="display:none;" onclick="toggleMailReadPanel()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+                    </button>
+
+                    <!-- 작성 패널 (초안/최종) -->
+                    <section class="mail-write-panel">
+                        <!-- 패널 헤더 -->
+                        <div class="mail-panel-header">
+                            <div class="mail-view-mode-toggle">
+                                <button class="mode-btn active" id="modeBtnTab" onclick="setMailViewMode('tab')">
+                                    기본 보기
+                                </button>
+                                <button class="mode-btn" id="modeBtnSplit" onclick="setMailViewMode('split')">
+                                    비교 보기
+                                </button>
+                            </div>
+                            <div class="mail-panel-actions">
+                                <button class="btn btn-sm btn-ghost" onclick="showMailSettings()">
+                                    ⚙️ 템플릿/서명
+                                </button>
+                            </div>
                         </div>
-                        <div class="mail-actions-right">
-                            <button class="btn btn-ghost btn-sm" onclick="copyMailDraft('ko')" title="한국어 복사">&#128203; 한국어 복사</button>
-                            <button class="btn btn-ghost btn-sm" onclick="copyMailDraft('translated')" title="번역본 복사">&#128203; 번역본 복사</button>
-                            <button class="btn btn-primary btn-sm" id="mailSaveBtn" onclick="saveMailComposition()" disabled>&#128190; 저장</button>
-                            <button class="btn btn-accent btn-sm" id="mailSendBtn" onclick="sendMailReply()" disabled style="display:none">&#128228; 발송</button>
+
+                        <!-- 탭 모드 탭 헤더 -->
+                        <div class="mail-write-tabs" id="mailWriteTabs">
+                            <button class="mail-tab active" id="tabWriteDraft" onclick="switchMailWriteTab('draft')">
+                                ✍️ 한국어 초안
+                            </button>
+                            <button class="mail-tab" id="tabWriteFinal" onclick="switchMailWriteTab('final')">
+                                🌐 최종 메일
+                            </button>
                         </div>
-                    </div>
+
+                        <!-- 작성 영역 컨테이너 -->
+                        <div class="mail-write-workspace" id="mailWriteWorkspace">
+                            <!-- AI 프롬프트 입력 -->
+                            <div class="mail-ai-prompt">
+                                <input type="text" id="aiPromptInput" class="mail-ai-prompt-input" placeholder="AI에게 요청하기 (예: 정중하게 거절하는 답장 써줘, 견적서 첨부한다고 알려줘)">
+                                <button class="btn btn-accent" onclick="executeAIPrompt()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    실행
+                                </button>
+                            </div>
+
+                            <!-- 편집 영역 -->
+                            <div class="mail-editor-container" id="mailEditorContainer">
+                                <!-- 초안 영역 -->
+                                <div class="mail-editor-area" id="mailEditorDraft">
+                                    <div class="mail-editor-header split-only">
+                                        <span>✍️ 한국어 초안</span>
+                                        <div class="mail-editor-header-actions">
+                                            <select id="mailSignatureSelect" class="mail-select-sm">
+                                                <option value="">서명 선택...</option>
+                                            </select>
+                                            <button class="btn-text-sm" onclick="insertSignature()">+ 삽입</button>
+                                        </div>
+                                    </div>
+                                    <textarea id="mailKoreanDraft" class="mail-editor-textarea" placeholder="답장 생성 버튼을 클릭하면 한국어 초안이 여기에 표시됩니다.&#10;수정 후 번역 버튼을 눌러주세요."></textarea>
+                                </div>
+
+                                <!-- 분할선 (비교 모드에서만 표시) -->
+                                <div class="mail-editor-divider" id="mailEditorDivider" style="display:none;">
+                                    <div class="divider-icon">→</div>
+                                </div>
+
+                                <!-- 최종 영역 -->
+                                <div class="mail-editor-area" id="mailEditorFinal" style="display:none;">
+                                    <div class="mail-editor-header split-only">
+                                        <span>🌐 최종 메일</span>
+                                        <select id="mailTargetLang" class="mail-select-sm" onchange="updateTargetLangBadge()">
+                                            <option value="en">English</option>
+                                            <option value="ja">日本語</option>
+                                            <option value="zh">中文</option>
+                                            <option value="de">Deutsch</option>
+                                            <option value="fr">Français</option>
+                                            <option value="es">Español</option>
+                                        </select>
+                                        <span class="mail-lang-badge" id="mailTargetLangBadge">EN</span>
+                                    </div>
+                                    <textarea id="mailTranslated" class="mail-editor-textarea" readonly placeholder="한국어 초안을 번역하면 여기에 표시됩니다."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- 하단 액션바 -->
+                            <div class="mail-action-bar">
+                                <div class="mail-action-left">
+                                    <span class="mail-status" id="mailStatusIndicator">
+                                        <span class="status-dot"></span>
+                                        대기 중
+                                    </span>
+                                </div>
+                                <div class="mail-action-right">
+                                    <button class="btn btn-sm btn-ghost" id="mailRecomposeBtn" onclick="recomposeMail()" disabled>
+                                        🔄 재작성
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" id="mailTranslateBtn" onclick="translateMail()" disabled>
+                                        🌐 번역
+                                    </button>
+                                    <button class="btn btn-sm btn-ghost" onclick="copyMailDraft('ko')">
+                                        📋 초안 복사
+                                    </button>
+                                    <button class="btn btn-sm btn-ghost" onclick="copyMailDraft('translated')">
+                                        📋 최종 복사
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" id="mailSaveBtn" onclick="saveMailComposition()" disabled>
+                                        💾 저장
+                                    </button>
+                                    <button class="btn btn-sm btn-accent" id="mailSendBtn" onclick="sendMailReply()" disabled style="display:none;">
+                                        📤 발송
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
                     <!-- 로딩 오버레이 -->
-                    <div class="mail-loading" id="mailLoading">
+                    <div class="mail-loading-overlay" id="mailLoading">
                         <div class="mail-loading-spinner"></div>
                         <div class="mail-loading-text" id="mailLoadingText">답장을 생성하고 있습니다...</div>
                     </div>
+                </main>
+
+            </div>
+
+            <!-- 빠른 작업 모달 -->
+            <div class="modal-overlay" id="quickActionsModal" style="display:none;" onclick="if(event.target===this) hideQuickActions()">
+                <div class="modal-container modal-md">
+                    <div class="modal-header">
+                        <h3>⚡ 빠른 작업</h3>
+                        <button class="modal-close" onclick="hideQuickActions()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="quick-action-grid">
+                            <button class="quick-action-btn" onclick="showMailPanel('docs'); hideQuickActions()">
+                                <div class="quick-action-icon">📁</div>
+                                <div class="quick-action-label">문서 참조</div>
+                            </button>
+                            <button class="quick-action-btn" onclick="showMailPanel('templates'); hideQuickActions()">
+                                <div class="quick-action-icon">📝</div>
+                                <div class="quick-action-label">템플릿</div>
+                            </button>
+                            <button class="quick-action-btn" onclick="showMailPanel('history'); hideQuickActions()">
+                                <div class="quick-action-icon">🕐</div>
+                                <div class="quick-action-label">이력</div>
+                            </button>
+                            <button class="quick-action-btn" onclick="showMailPanel('prompts'); hideQuickActions()">
+                                <div class="quick-action-icon">💬</div>
+                                <div class="quick-action-label">프롬프트 예시</div>
+                            </button>
+                            <button class="quick-action-btn" onclick="showMailPanel('signatures'); hideQuickActions()">
+                                <div class="quick-action-icon">✍️</div>
+                                <div class="quick-action-label">서명 관리</div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <!-- 오른쪽: 상세 패널 -->
-                <div class="mail-sidebar" id="mailRightPanel">
-                    <!-- 패널 헤더 -->
-                    <div style="padding:16px;border-bottom:1px solid var(--border);background:var(--bg-gray);display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="font-size:1rem;margin:0;" id="mailPanelTitle">📨 메일 작성</h3>
-                        <button onclick="hideMailPanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);" title="닫기">×</button>
+            <!-- 설정/리소스 모달 (템플릿, 서명, 문서 등) -->
+            <div class="modal-overlay" id="mailSettingsModal" style="display:none;" onclick="if(event.target===this) hideMailSettings()">
+                <div class="modal-container modal-lg">
+                    <div class="modal-header">
+                        <h3 id="mailPanelTitle">📨 템플릿 & 서명</h3>
+                        <button class="modal-close" onclick="hideMailSettings()">×</button>
                     </div>
-
-                    <!-- 수신함 패널 -->
-                    <div id="mailSidePanelInbox" style="flex:1;overflow-y:auto;padding:8px 10px;">
-                        <div class="empty-state" style="padding:20px 10px;font-size:0.8rem" id="inboxEmpty">Gmail을 연결하면<br>수신 메일이 표시됩니다</div>
-                        <div id="inboxList"></div>
-                    </div>
-
-                    <!-- 참조 문서 패널 -->
-                    <div id="mailSidePanelDocs" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
-                        <div class="mail-doc-list" id="mailDocList">
-                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">문서 로드 중...</div>
+                    <div class="modal-body">
+                        <!-- 탭 -->
+                        <div class="modal-tabs">
+                            <button class="modal-tab active" onclick="switchMailSettingsTab('templates')">템플릿</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('signatures')">서명</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('docs')">참조 문서</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('history')">이력</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('prompts')">프롬프트 예시</button>
                         </div>
-                    </div>
 
-                    <!-- 템플릿 패널 -->
-                    <div id="mailSidePanelTemplates" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
-                        <div style="margin-bottom:8px;">
-                            <button class="btn btn-primary btn-sm" onclick="showTemplateForm()" style="width:100%">&#10133; 템플릿 추가</button>
-                        </div>
-                        <div style="margin-bottom:8px;">
-                            <select id="templateCategoryFilter" onchange="filterTemplates()" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;">
-                                <option value="">전체 카테고리</option>
-                                <option value="general">일반</option>
-                                <option value="quotation">견적</option>
-                                <option value="inquiry">문의</option>
-                                <option value="follow-up">후속</option>
-                            </select>
-                        </div>
-                        <div id="templateForm" style="display:none;background:var(--bg-gray);padding:10px;border-radius:8px;margin-bottom:10px;">
-                            <input type="hidden" id="templateId" value="">
-                            <div style="margin-bottom:8px;">
-                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">템플릿 이름</label>
-                                <input type="text" id="templateName" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;" placeholder="예: 견적 요청 답변">
+                        <!-- 참조 문서 패널 -->
+                        <div id="mailSidePanelDocs" class="modal-tab-content" style="display:none;">
+                            <div class="mail-doc-list" id="mailDocList">
+                                <div class="empty-state-sm">문서 로드 중...</div>
                             </div>
-                            <div style="margin-bottom:8px;">
-                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">카테고리</label>
-                                <select id="templateCategory" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;">
+                        </div>
+
+                        <!-- 템플릿 패널 -->
+                        <div id="mailSidePanelTemplates" class="modal-tab-content">
+                            <div class="modal-section-header">
+                                <button class="btn btn-primary btn-sm" onclick="showTemplateForm()">+ 템플릿 추가</button>
+                                <select id="templateCategoryFilter" onchange="filterTemplates()" class="mail-select-sm">
+                                    <option value="">전체 카테고리</option>
                                     <option value="general">일반</option>
                                     <option value="quotation">견적</option>
                                     <option value="inquiry">문의</option>
                                     <option value="follow-up">후속</option>
                                 </select>
                             </div>
-                            <div style="margin-bottom:8px;">
-                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">내용 (변수: {{고객명}}, {{제품명}} 등)</label>
-                                <textarea id="templateContent" rows="5" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:inherit;resize:vertical;" placeholder="안녕하세요 {{고객명}}님,&#10;{{제품명}} 견적을 보내드립니다..."></textarea>
+                            <div id="templateForm" class="form-card" style="display:none;">
+                                <input type="hidden" id="templateId" value="">
+                                <div class="form-group">
+                                    <label>템플릿 이름</label>
+                                    <input type="text" id="templateName" placeholder="예: 견적 요청 답변">
+                                </div>
+                                <div class="form-group">
+                                    <label>카테고리</label>
+                                    <select id="templateCategory">
+                                        <option value="general">일반</option>
+                                        <option value="quotation">견적</option>
+                                        <option value="inquiry">문의</option>
+                                        <option value="follow-up">후속</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>내용 (변수: {{고객명}}, {{제품명}} 등)</label>
+                                    <textarea id="templateContent" rows="5" placeholder="안녕하세요 {{고객명}}님,&#10;{{제품명}} 견적을 보내드립니다..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-accent btn-sm" onclick="saveTemplate()">저장</button>
+                                    <button class="btn btn-ghost btn-sm" onclick="hideTemplateForm()">취소</button>
+                                </div>
                             </div>
-                            <div style="display:flex;gap:6px;">
-                                <button class="btn btn-accent btn-sm" onclick="saveTemplate()" style="flex:1">저장</button>
-                                <button class="btn btn-ghost btn-sm" onclick="hideTemplateForm()">취소</button>
+                            <div id="templateList">
+                                <div class="empty-state-sm">템플릿 로드 중...</div>
                             </div>
                         </div>
-                        <div id="templateList">
-                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">템플릿 로드 중...</div>
-                        </div>
-                    </div>
 
-                    <!-- 이력 패널 -->
-                    <div id="mailSidePanelHistory" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
-                        <div class="mail-history-list" id="mailHistoryList">
-                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">저장된 이력이 없습니다</div>
+                        <!-- 서명 패널 -->
+                        <div id="mailSidePanelSignatures" class="modal-tab-content" style="display:none;">
+                            <div class="modal-section-header">
+                                <button class="btn btn-primary btn-sm" onclick="showSignatureForm()">+ 서명 추가</button>
+                            </div>
+                            <div id="signatureForm" class="form-card" style="display:none;">
+                                <input type="hidden" id="signatureId" value="">
+                                <div class="form-group">
+                                    <label>서명 이름</label>
+                                    <input type="text" id="signatureName" placeholder="예: 기본 서명, 영문 서명">
+                                </div>
+                                <div class="form-group">
+                                    <label>서명 내용</label>
+                                    <textarea id="signatureContent" rows="5" placeholder="예:&#10;Best regards,&#10;홍길동&#10;영마린테크&#10;Tel: 02-1234-5678"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                        <input type="checkbox" id="signatureIsDefault" style="cursor:pointer;">
+                                        <span>기본 서명으로 설정</span>
+                                    </label>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-accent btn-sm" onclick="saveSignature()">저장</button>
+                                    <button class="btn btn-ghost btn-sm" onclick="hideSignatureForm()">취소</button>
+                                </div>
+                            </div>
+                            <div id="signatureList">
+                                <div class="empty-state-sm">서명 로드 중...</div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- 프롬프트 예시 패널 -->
-                    <div id="mailSidePanelPrompts" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
-                        <div style="margin-bottom:8px;">
-                            <button class="btn btn-primary btn-sm" onclick="showPromptExampleForm()" style="width:100%">&#10133; 예시 추가</button>
-                        </div>
-                        <div id="promptExampleForm" style="display:none;background:var(--bg-gray);padding:10px;border-radius:8px;margin-bottom:10px;">
-                            <input type="hidden" id="promptExampleId" value="">
-                            <div style="margin-bottom:8px;">
-                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">수신 메일 예시</label>
-                                <textarea id="promptIncomingText" rows="3" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:inherit;resize:vertical;" placeholder="예: I need a quotation for..."></textarea>
-                            </div>
-                            <div style="margin-bottom:8px;">
-                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">답장 예시</label>
-                                <textarea id="promptReplyText" rows="3" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:inherit;resize:vertical;" placeholder="예: 견적서를 확인해주세요..."></textarea>
-                            </div>
-                            <div style="margin-bottom:8px;">
-                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">정렬 순서</label>
-                                <input type="number" id="promptSortOrder" value="0" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;">
-                            </div>
-                            <div style="display:flex;gap:6px;">
-                                <button class="btn btn-accent btn-sm" onclick="savePromptExample()" style="flex:1">저장</button>
-                                <button class="btn btn-ghost btn-sm" onclick="hidePromptExampleForm()">취소</button>
+                        <!-- 이력 패널 -->
+                        <div id="mailSidePanelHistory" class="modal-tab-content" style="display:none;">
+                            <div class="mail-history-list" id="mailHistoryList">
+                                <div class="empty-state-sm">저장된 이력이 없습니다</div>
                             </div>
                         </div>
-                        <div id="promptExampleList">
-                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">예시 로드 중...</div>
-                        </div>
-                    </div>
 
-                    <!-- 서명 패널 -->
-                    <div id="mailSidePanelSignatures" style="flex:1;overflow-y:auto;padding:8px 10px;display:none;">
-                        <div style="margin-bottom:8px;">
-                            <button class="btn btn-primary btn-sm" onclick="showSignatureForm()" style="width:100%">&#10133; 서명 추가</button>
-                        </div>
-                        <div id="signatureForm" style="display:none;background:var(--bg-gray);padding:10px;border-radius:8px;margin-bottom:10px;">
-                            <input type="hidden" id="signatureId" value="">
-                            <div style="margin-bottom:8px;">
-                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">서명 이름</label>
-                                <input type="text" id="signatureName" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;" placeholder="예: 기본 서명, 영문 서명">
+                        <!-- 프롬프트 예시 패널 -->
+                        <div id="mailSidePanelPrompts" class="modal-tab-content" style="display:none;">
+                            <div class="modal-section-header">
+                                <button class="btn btn-primary btn-sm" onclick="showPromptExampleForm()">+ 예시 추가</button>
                             </div>
-                            <div style="margin-bottom:8px;">
-                                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">서명 내용</label>
-                                <textarea id="signatureContent" rows="5" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:inherit;resize:vertical;" placeholder="예:&#10;Best regards,&#10;홍길동&#10;영마린테크&#10;Tel: 02-1234-5678"></textarea>
+                            <div id="promptExampleForm" class="form-card" style="display:none;">
+                                <input type="hidden" id="promptExampleId" value="">
+                                <div class="form-group">
+                                    <label>수신 메일 예시</label>
+                                    <textarea id="promptIncomingText" rows="3" placeholder="예: I need a quotation for..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>답장 예시</label>
+                                    <textarea id="promptReplyText" rows="3" placeholder="예: 견적서를 확인해주세요..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>정렬 순서</label>
+                                    <input type="number" id="promptSortOrder" value="0">
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-accent btn-sm" onclick="savePromptExample()">저장</button>
+                                    <button class="btn btn-ghost btn-sm" onclick="hidePromptExampleForm()">취소</button>
+                                </div>
                             </div>
-                            <div style="margin-bottom:8px;">
-                                <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;">
-                                    <input type="checkbox" id="signatureIsDefault" style="cursor:pointer;">
-                                    <span>기본 서명으로 설정</span>
-                                </label>
+                            <div id="promptExampleList">
+                                <div class="empty-state-sm">예시 로드 중...</div>
                             </div>
-                            <div style="display:flex;gap:6px;">
-                                <button class="btn btn-accent btn-sm" onclick="saveSignature()" style="flex:1">저장</button>
-                                <button class="btn btn-ghost btn-sm" onclick="hideSignatureForm()">취소</button>
-                            </div>
-                        </div>
-                        <div id="signatureList">
-                            <div class="empty-state" style="padding:20px 10px;font-size:0.8rem">서명 로드 중...</div>
                         </div>
                     </div>
                 </div>

@@ -1766,3 +1766,757 @@
         .conv-kebab-menu-item:hover { background: var(--bg-gray); }
         .conv-kebab-menu-item.danger { color: var(--error); }
         .conv-kebab-menu-item.danger:hover { background: #fff0f0; }
+
+        /* ============================================================
+           메일 작성 UI (개선된 3-Panel 레이아웃)
+           ============================================================ */
+
+        /* 상단 Gmail 연동 바 */
+        .mail-topbar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .mail-topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mail-topbar-icon {
+            font-size: 1.5rem;
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+        .mail-topbar-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+        }
+        .mail-topbar-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            justify-content: center;
+        }
+        .mail-topbar-input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            background: var(--bg-gray);
+            color: var(--text-regular);
+            transition: all 0.2s;
+            min-width: 200px;
+        }
+        .mail-topbar-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-white);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .mail-topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .gmail-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-gray);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .gmail-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+        .gmail-status-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+        }
+        .gmail-status-dot.disconnected {
+            background: var(--error);
+        }
+
+        /* 메일 레이아웃 (3-Panel) */
+        .mail-layout {
+            display: flex;
+            height: calc(100vh - 180px);
+            gap: 0;
+            overflow: hidden;
+        }
+
+        /* 왼쪽 사이드바 (수신함) */
+        .mail-sidebar-left {
+            width: 280px;
+            flex-shrink: 0;
+            background: var(--bg-white);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .mail-sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .mail-sidebar-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .mail-sidebar-section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            background: var(--bg-gray);
+            border-bottom: 1px solid var(--border);
+        }
+        .mail-inbox-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        /* 중앙 메인 영역 */
+        .mail-main-area {
+            flex: 1;
+            display: flex;
+            gap: 0;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-gray);
+        }
+
+        /* 읽기 패널 */
+        .mail-read-panel {
+            width: 45%;
+            flex-shrink: 0;
+            background: var(--bg-white);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: width 0.3s ease, margin-left 0.3s ease;
+        }
+        .mail-read-panel.collapsed {
+            width: 0;
+            margin-left: -45%;
+        }
+        .mail-panel-expand-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            padding: 12px 6px;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            color: var(--text-muted);
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .mail-panel-expand-btn:hover {
+            color: var(--primary);
+            padding-left: 8px;
+        }
+
+        /* 패널 헤더 */
+        .mail-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            min-height: 56px;
+        }
+        .mail-panel-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .mail-tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mail-tab:hover {
+            color: var(--text-regular);
+            background: var(--bg-gray);
+            border-radius: 6px 6px 0 0;
+        }
+        .mail-tab.active {
+            color: var(--primary);
+            font-weight: 600;
+            border-bottom-color: var(--primary);
+        }
+        .mail-panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 읽기 컨텐츠 */
+        .mail-read-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .mail-incoming-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            line-height: 1.6;
+            resize: vertical;
+            background: var(--bg-white);
+            color: var(--text-regular);
+        }
+        .mail-incoming-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .mail-html-preview {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 400px;
+            overflow: auto;
+        }
+        .mail-html-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .mail-html-preview iframe {
+            width: 100%;
+            min-height: 300px;
+            border: none;
+            border-radius: 4px;
+            background: white;
+        }
+        .mail-analysis {
+            background: var(--bg-gray);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            display: none;
+        }
+        .mail-analysis.active {
+            display: block;
+        }
+        .mail-analysis-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .mail-analysis #mailAnalysisText {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-regular);
+        }
+
+        /* 분할 뷰 (원문/번역) */
+        .mail-split-view {
+            display: flex;
+            gap: 16px;
+            height: 100%;
+        }
+        .mail-split-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .mail-split-pane-header {
+            padding: 10px 12px;
+            background: var(--bg-gray);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mail-split-pane textarea {
+            flex: 1;
+            border: none;
+            padding: 12px;
+            resize: none;
+            font-size: 0.85rem;
+            font-family: inherit;
+            line-height: 1.6;
+            background: transparent;
+        }
+        .mail-split-pane textarea:focus {
+            outline: none;
+        }
+        .mail-lang-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .mail-lang-badge.badge-ko {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        /* 작성 패널 */
+        .mail-write-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-white);
+        }
+        .mail-view-mode-toggle {
+            display: flex;
+            background: var(--bg-gray);
+            padding: 4px;
+            border-radius: 8px;
+            gap: 4px;
+        }
+        .mode-btn {
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-btn:hover {
+            color: var(--text-regular);
+        }
+        .mode-btn.active {
+            background: var(--bg-white);
+            color: var(--text-dark);
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+        .mail-write-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 0 16px;
+            background: var(--bg-gray);
+            border-bottom: 1px solid var(--border);
+            height: 44px;
+        }
+        .mail-write-tabs .mail-tab {
+            border-bottom-width: 3px;
+        }
+
+        /* 작성 워크스페이스 */
+        .mail-write-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+            overflow: hidden;
+        }
+        .mail-ai-prompt {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border: 1px solid #bbdefb;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+        }
+        .mail-ai-prompt-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: white;
+            color: var(--text-regular);
+        }
+        .mail-ai-prompt-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        /* 편집기 컨테이너 */
+        .mail-editor-container {
+            flex: 1;
+            display: flex;
+            gap: 16px;
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        .mail-editor-container.split-mode {
+            flex-direction: row;
+        }
+        .mail-editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .mail-editor-header {
+            padding: 10px 14px;
+            background: var(--bg-gray);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mail-editor-header.split-only {
+            /* split 모드에서만 표시 */
+        }
+        .mail-editor-container.split-mode .mail-editor-header.split-only {
+            display: flex;
+        }
+        .mail-editor-header-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .mail-editor-textarea {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            resize: none;
+            font-size: 0.9rem;
+            font-family: inherit;
+            line-height: 1.7;
+            background: transparent;
+            color: var(--text-regular);
+        }
+        .mail-editor-textarea:focus {
+            outline: none;
+        }
+        .mail-editor-divider {
+            width: 1px;
+            background: var(--border);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .divider-icon {
+            position: absolute;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 4px 6px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 하단 액션바 */
+        .mail-action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+        }
+        .mail-action-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mail-action-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .mail-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+        .mail-status.active .status-dot {
+            background: var(--success);
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+        }
+        .mail-status.processing .status-dot {
+            background: var(--accent);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 로딩 오버레이 */
+        .mail-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .mail-loading-overlay.active {
+            display: flex;
+        }
+        .mail-loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .mail-loading-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* 유틸리티 클래스 */
+        .mail-select-sm {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            background: var(--bg-white);
+            color: var(--text-regular);
+            cursor: pointer;
+        }
+        .mail-select-sm:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn-icon-sm {
+            padding: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-icon-sm:hover {
+            background: var(--bg-gray);
+            color: var(--primary);
+        }
+        .btn-text-sm {
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            color: var(--primary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .btn-text-sm:hover {
+            background: var(--primary-light);
+        }
+        .empty-state-sm {
+            padding: 20px 12px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* 모달 스타일 */
+        .quick-action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        .quick-action-btn {
+            padding: 20px;
+            background: var(--bg-gray);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .quick-action-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .quick-action-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        .quick-action-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        .modal-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+        .modal-tab {
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .modal-tab:hover {
+            color: var(--text-regular);
+        }
+        .modal-tab.active {
+            color: var(--primary);
+            font-weight: 600;
+            border-bottom-color: var(--primary);
+        }
+        .modal-tab-content {
+            display: none;
+        }
+        .modal-tab-content.active {
+            display: block;
+        }
+        .modal-section-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .form-card {
+            background: var(--bg-gray);
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            background: var(--bg-white);
+            color: var(--text-regular);
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 8px;
+        }

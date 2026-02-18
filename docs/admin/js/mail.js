@@ -1319,3 +1319,232 @@ function showMailPanel(panel) {
 function hideMailPanel() {
     showMailPanel('compose');
 }
+
+// ===== 개선된 UI 컨트롤 함수들 (3-Panel 레이아웃) =====
+
+/**
+ * 읽기 패널 탭 전환 (원문/번역)
+ */
+function switchMailReadTab(tabName) {
+    const tabs = ['original', 'translated'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`tabRead${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const content = document.getElementById(`mailRead${t.charAt(0).toUpperCase() + t.slice(1)}Content`);
+        if (t === tabName) {
+            btn?.classList.add('active');
+            if (content) content.style.display = 'flex';
+        } else {
+            btn?.classList.remove('active');
+            if (content) content.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * 읽기 패널 접기/펴기
+ */
+function toggleMailReadPanel() {
+    const panel = document.getElementById('mailReadPanel');
+    const expandBtn = document.getElementById('mailReadExpandBtn');
+
+    if (panel && expandBtn) {
+        if (panel.classList.contains('collapsed')) {
+            panel.classList.remove('collapsed');
+            expandBtn.style.display = 'none';
+        } else {
+            panel.classList.add('collapsed');
+            expandBtn.style.display = 'block';
+        }
+    }
+}
+
+/**
+ * 작성 패널 탭 전환 (초안/최종)
+ */
+function switchMailWriteTab(tabName) {
+    const container = document.getElementById('mailEditorContainer');
+    const mode = container?.classList.contains('split-mode') ? 'split' : 'tab';
+    if (mode === 'split') return; // 비교 모드에서는 탭 전환 불가
+
+    const tabs = ['draft', 'final'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`tabWrite${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const area = document.getElementById(`mailEditor${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tabName) {
+            btn?.classList.add('active');
+            if (area) area.style.display = 'flex';
+        } else {
+            btn?.classList.remove('active');
+            if (area) area.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * 작성 뷰 모드 전환 (탭/비교)
+ */
+function setMailViewMode(mode) {
+    const container = document.getElementById('mailEditorContainer');
+    const draftArea = document.getElementById('mailEditorDraft');
+    const finalArea = document.getElementById('mailEditorFinal');
+    const divider = document.getElementById('mailEditorDivider');
+    const tabs = document.getElementById('mailWriteTabs');
+    const btnTab = document.getElementById('modeBtnTab');
+    const btnSplit = document.getElementById('modeBtnSplit');
+
+    if (!container) return;
+
+    if (mode === 'split') {
+        // 비교 모드
+        btnSplit?.classList.add('active');
+        btnTab?.classList.remove('active');
+        container.classList.add('split-mode');
+        if (draftArea) draftArea.style.display = 'flex';
+        if (finalArea) finalArea.style.display = 'flex';
+        if (divider) divider.style.display = 'flex';
+        if (tabs) tabs.style.display = 'none';
+    } else {
+        // 탭 모드
+        btnTab?.classList.add('active');
+        btnSplit?.classList.remove('active');
+        container.classList.remove('split-mode');
+        if (divider) divider.style.display = 'none';
+        if (tabs) tabs.style.display = 'flex';
+        // 현재 활성 탭 유지
+        const activeTab = document.querySelector('.mail-write-tabs .mail-tab.active')?.id;
+        if (activeTab === 'tabWriteFinal') {
+            switchMailWriteTab('final');
+        } else {
+            switchMailWriteTab('draft');
+        }
+    }
+}
+
+/**
+ * 빠른 작업 모달 표시
+ */
+function showQuickActions() {
+    const modal = document.getElementById('quickActionsModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+/**
+ * 빠른 작업 모달 숨김
+ */
+function hideQuickActions() {
+    const modal = document.getElementById('quickActionsModal');
+    if (modal) modal.style.display = 'none';
+}
+
+/**
+ * 설정 모달 표시 (템플릿, 서명 등)
+ */
+function showMailSettings() {
+    const modal = document.getElementById('mailSettingsModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        switchMailSettingsTab('templates');
+    }
+}
+
+/**
+ * 설정 모달 숨김
+ */
+function hideMailSettings() {
+    const modal = document.getElementById('mailSettingsModal');
+    if (modal) modal.style.display = 'none';
+}
+
+/**
+ * 설정 모달 탭 전환
+ */
+function switchMailSettingsTab(tabName) {
+    const tabs = ['templates', 'signatures', 'docs', 'history', 'prompts'];
+    tabs.forEach(t => {
+        const btns = document.querySelectorAll('.modal-tabs .modal-tab');
+        btns.forEach(btn => {
+            if (btn.textContent.includes(getTabLabelByName(t))) {
+                if (t === tabName) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+        });
+
+        const content = document.getElementById(`mailSidePanel${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (content) {
+            content.style.display = (t === tabName) ? 'block' : 'none';
+        }
+    });
+
+    // 패널별로 데이터 로드
+    if (tabName === 'templates') loadTemplates();
+    else if (tabName === 'signatures') loadSignatures();
+    else if (tabName === 'docs') loadMailDocuments();
+    else if (tabName === 'history') loadMailHistory();
+    else if (tabName === 'prompts') loadPromptExamples();
+}
+
+function getTabLabelByName(name) {
+    const labels = {
+        'templates': '템플릿',
+        'signatures': '서명',
+        'docs': '참조 문서',
+        'history': '이력',
+        'prompts': '프롬프트'
+    };
+    return labels[name] || name;
+}
+
+/**
+ * AI 프롬프트 실행
+ */
+async function executeAIPrompt() {
+    const input = document.getElementById('aiPromptInput');
+    const prompt = input?.value.trim();
+
+    if (!prompt) {
+        alert('프롬프트를 입력해주세요.');
+        return;
+    }
+
+    console.log('AI Prompt:', prompt);
+    updateMailStatus('AI 처리 중...', 'processing');
+
+    // TODO: 실제 AI API 호출 구현
+    setTimeout(() => {
+        updateMailStatus('대기 중', 'default');
+        alert('AI 프롬프트 기능은 추후 구현 예정입니다.');
+    }, 2000);
+}
+
+/**
+ * 메일 상태 업데이트
+ */
+function updateMailStatus(text, type = 'default') {
+    const indicator = document.getElementById('mailStatusIndicator');
+    if (!indicator) return;
+
+    indicator.className = 'mail-status ' + type;
+    indicator.innerHTML = `<span class="status-dot"></span>${text}`;
+}
+
+/**
+ * 메일 분석 정보 표시
+ */
+function showMailAnalysis(analysisText) {
+    const analysisDiv = document.getElementById('mailAnalysis');
+    const textDiv = document.getElementById('mailAnalysisText');
+    if (analysisDiv && textDiv) {
+        textDiv.textContent = analysisText;
+        analysisDiv.classList.add('active');
+    }
+}
+
+/**
+ * 메일 분석 정보 숨김
+ */
+function hideMailAnalysis() {
+    const analysisDiv = document.getElementById('mailAnalysis');
+    if (analysisDiv) {
+        analysisDiv.classList.remove('active');
+    }
+}
