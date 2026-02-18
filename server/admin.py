@@ -507,6 +507,7 @@ async def get_product(product_id: int, _=Depends(verify_token)):
 @router.post("/products")
 async def create_product(body: dict, _=Depends(verify_token)):
     """상품 생성"""
+    import json
     if not db.pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
 
@@ -514,19 +515,19 @@ async def create_product(body: dict, _=Depends(verify_token)):
         row = await conn.fetchrow(
             """INSERT INTO products (image, part_no, price, brand, category, name, description,
                                       category_name, detail_info, specs, compatibility)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+               VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb)
                RETURNING id""",
             body.get("image", ""),
             body.get("part_no", ""),
             body.get("price", ""),
             body.get("brand", ""),
             body.get("category", ""),
-            body.get("name", {}),
-            body.get("description", {}),
-            body.get("category_name", {}),
-            body.get("detail_info", {}),
-            body.get("specs", {}),
-            body.get("compatibility", {})
+            json.dumps(body.get("name", {})),
+            json.dumps(body.get("description", {})),
+            json.dumps(body.get("category_name", {})),
+            json.dumps(body.get("detail_info", {})),
+            json.dumps(body.get("specs", {})),
+            json.dumps(body.get("compatibility", {}))
         )
 
     return {"id": row["id"], "message": "상품 생성 완료"}
@@ -535,6 +536,7 @@ async def create_product(body: dict, _=Depends(verify_token)):
 @router.put("/products/{product_id}")
 async def update_product(product_id: int, body: dict, _=Depends(verify_token)):
     """상품 수정"""
+    import json
     if not db.pool:
         raise HTTPException(status_code=500, detail="DB 연결 없음")
 
@@ -542,20 +544,20 @@ async def update_product(product_id: int, body: dict, _=Depends(verify_token)):
         result = await conn.execute(
             """UPDATE products
                SET image = $1, part_no = $2, price = $3, brand = $4, category = $5,
-                   name = $6, description = $7, category_name = $8, detail_info = $9,
-                   specs = $10, compatibility = $11, updated_at = NOW()
+                   name = $6::jsonb, description = $7::jsonb, category_name = $8::jsonb, detail_info = $9::jsonb,
+                   specs = $10::jsonb, compatibility = $11::jsonb, updated_at = NOW()
                WHERE id = $12""",
             body.get("image", ""),
             body.get("part_no", ""),
             body.get("price", ""),
             body.get("brand", ""),
             body.get("category", ""),
-            body.get("name", {}),
-            body.get("description", {}),
-            body.get("category_name", {}),
-            body.get("detail_info", {}),
-            body.get("specs", {}),
-            body.get("compatibility", {}),
+            json.dumps(body.get("name", {})),
+            json.dumps(body.get("description", {})),
+            json.dumps(body.get("category_name", {})),
+            json.dumps(body.get("detail_info", {})),
+            json.dumps(body.get("specs", {})),
+            json.dumps(body.get("compatibility", {})),
             product_id
         )
 
