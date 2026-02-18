@@ -196,6 +196,11 @@ async function selectConversation(convId) {
         switchToChatMode();
         console.log('💬 [DEBUG] setChatEnabled 호출...');
         setChatEnabled(true);
+
+        // 실시간 polling 시작
+        console.log('🔄 [DEBUG] 실시간 polling 시작 요청...');
+        startRealtimePolling();
+
         console.log('✅ [DEBUG] selectConversation 완료!');
     } catch (e) {
         console.error('❌ [ERROR] 대화 선택 실패:', e);
@@ -761,5 +766,225 @@ function setChatEnabled(enabled) {
     ragInput.disabled = !enabled;
     ragSendBtn.disabled = !enabled;
     if (enabled) ragInput.focus();
+}
+
+// ===== 실시간 채팅 업데이트 (Polling) =====
+
+var pollingInterval = null;
+var lastMessageCount = 0;
+var isPolling = false;
+
+/**
+ * 실시간 polling 시작
+ */
+function startRealtimePolling() {
+    // 이미 polling 중이면 중복 시작 방지
+    if (pollingInterval) {
+        console.log('🔄 [POLLING] 이미 polling 중입니다');
+        return;
+    }
+
+    console.log('🔄 [POLLING] 실시간 polling 시작');
+
+    // 3초마다 체크
+    pollingInterval = setInterval(async () => {
+        // 현재 열린 대화가 있고, 다른 작업 중이 아닐 때만 체크
+        if (currentConvId && !isPolling && !isLoadingConversation) {
+            await checkForNewMessages();
+        }
+    }, 3000);
+}
+
+/**
+ * 실시간 polling 중지
+ */
+function stopRealtimePolling() {
+    if (pollingInterval) {
+        console.log('🛑 [POLLING] 실시간 polling 중지');
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+/**
+ * 새 메시지 확인
+ */
+async function checkForNewMessages() {
+    if (!currentConvId) return;
+
+    isPolling = true;
+    try {
+        const res = await api(`/admin/rag/conversations/${currentConvId}`);
+        if (!res.ok) {
+            isPolling = false;
+            return;
+        }
+
+        const data = await res.json();
+        const newMessageCount = data.messages?.length || 0;
+
+        // 새 메시지가 있으면
+        if (newMessageCount > lastMessageCount) {
+            console.log('✨ [POLLING] 새 메시지 감지:', newMessageCount - lastMessageCount, '개');
+
+            // 현재 스크롤 위치 저장
+            const chatContainer = document.getElementById('chatMessages');
+            const wasAtBottom = chatContainer ?
+                (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 100) : false;
+
+            // 메시지 렌더링
+            renderChatMessages(data.messages);
+            lastMessageCount = newMessageCount;
+
+            // 하단에 있었다면 자동 스크롤
+            if (wasAtBottom && chatContainer) {
+                setTimeout(() => {
+                    chatContainer.scrollTo({
+                        top: chatContainer.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 100);
+            }
+
+            // 새 메시지 알림 (선택적)
+            showNewMessageIndicator();
+        }
+    } catch (e) {
+        console.error('❌ [POLLING] 메시지 체크 실패:', e);
+    } finally {
+        isPolling = false;
+    }
+}
+
+/**
+ * 새 메시지 알림 표시
+ */
+function showNewMessageIndicator() {
+    // 간단한 시각적 피드백
+    const chatContainer = document.getElementById('chatMessages');
+    if (!chatContainer) return;
+
+    // 임시 배지 표시
+    const badge = document.createElement('div');
+    badge.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        z-index: 9999;
+        animation: slideInRight 0.3s ease;
+    `;
+    badge.textContent = '✨ 새 메시지가 도착했습니다';
+    document.body.appendChild(badge);
+
+    // 2초 후 제거
+    setTimeout(() => {
+        badge.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => badge.remove(), 300);
+    }, 2000);
+}
+
+/**
+ * 대화 로드 시 메시지 카운트 초기화
+ */
+var _originalLoadConversation = loadConversation;
+loadConversation = async function(convId) {
+    // 기존 함수 호출
+    await _originalLoadConversation(convId);
+
+    // 메시지 카운트 업데이트
+    const res = await api(`/admin/rag/conversations/${convId}`);
+    const data = await res.json();
+    lastMessageCount = data.messages?.length || 0;
+
+    console.log('📊 [POLLING] 초기 메시지 개수:', lastMessageCount);
+};
+
+/**
+ * 메시지 전송 후 polling 재개
+ */
+var _originalSendRagMessage = sendRagMessage;
+sendRagMessage = async function() {
+    await _originalSendRagMessage();
+
+    // 메시지 전송 후 즉시 체크
+    setTimeout(() => {
+        if (currentConvId) {
+            checkForNewMessages();
+        }
+    }, 1000);
+};
+
+// 탭이 활성화되면 polling 시작
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        console.log('👁️ [POLLING] 탭 비활성화 - polling 계속 실행');
+        // 백그라운드에서도 계속 polling (선택적)
+    } else {
+        console.log('👁️ [POLLING] 탭 활성화 - polling 확인');
+        if (!pollingInterval && currentConvId) {
+            startRealtimePolling();
+        }
+    }
+});
+
+// 페이지 로드 시 자동으로 polling 시작
+if (typeof window !== 'undefined') {
+    // DOM이 로드된 후 실행
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 [POLLING] 페이지 로드 완료, polling 준비');
+            // Q&A 탭이 활성화되면 polling 시작
+            const ragTab = document.getElementById('tabRag');
+            if (ragTab) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.target.style.display !== 'none' && currentConvId) {
+                            startRealtimePolling();
+                        } else if (mutation.target.style.display === 'none') {
+                            stopRealtimePolling();
+                        }
+                    });
+                });
+                observer.observe(ragTab, { attributes: true, attributeFilter: ['style'] });
+            }
+        });
+    } else {
+        console.log('🚀 [POLLING] 페이지 이미 로드됨, polling 준비');
+    }
+}
+
+// CSS 애니메이션 추가 (동적으로)
+if (typeof document !== 'undefined') {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
