@@ -2902,3 +2902,66 @@
             color: var(--text-muted);
             line-height: 1.6;
         }
+
+        /* ============================================================
+           Q&A 로딩 인디케이터 & 타이핑 애니메이션
+           ============================================================ */
+
+        /* 로딩 버블 */
+        .loading-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            padding: 16px 20px !important;
+        }
+
+        /* 타이핑 인디케이터 (점 3개) */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            animation: typing-bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing-bounce {
+            0%, 80%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            40% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+
+        /* 로딩 텍스트 */
+        .loading-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            animation: pulse-text 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-text {
+            0%, 100% {
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 1;
+            }
+        }

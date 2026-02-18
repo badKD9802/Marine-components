@@ -581,12 +581,17 @@ async function sendRagMessage() {
     switchToChatMode();
     setChatEnabled(false);
 
+    // 1. 사용자 메시지 즉시 표시
     appendMsg('user', msg);
+
+    // 2. 로딩 인디케이터 즉시 표시
+    const loadingMsgId = appendLoadingMsg();
 
     // SSE 스트리밍으로 AI 답변 받기
     let fullResponse = '';
     let assistantMsgId = null;
     let references = [];
+    let isFirstChunk = true;
 
     try {
         const res = await api('/admin/rag/chat/stream', {
@@ -613,9 +618,12 @@ async function sendRagMessage() {
 
                         if (data.chunk) {
                             fullResponse += data.chunk;
-                            // AI 메시지 생성 또는 업데이트
-                            if (!assistantMsgId) {
+
+                            // 3. 첫 번째 청크가 도착하면 로딩 메시지를 실제 답변으로 교체
+                            if (isFirstChunk) {
+                                removeLoadingMsg(loadingMsgId);
                                 assistantMsgId = appendMsg('assistant', fullResponse);
+                                isFirstChunk = false;
                             } else {
                                 updateMsg(assistantMsgId, fullResponse);
                             }
@@ -638,10 +646,16 @@ async function sendRagMessage() {
 
         await loadConversations();
     } catch (e) {
+        // 로딩 메시지 제거
+        if (loadingMsgId && !assistantMsgId) {
+            removeLoadingMsg(loadingMsgId);
+        }
+
+        // 에러 메시지 표시
         if (assistantMsgId) {
-            updateMsg(assistantMsgId, fullResponse || '오류가 발생했습니다. 다시 시도해주세요.');
+            updateMsg(assistantMsgId, fullResponse || '⚠️ 오류가 발생했습니다. 다시 시도해주세요.');
         } else {
-            appendMsg('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
+            appendMsg('assistant', '⚠️ 오류가 발생했습니다. 다시 시도해주세요.');
         }
         console.error('스트리밍 오류:', e);
     } finally {
@@ -709,6 +723,48 @@ function addRefsToMsg(msgId, refs) {
     refsLink.textContent = `📄 참조 ${refs.length}건 보기`;
     refsLink.onclick = () => showRefChunks(refs);
     msgContent.appendChild(refsLink);
+}
+
+/**
+ * 로딩 메시지 표시 (답변 생성 중...)
+ */
+function appendLoadingMsg() {
+    const c = document.getElementById('chatMessages');
+    const welcome = c.querySelector('.chat-welcome');
+    if (welcome) welcome.remove();
+
+    const id = 'loading-' + Date.now();
+    const avatar = siteLogoUrl ? `<img src="${siteLogoUrl}" alt="AI">` : 'AI';
+
+    const div = document.createElement('div');
+    div.className = 'msg-row assistant';
+    div.id = id;
+    div.innerHTML = `
+        <div class="msg-avatar">${avatar}</div>
+        <div class="msg-content">
+            <div class="msg-bubble loading-bubble">
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="loading-text">문서를 분석하여 답변을 생성하고 있습니다...</div>
+            </div>
+        </div>
+    `;
+    c.appendChild(div);
+    c.scrollTop = c.scrollHeight;
+    return id;
+}
+
+/**
+ * 로딩 메시지 제거
+ */
+function removeLoadingMsg(msgId) {
+    const el = document.getElementById(msgId);
+    if (el) {
+        el.remove();
+    }
 }
 
 function showTyping() {
