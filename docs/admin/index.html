@@ -166,32 +166,150 @@
 
         <!-- ===== 견적문의 탭 ===== -->
         <div id="tabInquiry" class="tab-content">
-            <div class="content" style="max-width:960px;margin:0 auto;">
-                <h2 style="margin-bottom:16px;">견적문의 관리</h2>
-                <table class="doc-table" style="width:100%;border-collapse:collapse;">
-                    <thead>
-                        <tr>
-                            <th style="width:50px">ID</th>
-                            <th>제목</th>
-                            <th style="width:90px">작성자</th>
-                            <th style="width:90px">상태</th>
-                            <th style="width:100px">날짜</th>
-                            <th style="width:110px">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminInquiryList"></tbody>
-                </table>
+            <!-- 헤더 & 통계 -->
+            <div class="inquiry-header">
+                <div class="inquiry-header-top">
+                    <h2 class="inquiry-title">
+                        <span class="inquiry-icon">💬</span>
+                        견적문의 관리
+                    </h2>
+                    <button class="btn btn-primary" onclick="refreshInquiries()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 019-5M20 15a9 9 0 01-9 5"/></svg>
+                        새로고침
+                    </button>
+                </div>
 
-                <div id="adminReplyPanel" style="display:none;margin-top:24px;background:#f9fafb;border-radius:12px;padding:24px;">
-                    <h3 id="adminReplyTitle" style="margin-bottom:8px;"></h3>
-                    <div id="adminReplyMeta" style="font-size:0.88rem;color:#64748b;margin-bottom:12px;"></div>
-                    <div id="adminReplyContent" style="background:white;border-radius:8px;padding:16px;margin-bottom:16px;white-space:pre-wrap;line-height:1.7;border:1px solid #e2e8f0;"></div>
-                    <div id="adminExistingReplies" style="margin-bottom:16px;"></div>
-                    <label style="font-weight:600;display:block;margin-bottom:6px;">답변 작성</label>
-                    <textarea id="adminReplyText" rows="5" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:0.95rem;box-sizing:border-box;resize:vertical;"></textarea>
-                    <div style="margin-top:12px;display:flex;gap:10px;">
-                        <button onclick="submitAdminReply()" style="padding:10px 24px;background:#0a2647;color:white;border:none;border-radius:20px;font-weight:600;cursor:pointer;">답변 등록</button>
-                        <button onclick="closeAdminReply()" style="padding:10px 24px;background:transparent;border:1px solid #d1d5db;border-radius:20px;font-weight:600;cursor:pointer;">닫기</button>
+                <!-- 통계 카드 -->
+                <div class="inquiry-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-total">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-label">전체 문의</div>
+                            <div class="stat-value" id="statTotal">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-pending">⏰</div>
+                        <div class="stat-content">
+                            <div class="stat-label">답변 대기</div>
+                            <div class="stat-value" id="statPending">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-replied">✅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">답변 완료</div>
+                            <div class="stat-value" id="statReplied">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-today">📅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">오늘 문의</div>
+                            <div class="stat-value" id="statToday">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 필터 & 검색 바 -->
+                <div class="inquiry-filters">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-status="all" onclick="filterInquiries('all')">
+                            전체
+                        </button>
+                        <button class="filter-btn" data-status="pending" onclick="filterInquiries('pending')">
+                            답변 대기
+                        </button>
+                        <button class="filter-btn" data-status="replied" onclick="filterInquiries('replied')">
+                            답변 완료
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input type="text" id="inquirySearchInput" placeholder="제목, 작성자, 내용 검색..." onkeyup="searchInquiries()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 문의 목록 (카드 형태) -->
+            <div class="inquiry-container">
+                <div class="inquiry-list" id="adminInquiryList">
+                    <!-- 카드들이 여기에 동적으로 추가됩니다 -->
+                    <div class="empty-state-lg">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">견적문의가 없습니다</div>
+                        <div class="empty-state-text">고객으로부터 새로운 문의가 도착하면 여기에 표시됩니다</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상세보기 & 답변 모달 -->
+            <div class="modal-overlay" id="inquiryDetailModal" style="display:none;" onclick="if(event.target===this) closeInquiryDetail()">
+                <div class="modal-container modal-lg">
+                    <div class="modal-header">
+                        <h3 id="inquiryDetailTitle">문의 상세</h3>
+                        <button class="modal-close" onclick="closeInquiryDetail()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- 문의 정보 -->
+                        <div class="inquiry-detail-section">
+                            <div class="inquiry-detail-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">작성자</span>
+                                    <span class="meta-value" id="inquiryDetailAuthor">-</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">이메일</span>
+                                    <span class="meta-value" id="inquiryDetailEmail">-</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">작성일</span>
+                                    <span class="meta-value" id="inquiryDetailDate">-</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">상태</span>
+                                    <span class="inquiry-status-badge" id="inquiryDetailStatus">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 문의 내용 -->
+                        <div class="inquiry-detail-section">
+                            <h4 class="section-title">📝 문의 내용</h4>
+                            <div class="inquiry-content-box" id="inquiryDetailContent">
+                                <!-- 내용이 여기에 표시됩니다 -->
+                            </div>
+                        </div>
+
+                        <!-- 기존 답변 -->
+                        <div class="inquiry-detail-section" id="existingRepliesSection" style="display:none;">
+                            <h4 class="section-title">💬 답변 내역</h4>
+                            <div id="adminExistingReplies">
+                                <!-- 기존 답변들이 여기에 표시됩니다 -->
+                            </div>
+                        </div>
+
+                        <!-- 답변 작성 -->
+                        <div class="inquiry-detail-section">
+                            <h4 class="section-title">✍️ 답변 작성</h4>
+                            <div class="reply-editor">
+                                <textarea id="adminReplyText" class="reply-textarea" rows="6" placeholder="답변 내용을 입력하세요...&#10;&#10;예: 안녕하세요, 문의 주신 부품에 대해 답변드립니다..."></textarea>
+                                <div class="reply-actions">
+                                    <div class="reply-actions-left">
+                                        <button class="btn btn-ghost btn-sm" onclick="insertReplyTemplate()">
+                                            📝 템플릿 삽입
+                                        </button>
+                                    </div>
+                                    <div class="reply-actions-right">
+                                        <button class="btn btn-ghost" onclick="closeInquiryDetail()">취소</button>
+                                        <button class="btn btn-primary" onclick="submitAdminReply()">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                            답변 등록
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
