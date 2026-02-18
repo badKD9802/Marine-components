@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Header
+from pydantic import BaseModel
 
 import db
 from ocr import extract_text
@@ -61,12 +62,12 @@ async def list_documents(purpose: str = None, _=Depends(verify_token)):
     async with db.vector_pool.acquire() as conn:
         if purpose:
             rows = await conn.fetch(
-                "SELECT id, filename, file_type, status, error_msg, purpose, created_at FROM documents WHERE purpose = $1 ORDER BY id DESC",
+                "SELECT id, filename, file_type, status, error_msg, purpose, category, created_at FROM documents WHERE purpose = $1 ORDER BY id DESC",
                 purpose,
             )
         else:
             rows = await conn.fetch(
-                "SELECT id, filename, file_type, status, error_msg, purpose, created_at FROM documents ORDER BY id DESC"
+                "SELECT id, filename, file_type, status, error_msg, purpose, category, created_at FROM documents ORDER BY id DESC"
             )
     return [
         {
@@ -76,6 +77,7 @@ async def list_documents(purpose: str = None, _=Depends(verify_token)):
             "status": row["status"],
             "error_msg": row["error_msg"],
             "purpose": row["purpose"],
+            "category": row.get("category", "미분류"),
             "created_at": row["created_at"].isoformat() if row["created_at"] else None,
         }
         for row in rows
@@ -223,6 +225,38 @@ async def delete_document(doc_id: int, _=Depends(verify_token)):
     if result == "DELETE 0":
         raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다")
     return {"message": "삭제 완료"}
+
+
+# --- 문서 카테고리 업데이트 ---
+
+class CategoryUpdate(BaseModel):
+    category: str
+
+
+@router.patch("/documents/{doc_id}/category")
+async def update_document_category(doc_id: int, body: CategoryUpdate, _=Depends(verify_token)):
+    """문서 카테고리 업데이트"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    category = body.category.strip()
+    if not category:
+        raise HTTPException(status_code=400, detail="카테고리를 입력하세요")
+
+    async with db.vector_pool.acquire() as conn:
+        # 문서 존재 여부 확인
+        doc = await conn.fetchrow("SELECT id FROM documents WHERE id = $1", doc_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다")
+
+        # 카테고리 업데이트
+        await conn.execute(
+            "UPDATE documents SET category = $1 WHERE id = $2",
+            category,
+            doc_id,
+        )
+
+    return {"message": "카테고리가 업데이트되었습니다", "category": category}
 
 
 # --- 유틸 ---

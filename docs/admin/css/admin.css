@@ -2951,17 +2951,213 @@
 
         /* 로딩 텍스트 */
         .loading-text {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: rgba(255, 255, 255, 0.95);
             font-weight: 500;
-            animation: pulse-text 2s infinite ease-in-out;
+            display: inline-block;
         }
 
-        @keyframes pulse-text {
+        /* 글자가 하나씩 점프하는 wave 애니메이션 */
+        .loading-text::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            text-align: left;
+            animation: loading-dots 1.5s infinite;
+        }
+
+        @keyframes loading-dots {
+            0%, 20% {
+                content: '.';
+            }
+            40% {
+                content: '..';
+            }
+            60%, 100% {
+                content: '...';
+            }
+        }
+
+        /* 텍스트 자체에도 약간의 pulsing 효과 */
+        .loading-text {
+            animation: text-wave 2s ease-in-out infinite;
+        }
+
+        @keyframes text-wave {
             0%, 100% {
-                opacity: 0.8;
+                transform: translateY(0);
+                opacity: 0.95;
             }
             50% {
+                transform: translateY(-2px);
                 opacity: 1;
             }
+        }
+
+        /* 참조문서 카테고리 */
+        .ref-doc-category {
+            margin-bottom: 8px;
+        }
+
+        .ref-doc-category-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        .ref-doc-category-header:hover {
+            background: var(--bg-hover);
+        }
+
+        .category-toggle-icon {
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+            color: var(--text-muted);
+        }
+
+        .category-name {
+            flex: 1;
+        }
+
+        .category-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .ref-doc-category-content {
+            margin-top: 4px;
+            margin-left: 12px;
+            padding-left: 8px;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .ref-doc-category-content .ref-doc-item {
+            padding: 6px 8px;
+            font-size: 0.85rem;
+        }
+
+        /* 문서 테이블 - 카드 스타일 */
+        .docs-table-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .doc-row {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .doc-row:hover {
+            box-shadow: var(--shadow-sm);
+            border-color: var(--accent);
+        }
+
+        .doc-row-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            cursor: pointer;
+        }
+
+        .doc-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .doc-icon {
+            font-size: 1.5rem;
+        }
+
+        .doc-info {
+            flex: 1;
+        }
+
+        .doc-name {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .doc-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .doc-category-display {
+            cursor: pointer;
+            padding: 2px 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .doc-category-display:hover {
+            background: var(--bg-hover);
+            color: var(--accent);
+        }
+
+        .doc-status {
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .doc-date {
+            min-width: 150px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .doc-delete-btn {
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--error);
+            background: var(--bg-primary);
+            color: var(--error);
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .doc-row:hover .doc-delete-btn {
+            display: flex;
+        }
+
+        .doc-delete-btn:hover {
+            background: var(--error);
+            color: white;
+            transform: translateY(-50%) scale(1.1);
         }

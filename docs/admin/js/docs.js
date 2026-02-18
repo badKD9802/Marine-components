@@ -28,19 +28,36 @@ function renderDocuments(docs) {
         ? '<span class="badge purpose-rag" style="margin-left:4px">RAG / 메일</span>'
         : '<span class="badge purpose-consultant" style="margin-left:4px">AI 상담</span>';
 
-    let html = '<table><thead><tr><th>파일명</th><th>유형</th><th>용도</th><th>상태</th><th>업로드일</th><th>작업</th></tr></thead><tbody>';
+    let html = '<div class="docs-table-wrapper">';
     for (const d of docs) {
         const date = d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '-';
-        html += `<tr>
-            <td style="cursor:pointer;color:var(--accent);font-weight:500" onclick="viewDocument(${d.id})">${d.file_type==='pdf'?'&#128196;':'&#128247;'} ${esc(d.filename)}</td>
-            <td>${d.file_type.toUpperCase()}</td>
-            <td>${purposeBadge(d.purpose)}</td>
-            <td>${statusBadge(d.status)}${d.error_msg?'<br><small style="color:var(--error)">'+esc(d.error_msg)+'</small>':''}</td>
-            <td style="font-size:0.8rem;color:var(--text-light)">${date}</td>
-            <td><button class="btn btn-danger" onclick="deleteDocument(${d.id})">삭제</button></td>
-        </tr>`;
+        const category = d.category || '미분류';
+        html += `
+        <div class="doc-row" data-doc-id="${d.id}">
+            <div class="doc-row-content" onclick="viewDocument(${d.id})">
+                <div class="doc-main">
+                    <div class="doc-icon">${d.file_type==='pdf'?'📄':'🖼️'}</div>
+                    <div class="doc-info">
+                        <div class="doc-name">${esc(d.filename)}</div>
+                        <div class="doc-meta">
+                            <span>${d.file_type.toUpperCase()}</span>
+                            <span>•</span>
+                            <span>${purposeBadge(d.purpose)}</span>
+                            <span>•</span>
+                            <span class="doc-category-display" onclick="event.stopPropagation(); editCategory(${d.id}, '${esc(category)}')">${esc(category)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="doc-status">
+                    ${statusBadge(d.status)}
+                    ${d.error_msg?'<br><small style="color:var(--error)">'+esc(d.error_msg)+'</small>':''}
+                </div>
+                <div class="doc-date">${date}</div>
+            </div>
+            <button class="doc-delete-btn" onclick="event.stopPropagation(); deleteDocument(${d.id})" title="삭제">×</button>
+        </div>`;
     }
-    c.innerHTML = html + '</tbody></table>';
+    c.innerHTML = html + '</div>';
 }
 
 /**
@@ -235,4 +252,40 @@ function toggleAllMailDocs(checked) {
  */
 function getMailSelectedDocIds() {
     return Array.from(document.querySelectorAll('#mailDocs input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+}
+
+/**
+ * 카테고리 편집
+ */
+function editCategory(docId, currentCategory) {
+    const newCategory = prompt('카테고리를 입력하세요:', currentCategory);
+    if (newCategory === null || newCategory.trim() === '') return;
+
+    updateDocumentCategory(docId, newCategory.trim());
+}
+
+/**
+ * 문서 카테고리 업데이트 (백엔드 API 호출)
+ */
+async function updateDocumentCategory(docId, category) {
+    try {
+        const res = await api(`/admin/documents/${docId}/category`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category: category })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.detail || '카테고리 업데이트 실패');
+            return;
+        }
+
+        // 성공 시 목록 새로고침
+        loadDocuments();
+
+    } catch (e) {
+        console.error('카테고리 업데이트 실패:', e);
+        alert('카테고리 업데이트 중 오류가 발생했습니다.');
+    }
 }

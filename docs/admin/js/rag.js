@@ -467,11 +467,64 @@ function renderRagDocuments(docs) {
         c.innerHTML = '<div class="empty-state" style="padding:24px 12px;font-size:0.8rem"><div style="font-size:1.2rem;margin-bottom:6px;">&#128196;</div>RAG 세션용 문서가 없습니다<br><span style="font-size:0.72rem">문서 관리에서 업로드하세요</span></div>';
         return;
     }
-    let html = `<div class="ref-doc-item ref-doc-all"><input type="checkbox" id="refDocAll" checked onchange="toggleAllDocs(this.checked)" /><label for="refDocAll">전체 문서</label></div>`;
+
+    // 카테고리별로 문서 그룹화
+    const categorized = {};
     for (const d of docs) {
-        html += `<div class="ref-doc-item"><input type="checkbox" class="ref-doc-check" id="refDoc${d.id}" value="${d.id}" checked /><label for="refDoc${d.id}">&#128196; ${esc(d.filename)}</label></div>`;
+        // filename에서 카테고리 추출 (예: "엔진_매뉴얼.pdf" → "엔진")
+        const parts = d.filename.split('_');
+        const category = parts.length > 1 ? parts[0] : '기타';
+
+        if (!categorized[category]) {
+            categorized[category] = [];
+        }
+        categorized[category].push(d);
     }
+
+    let html = `<div class="ref-doc-item ref-doc-all"><input type="checkbox" id="refDocAll" checked onchange="toggleAllDocs(this.checked)" /><label for="refDocAll">전체 문서</label></div>`;
+
+    // 카테고리별로 토글 형식으로 표시
+    const categories = Object.keys(categorized).sort();
+    for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        const categoryId = 'category-' + i;  // 인덱스 기반 ID 생성
+        const docsInCategory = categorized[category];
+
+        html += `
+            <div class="ref-doc-category">
+                <div class="ref-doc-category-header" onclick="toggleCategory('${categoryId}')">
+                    <span class="category-toggle-icon" id="${categoryId}-icon">▼</span>
+                    <span class="category-name">${esc(category)}</span>
+                    <span class="category-count">${docsInCategory.length}개</span>
+                </div>
+                <div class="ref-doc-category-content" id="${categoryId}" style="display:block">
+        `;
+
+        for (const d of docsInCategory) {
+            html += `<div class="ref-doc-item"><input type="checkbox" class="ref-doc-check" id="refDoc${d.id}" value="${d.id}" checked /><label for="refDoc${d.id}">&#128196; ${esc(d.filename)}</label></div>`;
+        }
+
+        html += `
+                </div>
+            </div>
+        `;
+    }
+
     c.innerHTML = html;
+}
+
+// 카테고리 토글 함수
+function toggleCategory(categoryId) {
+    const content = document.getElementById(categoryId);
+    const icon = document.getElementById(categoryId + '-icon');
+
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.textContent = '▼';
+    } else {
+        content.style.display = 'none';
+        icon.textContent = '▶';
+    }
 }
 
 function renderWelcomeDocs(docs) {
@@ -536,7 +589,7 @@ function showWelcomeScreen() {
             <div class="welcome-docs" id="welcomeDocs"></div>
             <div class="welcome-input-wrap">
                 <div class="welcome-input-box">
-                    <input type="text" id="welcomeInput" placeholder="문서에 대해 질문하세요..." />
+                    <input type="text" id="welcomeInput" placeholder="문서에 대해 질문을 입력해주시면 답변을 드리겠습니다" />
                     <button class="chat-send-btn" id="welcomeSendBtn" onclick="sendRagMessage()">&#10148;</button>
                 </div>
                 <div class="welcome-hint">Enter로 전송 — 대화가 자동 생성됩니다</div>
@@ -743,11 +796,6 @@ function appendLoadingMsg() {
         <div class="msg-avatar">${avatar}</div>
         <div class="msg-content">
             <div class="msg-bubble loading-bubble">
-                <div class="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
                 <div class="loading-text">문서를 분석하여 답변을 생성하고 있습니다...</div>
             </div>
         </div>
@@ -1042,5 +1090,47 @@ if (typeof document !== 'undefined') {
         }
     `;
     document.head.appendChild(style);
+}
+
+/**
+ * 대화내역 전체 삭제
+ */
+async function clearAllMessages() {
+    if (!currentConvId) {
+        alert('선택된 대화가 없습니다.');
+        return;
+    }
+
+    if (!confirm('현재 대화의 모든 메시지를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+        return;
+    }
+
+    try {
+        const res = await api(`/admin/rag/conversations/${currentConvId}/messages`, {
+            method: 'DELETE'
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.detail || '메시지 삭제 실패');
+            return;
+        }
+
+        // 성공 시 채팅 화면 초기화
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = '';
+
+        // 웰컴 화면 다시 표시
+        showWelcomeScreen();
+
+        // 메시지 카운트 초기화
+        lastMessageCount = 0;
+
+        alert('모든 메시지가 삭제되었습니다.');
+
+    } catch (e) {
+        console.error('메시지 삭제 실패:', e);
+        alert('메시지 삭제 중 오류가 발생했습니다.');
+    }
 }
 

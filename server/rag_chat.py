@@ -150,6 +150,25 @@ async def delete_conversation(conv_id: int, _=Depends(verify_token)):
     return {"message": "삭제 완료"}
 
 
+# --- 대화 메시지 전체 삭제 ---
+
+@router.delete("/conversations/{conv_id}/messages")
+async def delete_all_messages(conv_id: int, _=Depends(verify_token)):
+    """특정 대화의 모든 메시지 삭제"""
+    if not db.vector_pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+    async with db.vector_pool.acquire() as conn:
+        # 먼저 대화가 존재하는지 확인
+        conv = await conn.fetchrow("SELECT id FROM rag_conversations WHERE id = $1", conv_id)
+        if not conv:
+            raise HTTPException(status_code=404, detail="대화를 찾을 수 없습니다")
+
+        # 해당 대화의 모든 메시지 삭제
+        result = await conn.execute("DELETE FROM rag_messages WHERE conversation_id = $1", conv_id)
+
+    return {"message": "모든 메시지가 삭제되었습니다", "deleted": result}
+
+
 # --- 대화 이름 변경 ---
 
 @router.patch("/conversations/{conv_id}")
@@ -194,7 +213,7 @@ async def list_rag_documents(_=Depends(verify_token)):
         raise HTTPException(status_code=500, detail="DB 연결 없음")
     async with db.vector_pool.acquire() as conn:
         rows = await conn.fetch(
-            "SELECT id, filename, file_type, status FROM documents WHERE purpose = 'rag_session' AND status = 'done' ORDER BY id DESC"
+            "SELECT id, filename, file_type, status, category FROM documents WHERE purpose = 'rag_session' AND status = 'done' ORDER BY id DESC"
         )
     return [
         {
@@ -202,6 +221,7 @@ async def list_rag_documents(_=Depends(verify_token)):
             "filename": row["filename"],
             "file_type": row["file_type"],
             "status": row["status"],
+            "category": row.get("category", "미분류"),
         }
         for row in rows
     ]
@@ -467,23 +487,44 @@ async def _generate_rag_answer_stream(
 
     try:
         # 동기 스트리밍을 asyncio.to_thread로 래핑
+        import queue
+        import threading
+
+        chunk_queue = queue.Queue()
+
         def _sync_stream():
             """동기 제너레이터 → 큐로 전송"""
-            stream = client.models.generate_content_stream(
-                model="gemini-2.5-flash",
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
-                    temperature=0.3,
-                ),
-            )
-            for chunk in stream:
-                if chunk.text:
-                    yield chunk.text
+            try:
+                stream = client.models.generate_content_stream(
+                    model="gemini-2.5-flash",
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        temperature=0.3,
+                    ),
+                )
+                for chunk in stream:
+                    if chunk.text:
+                        chunk_queue.put(chunk.text)
+            except Exception as e:
+                chunk_queue.put(("ERROR", str(e)))
+            finally:
+                chunk_queue.put(None)  # 종료 신호
 
-        # 동기 제너레이터를 비동기로 변환
-        for chunk in await asyncio.to_thread(lambda: list(_sync_stream())):
+        # 별도 스레드에서 실행
+        thread = threading.Thread(target=_sync_stream)
+        thread.start()
+
+        # 큐에서 하나씩 꺼내서 yield (실시간 스트리밍)
+        while True:
+            chunk = await asyncio.to_thread(chunk_queue.get)
+            if chunk is None:  # 종료 신호
+                break
+            if isinstance(chunk, tuple) and chunk[0] == "ERROR":
+                raise Exception(chunk[1])
             yield chunk
+
+        thread.join()
 
     except Exception as e:
         print(f"RAG 스트리밍 오류: {e}", flush=True)

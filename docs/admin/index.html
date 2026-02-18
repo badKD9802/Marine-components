@@ -375,6 +375,7 @@
                         <div class="chat-header-actions">
                             <button class="btn-icon" id="chatSaveBtn" onclick="toggleSaveConversation()" title="대화 저장">&#11088; 저장</button>
                             <button class="btn-icon" onclick="startRenameFromHeader()" title="이름 변경">&#9998; 이름 변경</button>
+                            <button class="btn-icon btn-danger" onclick="clearAllMessages()" title="대화내역 전체 삭제">&#128465; 전체 삭제</button>
                         </div>
                     </div>
                     <div class="chat-messages" id="chatMessages">
@@ -385,7 +386,7 @@
                             <div class="welcome-docs" id="welcomeDocs"></div>
                             <div class="welcome-input-wrap">
                                 <div class="welcome-input-box">
-                                    <input type="text" id="welcomeInput" placeholder="문서에 대해 질문하세요..." />
+                                    <input type="text" id="welcomeInput" placeholder="문서에 대해 질문을 입력해주시면 답변을 드리겠습니다" />
                                     <button class="chat-send-btn" id="welcomeSendBtn" onclick="sendRagMessage()">&#10148;</button>
                                 </div>
                                 <div class="welcome-hint">Enter로 전송 — 대화가 자동 생성됩니다</div>
@@ -394,7 +395,7 @@
                     </div>
                     <div class="chat-input-wrap" id="chatInputWrap" style="display:none">
                         <div class="chat-input-box">
-                            <input type="text" id="ragInput" placeholder="문서에 대해 질문하세요..." />
+                            <input type="text" id="ragInput" placeholder="문서에 대해 질문을 입력해주시면 답변을 드리겠습니다" />
                             <button class="chat-send-btn" id="ragSendBtn" onclick="sendRagMessage()">&#10148;</button>
                         </div>
                     </div>
