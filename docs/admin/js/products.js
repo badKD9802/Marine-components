@@ -244,16 +244,20 @@ function renderProducts() {
     }
 
     container.innerHTML = allProducts.map(p => `
-        <div style="background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:box-shadow 0.2s;cursor:pointer;" onclick="editProduct(${p.id})">
-            <div style="aspect-ratio:1;background:var(--bg-gray);overflow:hidden;">
+        <div style="background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:box-shadow 0.2s;position:relative;" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseleave="this.style.boxShadow='none'">
+            <div style="aspect-ratio:1;background:var(--bg-gray);overflow:hidden;cursor:pointer;" onclick="editProduct(${p.id})">
                 <img src="${p.image}" alt="${p.name?.ko || p.part_no}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3ENo Image%3C/text%3E%3C/svg%3E'">
             </div>
             <div style="padding:12px;">
                 <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:4px;">${p.part_no}</div>
                 <div style="font-size:0.9rem;font-weight:600;color:var(--text-dark);margin-bottom:6px;line-height:1.3;">${p.name?.ko || 'N/A'}</div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                     <span style="font-size:0.75rem;color:var(--text-muted);">${p.brand}</span>
                     <span style="font-size:0.85rem;font-weight:600;color:var(--primary);">${p.price}</span>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <button onclick="event.stopPropagation(); editProduct(${p.id})" style="flex:1;padding:6px;background:var(--primary);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem;font-weight:500;transition:background 0.2s;" onmouseover="this.style.background='var(--primary-dark)'" onmouseout="this.style.background='var(--primary)'">수정</button>
+                    <button onclick="event.stopPropagation(); deleteProduct(${p.id})" style="flex:1;padding:6px;background:var(--error);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem;font-weight:500;transition:background 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='var(--error)'">삭제</button>
                 </div>
             </div>
         </div>
