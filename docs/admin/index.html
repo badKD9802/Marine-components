@@ -799,49 +799,96 @@
                     </div>
                 </div>
 
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상품명 (한국어)</label>
-                    <input type="text" id="productNameKo" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: 볼보펜타 엔진 오일 필터">
-                </div>
-
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상품명 (영어)</label>
-                    <input type="text" id="productNameEn" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: Volvo Penta Engine Oil Filter">
-                </div>
-
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">설명 (한국어)</label>
-                    <textarea id="productDescKo" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="상품 설명을 입력하세요"></textarea>
-                </div>
-
+                <!-- 다국어 탭 -->
                 <div style="margin-bottom:20px;">
-                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">설명 (영어)</label>
-                    <textarea id="productDescEn" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="Product description"></textarea>
-                </div>
-
-                <!-- 추가 정보 섹션 -->
-                <div style="background:var(--bg-gray);padding:16px;border-radius:8px;margin-bottom:20px;">
-                    <h4 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;color:var(--text-dark);">추가 정보</h4>
-
-                    <!-- 상세 정보 -->
-                    <div style="margin-bottom:16px;">
-                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">상세 정보</label>
-                        <div id="detailInfoList" style="display:flex;flex-direction:column;gap:8px;"></div>
-                        <button type="button" onclick="addDetailInfoRow()" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;color:var(--text-regular);">+ 항목 추가</button>
+                    <div style="display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px;">
+                        <button type="button" class="lang-tab active" data-lang="ko" onclick="switchProductLang('ko')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;transition:all 0.2s;">한국어 *</button>
+                        <button type="button" class="lang-tab" data-lang="en" onclick="switchProductLang('en')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;transition:all 0.2s;">English</button>
+                        <button type="button" class="lang-tab" data-lang="cn" onclick="switchProductLang('cn')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;transition:all 0.2s;">中文</button>
                     </div>
 
-                    <!-- 스펙 -->
-                    <div style="margin-bottom:16px;">
-                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">스펙</label>
-                        <div id="specsList" style="display:flex;flex-direction:column;gap:8px;"></div>
-                        <button type="button" onclick="addSpecRow()" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;color:var(--text-regular);">+ 항목 추가</button>
+                    <!-- 한국어 탭 -->
+                    <div class="lang-content" data-lang="ko" style="display:block;">
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상품명 (필수)</label>
+                            <input type="text" id="productNameKo" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: 볼보펜타 엔진 오일 필터">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">설명</label>
+                            <textarea id="productDescKo" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="상품 설명을 입력하세요"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상세 정보</label>
+                            <textarea id="productDetailInfoKo" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="상세 설명을 입력하세요"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">스펙</label>
+                            <div id="specsListKo" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addSpecRowLang('ko')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ 항목 추가</button>
+                        </div>
+                        <div style="margin-bottom:0;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">호환 정보</label>
+                            <div id="compatibilityListKo" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addCompatibilityRowLang('ko')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ 항목 추가</button>
+                        </div>
                     </div>
 
-                    <!-- 호환 정보 -->
-                    <div style="margin-bottom:0;">
-                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">호환 정보</label>
-                        <div id="compatibilityList" style="display:flex;flex-direction:column;gap:8px;"></div>
-                        <button type="button" onclick="addCompatibilityRow()" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;color:var(--text-regular);">+ 항목 추가</button>
+                    <!-- 영어 탭 -->
+                    <div class="lang-content" data-lang="en" style="display:none;">
+                        <div style="background:var(--bg-gray-100);padding:10px;border-radius:6px;margin-bottom:12px;font-size:0.85rem;color:var(--text-muted);">
+                            💡 비워두면 자동 번역됩니다 (LLM + 웹 검색)
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">Product Name</label>
+                            <input type="text" id="productNameEn" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="e.g., Volvo Penta Engine Oil Filter">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">Description</label>
+                            <textarea id="productDescEn" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="Product description"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">Detail Information</label>
+                            <textarea id="productDetailInfoEn" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="Detailed description"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">Specs</label>
+                            <div id="specsListEn" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addSpecRowLang('en')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ Add Item</button>
+                        </div>
+                        <div style="margin-bottom:0;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">Compatibility</label>
+                            <div id="compatibilityListEn" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addCompatibilityRowLang('en')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ Add Item</button>
+                        </div>
+                    </div>
+
+                    <!-- 중국어 탭 -->
+                    <div class="lang-content" data-lang="cn" style="display:none;">
+                        <div style="background:var(--bg-gray-100);padding:10px;border-radius:6px;margin-bottom:12px;font-size:0.85rem;color:var(--text-muted);">
+                            💡 留空将自动翻译 (LLM + 网络搜索)
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">产品名称</label>
+                            <input type="text" id="productNameCn" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="例: Volvo Penta 引擎机油滤清器">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">描述</label>
+                            <textarea id="productDescCn" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="产品描述"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">详细信息</label>
+                            <textarea id="productDetailInfoCn" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="详细说明"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">规格</label>
+                            <div id="specsListCn" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addSpecRowLang('cn')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ 添加项目</button>
+                        </div>
+                        <div style="margin-bottom:0;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">兼容性信息</label>
+                            <div id="compatibilityListCn" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addCompatibilityRowLang('cn')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ 添加项目</button>
+                        </div>
                     </div>
                 </div>
 

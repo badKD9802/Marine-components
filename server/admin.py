@@ -580,3 +580,83 @@ async def delete_product(product_id: int, _=Depends(verify_token)):
         raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다")
 
     return {"message": "상품 삭제 완료"}
+
+
+# ===== 번역 API =====
+
+@router.post("/translate")
+async def translate_product(body: dict, _=Depends(verify_token)):
+    """
+    상품 정보 자동 번역 (Gemini + Web Search)
+
+    Request body:
+    {
+        "text": "번역할 텍스트",
+        "target_lang": "en" or "cn",
+        "context": {
+            "part_no": "부품번호",
+            "brand": "브랜드",
+            "category": "카테고리"
+        }
+    }
+    """
+    import google.genai as genai
+
+    text = body.get("text", "")
+    target_lang = body.get("target_lang", "en")
+    context = body.get("context", {})
+
+    if not text:
+        raise HTTPException(status_code=400, detail="번역할 텍스트가 필요합니다")
+
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="API 키가 설정되지 않았습니다")
+
+    try:
+        client = genai.Client(api_key=api_key)
+
+        lang_names = {
+            "en": "English",
+            "cn": "Chinese (Simplified)"
+        }
+
+        target_lang_name = lang_names.get(target_lang, "English")
+
+        # 웹 검색 포함 프롬프트
+        prompt = f"""You are a professional translator specializing in marine engine parts.
+
+Translate the following Korean text to {target_lang_name}:
+
+Korean text: {text}
+
+Context:
+- Part Number: {context.get('part_no', 'N/A')}
+- Brand: {context.get('brand', 'N/A')}
+- Category: {context.get('category', 'N/A')}
+
+Requirements:
+1. Use accurate technical terminology for marine engine parts
+2. Search the web if needed to find the correct translation for part names
+3. Keep brand names and part numbers unchanged
+4. Maintain professional tone
+5. Return ONLY the translated text, no explanations
+
+Translated text:"""
+
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                temperature=0.3,
+                max_output_tokens=1000
+            )
+        )
+
+        translated_text = response.text.strip()
+
+        return {"translated": translated_text}
+
+    except Exception as e:
+        print(f"Translation error: {e}")
+        raise HTTPException(status_code=500, detail=f"번역 실패: {str(e)}")

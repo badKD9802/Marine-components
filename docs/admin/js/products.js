@@ -295,14 +295,25 @@ async function showProductForm() {
     document.getElementById('productCategory').value = allCategories[0]?.code || '';
     document.getElementById('productNameKo').value = '';
     document.getElementById('productNameEn').value = '';
+    document.getElementById('productNameCn').value = '';
     document.getElementById('productDescKo').value = '';
     document.getElementById('productDescEn').value = '';
+    document.getElementById('productDescCn').value = '';
+    document.getElementById('productDetailInfoKo').value = '';
+    document.getElementById('productDetailInfoEn').value = '';
+    document.getElementById('productDetailInfoCn').value = '';
     document.getElementById('productDeleteBtn').style.display = 'none';
 
-    // 동적 필드 초기화 (각각 빈 행 1개씩)
-    populateKeyValuePairs('detailInfoList', {}, addDetailInfoRow);
-    populateKeyValuePairs('specsList', {}, addSpecRow);
-    populateKeyValuePairs('compatibilityList', {}, addCompatibilityRow);
+    // 언어별 스펙/호환정보 초기화
+    populateSpecsByLang('ko', {});
+    populateSpecsByLang('en', {});
+    populateSpecsByLang('cn', {});
+    populateCompatibilityByLang('ko', []);
+    populateCompatibilityByLang('en', []);
+    populateCompatibilityByLang('cn', []);
+
+    // 한국어 탭으로 초기화
+    switchProductLang('ko');
 
     // 이미지 미리보기 초기화
     document.getElementById('imagePreview').style.display = 'none';
@@ -334,14 +345,25 @@ async function editProduct(id) {
         document.getElementById('productCategory').value = product.category || '';
         document.getElementById('productNameKo').value = product.name?.ko || '';
         document.getElementById('productNameEn').value = product.name?.en || '';
+        document.getElementById('productNameCn').value = product.name?.cn || '';
         document.getElementById('productDescKo').value = product.description?.ko || '';
         document.getElementById('productDescEn').value = product.description?.en || '';
+        document.getElementById('productDescCn').value = product.description?.cn || '';
+        document.getElementById('productDetailInfoKo').value = product.detail_info?.ko || '';
+        document.getElementById('productDetailInfoEn').value = product.detail_info?.en || '';
+        document.getElementById('productDetailInfoCn').value = product.detail_info?.cn || '';
         document.getElementById('productDeleteBtn').style.display = 'block';
 
-        // 동적 필드 로드
-        populateKeyValuePairs('detailInfoList', product.detail_info || {}, addDetailInfoRow);
-        populateKeyValuePairs('specsList', product.specs || {}, addSpecRow);
-        populateKeyValuePairs('compatibilityList', product.compatibility || {}, addCompatibilityRow);
+        // 언어별 스펙/호환정보 로드
+        populateSpecsByLang('ko', product.specs?.ko || {});
+        populateSpecsByLang('en', product.specs?.en || {});
+        populateSpecsByLang('cn', product.specs?.cn || {});
+        populateCompatibilityByLang('ko', product.compatibility?.ko || []);
+        populateCompatibilityByLang('en', product.compatibility?.en || []);
+        populateCompatibilityByLang('cn', product.compatibility?.cn || []);
+
+        // 한국어 탭으로 초기화
+        switchProductLang('ko');
 
         // 이미지 미리보기 표시
         if (product.image) {
@@ -405,11 +427,7 @@ async function saveProduct() {
     const id = document.getElementById('productId').value;
     console.log('💾 [DEBUG] productId:', id);
 
-    // 동적 필드에서 데이터 수집
-    var detailInfo = collectKeyValuePairs('detailInfoList');
-    var specs = collectKeyValuePairs('specsList');
-    var compatibility = collectKeyValuePairs('compatibilityList');
-
+    // 다국어 데이터 수집
     const data = {
         image: document.getElementById('productImage').value.trim(),
         part_no: document.getElementById('productPartNo').value.trim(),
@@ -418,16 +436,30 @@ async function saveProduct() {
         category: document.getElementById('productCategory').value,
         name: {
             ko: document.getElementById('productNameKo').value.trim(),
-            en: document.getElementById('productNameEn').value.trim()
+            en: document.getElementById('productNameEn').value.trim(),
+            cn: document.getElementById('productNameCn').value.trim()
         },
         description: {
             ko: document.getElementById('productDescKo').value.trim(),
-            en: document.getElementById('productDescEn').value.trim()
+            en: document.getElementById('productDescEn').value.trim(),
+            cn: document.getElementById('productDescCn').value.trim()
         },
-        category_name: {},
-        detail_info: detailInfo,
-        specs: specs,
-        compatibility: compatibility
+        detail_info: {
+            ko: document.getElementById('productDetailInfoKo').value.trim(),
+            en: document.getElementById('productDetailInfoEn').value.trim(),
+            cn: document.getElementById('productDetailInfoCn').value.trim()
+        },
+        specs: {
+            ko: collectSpecsByLang('ko'),
+            en: collectSpecsByLang('en'),
+            cn: collectSpecsByLang('cn')
+        },
+        compatibility: {
+            ko: collectCompatibilityByLang('ko'),
+            en: collectCompatibilityByLang('en'),
+            cn: collectCompatibilityByLang('cn')
+        },
+        category_name: {}
     };
 
     console.log('💾 [DEBUG] 저장할 데이터:', data);
@@ -435,6 +467,26 @@ async function saveProduct() {
     if (!data.part_no || !data.name.ko) {
         alert('부품번호와 상품명(한국어)은 필수입니다.');
         return;
+    }
+
+    // 자동 번역 필요 여부 확인
+    var needTranslation = !data.name.en || !data.name.cn || !data.description.en || !data.description.cn;
+
+    if (needTranslation) {
+        if (!confirm('영어 또는 중국어가 비어있습니다.\n\n자동 번역을 진행하시겠습니까?\n(LLM + 웹 검색 사용, 약 10-20초 소요)')) {
+            return;
+        }
+
+        try {
+            console.log('💾 [DEBUG] 자동 번역 시작...');
+            await autoTranslateProduct(data);
+            console.log('💾 [DEBUG] 자동 번역 완료');
+        } catch (e) {
+            console.error('❌ [ERROR] 자동 번역 실패:', e);
+            if (!confirm('자동 번역에 실패했습니다.\n\n번역 없이 저장하시겠습니까?')) {
+                return;
+            }
+        }
     }
 
     try {
@@ -509,7 +561,188 @@ function closeProductModal() {
 }
 
 /**
- * 동적 키-값 필드 관리
+ * 자동 번역
+ */
+async function autoTranslateProduct(data) {
+    var context = {
+        part_no: data.part_no,
+        brand: data.brand,
+        category: data.category
+    };
+
+    // 상품명 번역
+    if (!data.name.en && data.name.ko) {
+        console.log('🌐 [TRANSLATE] 상품명 → 영어');
+        var res = await api('/admin/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: data.name.ko,
+                target_lang: 'en',
+                context: context
+            })
+        });
+        var result = await res.json();
+        data.name.en = result.translated;
+    }
+
+    if (!data.name.cn && data.name.ko) {
+        console.log('🌐 [TRANSLATE] 상품명 → 중국어');
+        var res = await api('/admin/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: data.name.ko,
+                target_lang: 'cn',
+                context: context
+            })
+        });
+        var result = await res.json();
+        data.name.cn = result.translated;
+    }
+
+    // 설명 번역
+    if (!data.description.en && data.description.ko) {
+        console.log('🌐 [TRANSLATE] 설명 → 영어');
+        var res = await api('/admin/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: data.description.ko,
+                target_lang: 'en',
+                context: context
+            })
+        });
+        var result = await res.json();
+        data.description.en = result.translated;
+    }
+
+    if (!data.description.cn && data.description.ko) {
+        console.log('🌐 [TRANSLATE] 설명 → 중국어');
+        var res = await api('/admin/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: data.description.ko,
+                target_lang: 'cn',
+                context: context
+            })
+        });
+        var result = await res.json();
+        data.description.cn = result.translated;
+    }
+
+    // 상세정보 번역
+    if (!data.detail_info.en && data.detail_info.ko) {
+        console.log('🌐 [TRANSLATE] 상세정보 → 영어');
+        var res = await api('/admin/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: data.detail_info.ko,
+                target_lang: 'en',
+                context: context
+            })
+        });
+        var result = await res.json();
+        data.detail_info.en = result.translated;
+    }
+
+    if (!data.detail_info.cn && data.detail_info.ko) {
+        console.log('🌐 [TRANSLATE] 상세정보 → 중국어');
+        var res = await api('/admin/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: data.detail_info.ko,
+                target_lang: 'cn',
+                context: context
+            })
+        });
+        var result = await res.json();
+        data.detail_info.cn = result.translated;
+    }
+
+    // 스펙과 호환정보는 간단하게 처리 (여기서는 생략, 필요시 추가)
+    // TODO: specs, compatibility 번역
+}
+
+/**
+ * 다국어 탭 전환
+ */
+function switchProductLang(lang) {
+    // 모든 탭 비활성화
+    document.querySelectorAll('.lang-tab').forEach(tab => {
+        tab.classList.remove('active');
+        tab.style.color = 'var(--text-muted)';
+        tab.style.borderBottomColor = 'transparent';
+    });
+
+    // 모든 콘텐츠 숨기기
+    document.querySelectorAll('.lang-content').forEach(content => {
+        content.style.display = 'none';
+    });
+
+    // 선택한 탭 활성화
+    var activeTab = document.querySelector(`.lang-tab[data-lang="${lang}"]`);
+    if (activeTab) {
+        activeTab.classList.add('active');
+        activeTab.style.color = 'var(--primary)';
+        activeTab.style.borderBottomColor = 'var(--primary)';
+    }
+
+    // 선택한 콘텐츠 표시
+    var activeContent = document.querySelector(`.lang-content[data-lang="${lang}"]`);
+    if (activeContent) {
+        activeContent.style.display = 'block';
+    }
+}
+
+/**
+ * 동적 키-값 필드 관리 (다국어 지원)
+ */
+
+// 언어별 스펙 행 추가
+function addSpecRowLang(lang, key = '', value = '') {
+    var container = document.getElementById('specsList' + lang.charAt(0).toUpperCase() + lang.slice(1));
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+
+    var placeholders = {
+        ko: { key: '스펙 (예: 부품번호)', value: '값 (예: 4TNV98)' },
+        en: { key: 'Spec (e.g., Part Number)', value: 'Value (e.g., 4TNV98)' },
+        cn: { key: '规格 (例: 零件编号)', value: '值 (例: 4TNV98)' }
+    };
+
+    row.innerHTML = `
+        <input type="text" placeholder="${placeholders[lang].key}" value="${esc(key)}" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <input type="text" placeholder="${placeholders[lang].value}" value="${esc(value)}" style="flex:2;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <button type="button" onclick="this.parentElement.remove()" style="padding:8px 12px;background:var(--error);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;">×</button>
+    `;
+    container.appendChild(row);
+}
+
+// 언어별 호환 정보 행 추가 (배열 형식)
+function addCompatibilityRowLang(lang, value = '') {
+    var container = document.getElementById('compatibilityList' + lang.charAt(0).toUpperCase() + lang.slice(1));
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+
+    var placeholders = {
+        ko: '예: YANMAR 4TNV98 시리즈',
+        en: 'e.g., YANMAR 4TNV98 Series',
+        cn: '例: YANMAR 4TNV98 系列'
+    };
+
+    row.innerHTML = `
+        <input type="text" placeholder="${placeholders[lang]}" value="${esc(value)}" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+        <button type="button" onclick="this.parentElement.remove()" style="padding:8px 12px;background:var(--error);color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;">×</button>
+    `;
+    container.appendChild(row);
+}
+
+/**
+ * 레거시 함수들 (하위 호환성)
  */
 
 // 상세 정보 행 추가
@@ -585,5 +818,82 @@ function populateKeyValuePairs(containerId, data, addRowFunction) {
     // 빈 행이면 하나 추가
     if (container.children.length === 0) {
         addRowFunction();
+    }
+}
+
+// 언어별 스펙 수집 (객체 형식)
+function collectSpecsByLang(lang) {
+    var containerId = 'specsList' + lang.charAt(0).toUpperCase() + lang.slice(1);
+    var container = document.getElementById(containerId);
+    var rows = container.querySelectorAll('div');
+    var result = {};
+
+    rows.forEach(function(row) {
+        var inputs = row.querySelectorAll('input[type="text"]');
+        if (inputs.length >= 2) {
+            var key = inputs[0].value.trim();
+            var value = inputs[1].value.trim();
+            if (key) {
+                result[key] = value;
+            }
+        }
+    });
+
+    return result;
+}
+
+// 언어별 호환정보 수집 (배열 형식)
+function collectCompatibilityByLang(lang) {
+    var containerId = 'compatibilityList' + lang.charAt(0).toUpperCase() + lang.slice(1);
+    var container = document.getElementById(containerId);
+    var rows = container.querySelectorAll('div');
+    var result = [];
+
+    rows.forEach(function(row) {
+        var input = row.querySelector('input[type="text"]');
+        if (input) {
+            var value = input.value.trim();
+            if (value) {
+                result.push(value);
+            }
+        }
+    });
+
+    return result;
+}
+
+// 언어별 스펙 표시
+function populateSpecsByLang(lang, data) {
+    var containerId = 'specsList' + lang.charAt(0).toUpperCase() + lang.slice(1);
+    var container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    if (data && typeof data === 'object') {
+        Object.keys(data).forEach(function(key) {
+            addSpecRowLang(lang, key, data[key]);
+        });
+    }
+
+    // 빈 행이면 하나 추가
+    if (container.children.length === 0) {
+        addSpecRowLang(lang);
+    }
+}
+
+// 언어별 호환정보 표시
+function populateCompatibilityByLang(lang, data) {
+    var containerId = 'compatibilityList' + lang.charAt(0).toUpperCase() + lang.slice(1);
+    var container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    if (Array.isArray(data)) {
+        data.forEach(function(value) {
+            addCompatibilityRowLang(lang, value);
+        });
+    }
+
+    // 빈 행이면 하나 추가
+    if (container.children.length === 0) {
+        addCompatibilityRowLang(lang);
     }
 }
