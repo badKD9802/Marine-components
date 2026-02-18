@@ -77,9 +77,12 @@ function toggleCategoryManage() {
  * 카테고리 추가
  */
 async function addCategory() {
+    console.log('📁 [DEBUG] addCategory 시작');
     const code = document.getElementById('newCategoryCode').value.trim();
     const nameKo = document.getElementById('newCategoryNameKo').value.trim();
     const nameEn = document.getElementById('newCategoryNameEn').value.trim();
+
+    console.log('📁 [DEBUG] 입력값 - code:', code, 'nameKo:', nameKo, 'nameEn:', nameEn);
 
     if (!code || !nameKo) {
         alert('코드와 한글명은 필수입니다.');
@@ -87,17 +90,29 @@ async function addCategory() {
     }
 
     try {
-        await api('/admin/categories', {
+        console.log('📁 [DEBUG] API 요청:', '/admin/categories');
+        const res = await api('/admin/categories', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code, name_ko: nameKo, name_en: nameEn })
         });
+        console.log('📁 [DEBUG] 응답 status:', res.status);
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('❌ [ERROR] 카테고리 추가 실패:', errorText);
+            throw new Error('추가 실패: ' + res.status + ' - ' + errorText);
+        }
+
         alert('카테고리가 추가되었습니다.');
         document.getElementById('newCategoryCode').value = '';
         document.getElementById('newCategoryNameKo').value = '';
         document.getElementById('newCategoryNameEn').value = '';
         loadCategories();
+        console.log('✅ [DEBUG] addCategory 완료');
     } catch (e) {
-        console.error('카테고리 추가 실패:', e);
+        console.error('❌ [ERROR] 카테고리 추가 실패:', e);
+        console.error('❌ [ERROR] 에러 스택:', e.stack);
         alert('카테고리 추가 실패: ' + e.message);
     }
 }
@@ -376,7 +391,10 @@ async function deleteProduct(id) {
  * 상품 저장
  */
 async function saveProduct() {
+    console.log('💾 [DEBUG] saveProduct 시작');
     const id = document.getElementById('productId').value;
+    console.log('💾 [DEBUG] productId:', id);
+
     const data = {
         image: document.getElementById('productImage').value.trim(),
         part_no: document.getElementById('productPartNo').value.trim(),
@@ -397,6 +415,8 @@ async function saveProduct() {
         compatibility: {}
     };
 
+    console.log('💾 [DEBUG] 저장할 데이터:', data);
+
     if (!data.part_no || !data.name.ko) {
         alert('부품번호와 상품명(한국어)은 필수입니다.');
         return;
@@ -405,24 +425,42 @@ async function saveProduct() {
     try {
         var res;
         if (id) {
+            console.log('💾 [DEBUG] 상품 수정 요청:', `/admin/products/${id}`);
             res = await api(`/admin/products/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            console.log('💾 [DEBUG] 수정 응답 status:', res.status);
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error('❌ [ERROR] 수정 실패 응답:', errorText);
+                throw new Error('수정 실패: ' + res.status + ' - ' + errorText);
+            }
             alert('상품이 수정되었습니다.');
         } else {
+            console.log('💾 [DEBUG] 상품 추가 요청:', '/admin/products');
             res = await api('/admin/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            console.log('💾 [DEBUG] 추가 응답 status:', res.status);
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error('❌ [ERROR] 추가 실패 응답:', errorText);
+                throw new Error('추가 실패: ' + res.status + ' - ' + errorText);
+            }
             alert('상품이 추가되었습니다.');
         }
+        console.log('💾 [DEBUG] 모달 닫기');
         closeProductModal();
-        await loadProducts();  // await 추가
+        console.log('💾 [DEBUG] 상품 목록 다시 로드');
+        await loadProducts();
+        console.log('✅ [DEBUG] saveProduct 완료');
     } catch (e) {
-        console.error('상품 저장 실패:', e);
+        console.error('❌ [ERROR] 상품 저장 실패:', e);
+        console.error('❌ [ERROR] 에러 스택:', e.stack);
         alert('상품 저장에 실패했습니다. 콘솔을 확인하세요.\n' + e.message);
     }
 }
