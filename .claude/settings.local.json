@@ -36,7 +36,8 @@
       "Bash(do)",
       "Bash(node --check:*)",
       "Bash(echo:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(grep:*)"
     ]
   }
 }
