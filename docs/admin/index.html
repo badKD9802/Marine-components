@@ -819,6 +819,29 @@
                     <textarea id="productDescEn" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="Product description"></textarea>
                 </div>
 
+                <!-- 추가 정보 섹션 -->
+                <div style="background:var(--bg-gray);padding:16px;border-radius:8px;margin-bottom:20px;">
+                    <h4 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;color:var(--text-dark);">추가 정보</h4>
+
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상세 정보 (JSON 형식)</label>
+                        <textarea id="productDetailInfo" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;font-family:monospace;font-size:0.85rem;" placeholder='{"원산지": "독일", "무게": "2.5kg", "크기": "150x100x50mm"}'></textarea>
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">💡 키-값 쌍으로 입력하세요</div>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">스펙 (JSON 형식)</label>
+                        <textarea id="productSpecs" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;font-family:monospace;font-size:0.85rem;" placeholder='{"최대압력": "250bar", "온도범위": "-20°C ~ 100°C", "재질": "스테인리스강"}'></textarea>
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">💡 기술 스펙을 입력하세요</div>
+                    </div>
+
+                    <div style="margin-bottom:0;">
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">호환 정보 (JSON 형식)</label>
+                        <textarea id="productCompatibility" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;font-family:monospace;font-size:0.85rem;" placeholder='{"엔진모델": ["D4-180", "D6-310", "D6-370"], "연도": "2010-2023", "대체품번": "21951342"}'></textarea>
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">💡 호환 엔진, 연도, 대체 부품 등을 입력하세요</div>
+                    </div>
+                </div>
+
                 <div style="display:flex;gap:10px;justify-content:space-between;">
                     <button class="btn btn-ghost" onclick="deleteProductConfirm()" id="productDeleteBtn" style="background:var(--error);color:white;display:none;">🗑️ 삭제</button>
                     <div style="display:flex;gap:10px;">

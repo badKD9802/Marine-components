@@ -297,6 +297,9 @@ async function showProductForm() {
     document.getElementById('productNameEn').value = '';
     document.getElementById('productDescKo').value = '';
     document.getElementById('productDescEn').value = '';
+    document.getElementById('productDetailInfo').value = '';
+    document.getElementById('productSpecs').value = '';
+    document.getElementById('productCompatibility').value = '';
     document.getElementById('productDeleteBtn').style.display = 'none';
 
     // 이미지 미리보기 초기화
@@ -331,6 +334,9 @@ async function editProduct(id) {
         document.getElementById('productNameEn').value = product.name?.en || '';
         document.getElementById('productDescKo').value = product.description?.ko || '';
         document.getElementById('productDescEn').value = product.description?.en || '';
+        document.getElementById('productDetailInfo').value = product.detail_info ? JSON.stringify(product.detail_info, null, 2) : '';
+        document.getElementById('productSpecs').value = product.specs ? JSON.stringify(product.specs, null, 2) : '';
+        document.getElementById('productCompatibility').value = product.compatibility ? JSON.stringify(product.compatibility, null, 2) : '';
         document.getElementById('productDeleteBtn').style.display = 'block';
 
         // 이미지 미리보기 표시
@@ -395,6 +401,22 @@ async function saveProduct() {
     const id = document.getElementById('productId').value;
     console.log('💾 [DEBUG] productId:', id);
 
+    // JSON 필드 파싱 헬퍼 함수
+    function parseJSON(value, defaultValue = {}) {
+        if (!value || !value.trim()) return defaultValue;
+        try {
+            return JSON.parse(value);
+        } catch (e) {
+            console.error('JSON 파싱 에러:', e);
+            alert('JSON 형식이 올바르지 않습니다. 다시 확인해주세요.\n\n' + e.message);
+            throw e;
+        }
+    }
+
+    var detailInfo = parseJSON(document.getElementById('productDetailInfo').value);
+    var specs = parseJSON(document.getElementById('productSpecs').value);
+    var compatibility = parseJSON(document.getElementById('productCompatibility').value);
+
     const data = {
         image: document.getElementById('productImage').value.trim(),
         part_no: document.getElementById('productPartNo').value.trim(),
@@ -410,9 +432,9 @@ async function saveProduct() {
             en: document.getElementById('productDescEn').value.trim()
         },
         category_name: {},
-        detail_info: {},
-        specs: {},
-        compatibility: {}
+        detail_info: detailInfo,
+        specs: specs,
+        compatibility: compatibility
     };
 
     console.log('💾 [DEBUG] 저장할 데이터:', data);
