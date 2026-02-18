@@ -333,8 +333,13 @@ async function editProduct(id) {
         // 카테고리 로드
         await loadCategories();
 
+        console.log('📝 [EDIT] 상품 로드 중, ID:', id);
         const res = await api(`/admin/products/${id}`);
         const product = await res.json();
+        console.log('📝 [EDIT] 받은 데이터:', product);
+        console.log('📝 [EDIT] name:', product.name);
+        console.log('📝 [EDIT] description:', product.description);
+        console.log('📝 [EDIT] detail_info:', product.detail_info);
 
         document.getElementById('productModalTitle').textContent = '상품 수정';
         document.getElementById('productId').value = product.id;
@@ -343,24 +348,56 @@ async function editProduct(id) {
         document.getElementById('productPrice').value = product.price || '';
         document.getElementById('productBrand').value = product.brand || '';
         document.getElementById('productCategory').value = product.category || '';
-        document.getElementById('productNameKo').value = product.name?.ko || '';
-        document.getElementById('productNameEn').value = product.name?.en || '';
-        document.getElementById('productNameCn').value = product.name?.cn || '';
-        document.getElementById('productDescKo').value = product.description?.ko || '';
-        document.getElementById('productDescEn').value = product.description?.en || '';
-        document.getElementById('productDescCn').value = product.description?.cn || '';
-        document.getElementById('productDetailInfoKo').value = product.detail_info?.ko || '';
-        document.getElementById('productDetailInfoEn').value = product.detail_info?.en || '';
-        document.getElementById('productDetailInfoCn').value = product.detail_info?.cn || '';
+
+        // 다국어 필드 로드 (안전하게 파싱)
+        // JSONB 필드가 문자열로 올 수 있으므로 파싱
+        var name = product.name || {};
+        if (typeof name === 'string') {
+            try { name = JSON.parse(name); } catch(e) { name = {}; }
+        }
+
+        var description = product.description || {};
+        if (typeof description === 'string') {
+            try { description = JSON.parse(description); } catch(e) { description = {}; }
+        }
+
+        var detailInfo = product.detail_info || {};
+        if (typeof detailInfo === 'string') {
+            try { detailInfo = JSON.parse(detailInfo); } catch(e) { detailInfo = {}; }
+        }
+
+        console.log('📝 [EDIT] 파싱된 name:', name);
+        console.log('📝 [EDIT] 파싱된 description:', description);
+        console.log('📝 [EDIT] 파싱된 detailInfo:', detailInfo);
+
+        document.getElementById('productNameKo').value = name.ko || '';
+        document.getElementById('productNameEn').value = name.en || '';
+        document.getElementById('productNameCn').value = name.cn || '';
+        document.getElementById('productDescKo').value = description.ko || '';
+        document.getElementById('productDescEn').value = description.en || '';
+        document.getElementById('productDescCn').value = description.cn || '';
+        document.getElementById('productDetailInfoKo').value = detailInfo.ko || '';
+        document.getElementById('productDetailInfoEn').value = detailInfo.en || '';
+        document.getElementById('productDetailInfoCn').value = detailInfo.cn || '';
         document.getElementById('productDeleteBtn').style.display = 'block';
 
-        // 언어별 스펙/호환정보 로드
-        populateSpecsByLang('ko', product.specs?.ko || {});
-        populateSpecsByLang('en', product.specs?.en || {});
-        populateSpecsByLang('cn', product.specs?.cn || {});
-        populateCompatibilityByLang('ko', product.compatibility?.ko || []);
-        populateCompatibilityByLang('en', product.compatibility?.en || []);
-        populateCompatibilityByLang('cn', product.compatibility?.cn || []);
+        // 언어별 스펙/호환정보 로드 (안전하게 파싱)
+        var specs = product.specs || {};
+        if (typeof specs === 'string') {
+            try { specs = JSON.parse(specs); } catch(e) { specs = {}; }
+        }
+
+        var compatibility = product.compatibility || {};
+        if (typeof compatibility === 'string') {
+            try { compatibility = JSON.parse(compatibility); } catch(e) { compatibility = {}; }
+        }
+
+        populateSpecsByLang('ko', specs.ko || {});
+        populateSpecsByLang('en', specs.en || {});
+        populateSpecsByLang('cn', specs.cn || {});
+        populateCompatibilityByLang('ko', compatibility.ko || []);
+        populateCompatibilityByLang('en', compatibility.en || []);
+        populateCompatibilityByLang('cn', compatibility.cn || []);
 
         // 한국어 탭으로 초기화
         switchProductLang('ko');
