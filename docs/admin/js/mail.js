@@ -9,6 +9,8 @@ var mailTemplates = [];
 var mailSignatures = [];
 var promptExamples = [];
 var currentMailHistoryId = null;
+var mailDetectedLang = 'en';  // 감지된 언어
+var mailCurrentRefs = [];     // 현재 참조 문서
 
 async function loadMailDocuments() {
     try {
@@ -123,7 +125,10 @@ function renderMailHistory(items) {
 
 // --- 수신 메일 한국어 번역 ---
 async function translateIncoming() {
-    const incoming = document.getElementById('mailIncoming').value.trim();
+    const mailIncoming = document.getElementById('mailIncoming');
+    if (!mailIncoming) { alert('메일 입력 영역을 찾을 수 없습니다.'); return; }
+
+    const incoming = mailIncoming.value.trim();
     if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
 
     showMailLoading('수신 메일을 한국어로 번역하고 있습니다...');
@@ -138,22 +143,28 @@ async function translateIncoming() {
         const translated = data.translated_korean || '';
 
         // 단일 textarea 숨기고 분할 뷰 표시
-        document.getElementById('mailIncoming').style.display = 'none';
         const splitView = document.getElementById('mailIncomingSplit');
-        splitView.classList.add('visible');
+        const originalInput = document.getElementById('mailIncomingOriginal');
+        const translatedInput = document.getElementById('mailIncomingTranslated');
 
-        // 원문 채우기
-        document.getElementById('mailIncomingOriginal').value = incoming;
-        document.getElementById('mailIncomingTranslated').value = translated;
+        if (splitView && originalInput && translatedInput) {
+            mailIncoming.style.display = 'none';
+            splitView.classList.add('visible');
 
-        // 원문 편집 시 단일 textarea도 동기화
-        document.getElementById('mailIncomingOriginal').oninput = function() {
-            document.getElementById('mailIncoming').value = this.value;
-        };
+            // 원문 채우기
+            originalInput.value = incoming;
+            translatedInput.value = translated;
+
+            // 원문 편집 시 단일 textarea도 동기화
+            originalInput.oninput = function() {
+                mailIncoming.value = this.value;
+            };
+        }
+        // 분할 뷰가 없어도 번역은 정상 작동함
 
         // 소스 언어 배지 (감지된 언어가 있으면 표시)
         const srcBadge = document.getElementById('incomingSrcLangBadge');
-        if (mailDetectedLang && mailDetectedLang !== 'ko') {
+        if (srcBadge && mailDetectedLang && mailDetectedLang !== 'ko') {
             srcBadge.textContent = mailDetectedLang.toUpperCase();
         }
 
@@ -167,10 +178,14 @@ async function translateIncoming() {
 
 // --- 답장 생성 ---
 async function composeMail() {
-    const incoming = document.getElementById('mailIncoming').value.trim();
+    const mailIncoming = document.getElementById('mailIncoming');
+    if (!mailIncoming) { alert('메일 입력 영역을 찾을 수 없습니다.'); return; }
+
+    const incoming = mailIncoming.value.trim();
     if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
 
-    const tone = document.getElementById('mailTone').value;
+    const toneInput = document.getElementById('mailTone');
+    const tone = toneInput ? toneInput.value : 'formal';
     const docIds = getMailSelectedDocIds();
 
     showMailLoading('수신 메일을 분석하고 답장을 생성하고 있습니다...');
@@ -187,11 +202,14 @@ async function composeMail() {
 
         // 분석 결과 표시
         const analysisEl = document.getElementById('mailAnalysis');
-        if (data.analysis) {
-            document.getElementById('mailAnalysisText').textContent = data.analysis;
-            analysisEl.classList.add('visible');
-        } else {
-            analysisEl.classList.remove('visible');
+        const analysisText = document.getElementById('mailAnalysisText');
+        if (analysisEl && analysisText) {
+            if (data.analysis) {
+                analysisText.textContent = data.analysis;
+                analysisEl.classList.add('visible');
+            } else {
+                analysisEl.classList.remove('visible');
+            }
         }
 
         // 한국어 초안
@@ -203,22 +221,27 @@ async function composeMail() {
             koreanDraft = koreanDraft.trim() + '\n\n' + defaultSig.content;
         }
 
-        document.getElementById('mailKoreanDraft').value = koreanDraft;
+        const koreanDraftInput = document.getElementById('mailKoreanDraft');
+        if (koreanDraftInput) koreanDraftInput.value = koreanDraft;
 
         // 번역 대상 언어 자동 설정
         const langSelect = document.getElementById('mailTargetLang');
-        if (mailDetectedLang && mailDetectedLang !== 'ko') {
+        if (langSelect && mailDetectedLang && mailDetectedLang !== 'ko') {
             langSelect.value = mailDetectedLang;
         }
         updateTargetLangBadge();
 
         // 번역본 초기화
-        document.getElementById('mailTranslated').value = '';
+        const translatedInput = document.getElementById('mailTranslated');
+        if (translatedInput) translatedInput.value = '';
 
         // 버튼 활성화
-        document.getElementById('mailRecomposeBtn').disabled = false;
-        document.getElementById('mailTranslateBtn').disabled = false;
-        document.getElementById('mailSaveBtn').disabled = false;
+        const recomposeBtn = document.getElementById('mailRecomposeBtn');
+        const translateBtn = document.getElementById('mailTranslateBtn');
+        const saveBtn = document.getElementById('mailSaveBtn');
+        if (recomposeBtn) recomposeBtn.disabled = false;
+        if (translateBtn) translateBtn.disabled = false;
+        if (saveBtn) saveBtn.disabled = false;
 
     } catch (e) {
         console.error('메일 생성 오류:', e);
@@ -230,12 +253,16 @@ async function composeMail() {
 
 // 한국어 초안 재작성
 async function recomposeMail() {
-    const incoming = document.getElementById('mailIncoming').value.trim();
+    const mailIncoming = document.getElementById('mailIncoming');
+    if (!mailIncoming) { alert('메일 입력 영역을 찾을 수 없습니다.'); return; }
+
+    const incoming = mailIncoming.value.trim();
     if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
 
     if (!confirm('한국어 초안을 다시 생성하시겠습니까? 기존 내용은 사라집니다.')) return;
 
-    const tone = document.getElementById('mailTone').value;
+    const toneInput = document.getElementById('mailTone');
+    const tone = toneInput ? toneInput.value : 'formal';
     const docIds = getMailSelectedDocIds();
 
     showMailLoading('답장을 재작성하고 있습니다...');
@@ -252,11 +279,14 @@ async function recomposeMail() {
 
         // 분석 결과 표시
         const analysisEl = document.getElementById('mailAnalysis');
-        if (data.analysis) {
-            document.getElementById('mailAnalysisText').textContent = data.analysis;
-            analysisEl.classList.add('visible');
-        } else {
-            analysisEl.classList.remove('visible');
+        const analysisText = document.getElementById('mailAnalysisText');
+        if (analysisEl && analysisText) {
+            if (data.analysis) {
+                analysisText.textContent = data.analysis;
+                analysisEl.classList.add('visible');
+            } else {
+                analysisEl.classList.remove('visible');
+            }
         }
 
         // 한국어 초안
@@ -268,23 +298,29 @@ async function recomposeMail() {
             koreanDraft = koreanDraft.trim() + '\n\n' + defaultSig.content;
         }
 
-        document.getElementById('mailKoreanDraft').value = koreanDraft;
+        const koreanDraftInput = document.getElementById('mailKoreanDraft');
+        if (koreanDraftInput) koreanDraftInput.value = koreanDraft;
 
         // 번역 대상 언어 자동 설정
         const langSelect = document.getElementById('mailTargetLang');
-        if (mailDetectedLang && mailDetectedLang !== 'ko') {
+        if (langSelect && mailDetectedLang && mailDetectedLang !== 'ko') {
             langSelect.value = mailDetectedLang;
         }
         updateTargetLangBadge();
 
         // 번역본 초기화 (재작성하면 다시 번역해야 함)
-        document.getElementById('mailTranslated').value = '';
-        document.getElementById('mailRetranslateBtn').disabled = true;
+        const translatedInput = document.getElementById('mailTranslated');
+        const retranslateBtn = document.getElementById('mailRetranslateBtn');
+        if (translatedInput) translatedInput.value = '';
+        if (retranslateBtn) retranslateBtn.disabled = true;
 
         // 버튼 활성화
-        document.getElementById('mailRecomposeBtn').disabled = false;
-        document.getElementById('mailTranslateBtn').disabled = false;
-        document.getElementById('mailSaveBtn').disabled = false;
+        const recomposeBtn = document.getElementById('mailRecomposeBtn');
+        const translateBtn = document.getElementById('mailTranslateBtn');
+        const saveBtn = document.getElementById('mailSaveBtn');
+        if (recomposeBtn) recomposeBtn.disabled = false;
+        if (translateBtn) translateBtn.disabled = false;
+        if (saveBtn) saveBtn.disabled = false;
 
         alert('한국어 초안이 재작성되었습니다.');
 
@@ -467,15 +503,22 @@ var currentInboxId = null;  // 현재 선택된 수신 메일 ID
 // --- Gmail 상태 로드 ---
 async function loadGmailStatus() {
     try {
+        console.log('[DEBUG] Gmail 상태 API 호출 중...');
         const data = await (await api('/admin/mail/gmail/status')).json();
+        console.log('[DEBUG] Gmail 상태 응답:', data);
         gmailConnected = data.connected;
+        console.log('[DEBUG] gmailConnected 설정됨:', gmailConnected);
         updateGmailUI(data);
     } catch (e) {
-        console.error('Gmail 상태 로드 실패:', e);
+        console.error('[ERROR] Gmail 상태 로드 실패:', e);
+        gmailConnected = false;
+        updateGmailUI({ connected: false });
     }
 }
 
 function updateGmailUI(data) {
+    console.log('[DEBUG] updateGmailUI 호출됨, data:', data);
+
     const dot = document.getElementById('gmailDot');
     const statusText = document.getElementById('gmailStatusText');
     const disconnectBtn = document.getElementById('gmailDisconnectBtn');
@@ -484,44 +527,66 @@ function updateGmailUI(data) {
     const authSection = document.getElementById('gmailAuthSection');
     const sendBtn = document.getElementById('mailSendBtn');
 
+    // 필수 요소가 없으면 경고만 출력하고 종료
+    if (!dot || !statusText) {
+        console.warn('[WARN] Gmail UI 요소를 찾을 수 없습니다. 메일 탭이 아닐 수 있습니다.');
+        return;
+    }
+
     if (data.connected) {
+        console.log('[DEBUG] Gmail 연결됨, 수신함 로드 예정');
+
         dot.className = 'gmail-status-dot connected';
         statusText.textContent = data.email;
-        disconnectBtn.style.display = '';
-        fetchBtn.style.display = '';
-        autoSettings.style.display = '';
-        authSection.style.display = 'none';  // 연결되면 입력란 숨김
-        sendBtn.style.display = '';
+        if (disconnectBtn) disconnectBtn.style.display = '';
+        if (fetchBtn) fetchBtn.style.display = '';
+        if (autoSettings) autoSettings.style.display = '';
+        if (authSection) authSection.style.display = 'none';  // 연결되면 입력란 숨김
+        if (sendBtn) sendBtn.style.display = '';
 
         // 자동 체크 설정
-        document.getElementById('gmailCheckTime').value = data.check_time || '09:00';
+        const checkTimeInput = document.getElementById('gmailCheckTime');
+        if (checkTimeInput) checkTimeInput.value = data.check_time || '09:00';
+
         const toggle = document.getElementById('gmailAutoToggle');
-        if (data.auto_reply_enabled) {
-            toggle.classList.add('active');
-        } else {
-            toggle.classList.remove('active');
+        if (toggle) {
+            if (data.auto_reply_enabled) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
         }
 
         // 마지막 체크 시간
         if (data.last_checked_at) {
             const d = new Date(data.last_checked_at);
-            document.getElementById('gmailLastChecked').textContent =
-                '마지막: ' + d.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const lastChecked = document.getElementById('gmailLastChecked');
+            if (lastChecked) {
+                lastChecked.textContent = '마지막: ' + d.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
         }
 
+        console.log('[DEBUG] 수신함 로드 함수 호출');
         loadInboxEmails();
     } else {
+        console.log('[DEBUG] Gmail 연결 안됨');
+
         dot.className = 'gmail-status-dot disconnected';
         statusText.textContent = '연결 안됨';
-        disconnectBtn.style.display = 'none';
-        fetchBtn.style.display = 'none';
-        autoSettings.style.display = 'none';
-        authSection.style.display = 'flex';  // 연결 해제되면 입력란 다시 표시
-        sendBtn.style.display = 'none';
+        if (disconnectBtn) disconnectBtn.style.display = 'none';
+        if (fetchBtn) fetchBtn.style.display = 'none';
+        if (autoSettings) autoSettings.style.display = 'none';
+        if (authSection) authSection.style.display = 'flex';  // 연결 해제되면 입력란 다시 표시
+        if (sendBtn) sendBtn.style.display = 'none';
 
         // 입력란 초기화
-        document.getElementById('gmailEmail').value = '';
-        document.getElementById('gmailAppPassword').value = '';
+        const emailInput = document.getElementById('gmailEmail');
+        const pwInput = document.getElementById('gmailAppPassword');
+        if (emailInput) emailInput.value = '';
+        if (pwInput) pwInput.value = '';
+
+        // 수신함도 비우기
+        loadInboxEmails();
     }
 }
 
@@ -604,17 +669,35 @@ document.getElementById('gmailCheckTime').addEventListener('change', async funct
 
 // --- 수신함 로드 ---
 async function loadInboxEmails() {
+    console.log('[DEBUG] loadInboxEmails 호출됨, gmailConnected:', gmailConnected);
+
     if (!gmailConnected) {
         console.warn('Gmail이 연결되지 않았습니다. 수신함을 로드할 수 없습니다.');
+        const c = document.getElementById('inboxList');
+        const empty = document.getElementById('inboxEmpty');
+        if (c) c.innerHTML = '';
+        if (empty) {
+            empty.style.display = '';
+            empty.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);"><div style="font-size:2rem;margin-bottom:8px;">📭</div><div>Gmail이 연결되지 않았습니다</div><div style="font-size:0.8rem;margin-top:4px;">메일 작성 도구에서 Gmail을 연결하세요</div></div>';
+        }
         return;
     }
+
     try {
-        console.log('수신함 로드 중...');
+        console.log('[DEBUG] 수신함 API 호출 중...');
         const items = await (await api('/admin/mail/gmail/inbox')).json();
-        console.log('수신함 메일 개수:', items.length);
+        console.log('[DEBUG] 수신함 메일 개수:', items.length);
+        console.log('[DEBUG] 수신함 데이터:', items);
         renderInboxList(items);
     } catch (e) {
-        console.error('수신함 로드 실패:', e);
+        console.error('[ERROR] 수신함 로드 실패:', e);
+        const c = document.getElementById('inboxList');
+        const empty = document.getElementById('inboxEmpty');
+        if (c) c.innerHTML = '';
+        if (empty) {
+            empty.style.display = '';
+            empty.innerHTML = '<div style="padding:20px;text-align:center;color:var(--error);"><div style="font-size:2rem;margin-bottom:8px;">⚠️</div><div>수신함 로드 실패</div><div style="font-size:0.8rem;margin-top:4px;">'+e.message+'</div></div>';
+        }
     }
 }
 
@@ -623,21 +706,32 @@ function renderInboxList(items) {
     const empty = document.getElementById('inboxEmpty');
     const countBadge = document.getElementById('inboxCount');
 
-    if (!items.length) {
-        c.innerHTML = '';
-        empty.style.display = '';
-        countBadge.style.display = 'none';
+    console.log('[DEBUG] renderInboxList 호출, items:', items.length);
+    console.log('[DEBUG] inboxList 요소:', c, 'inboxEmpty 요소:', empty, 'inboxCount 요소:', countBadge);
+
+    // 필수 요소가 없으면 경고하고 종료
+    if (!c) {
+        console.error('[ERROR] inboxList 요소를 찾을 수 없습니다');
         return;
     }
-    empty.style.display = 'none';
+
+    if (!items.length) {
+        c.innerHTML = '';
+        if (empty) empty.style.display = '';
+        if (countBadge) countBadge.style.display = 'none';
+        return;
+    }
+    if (empty) empty.style.display = 'none';
 
     // new 카운트
     const newCount = items.filter(i => i.status === 'new').length;
-    if (newCount > 0) {
-        countBadge.textContent = newCount;
-        countBadge.style.display = '';
-    } else {
-        countBadge.style.display = 'none';
+    if (countBadge) {
+        if (newCount > 0) {
+            countBadge.textContent = newCount;
+            countBadge.style.display = '';
+        } else {
+            countBadge.style.display = 'none';
+        }
     }
 
     const statusMap = {
@@ -661,57 +755,71 @@ function renderInboxList(items) {
         </div>`;
     }
     c.innerHTML = html;
+    console.log('[DEBUG] 수신함 렌더링 완료, HTML 길이:', html.length);
 }
 
 // --- 수신 메일 클릭 → 본문 채우기 ---
 async function loadInboxItem(id) {
     try {
+        console.log('[DEBUG] 수신 메일 로드:', id);
         const data = await (await api(`/admin/mail/gmail/inbox/${id}`)).json();
         currentInboxId = id;
 
         // 수신 메일 textarea에 채우기
         const bodyText = `From: ${data.from_name || ''} <${data.from_addr}>\nSubject: ${data.subject || ''}\n\n${data.body || ''}`;
-        document.getElementById('mailIncoming').value = bodyText;
+        const mailIncoming = document.getElementById('mailIncoming');
+        if (mailIncoming) mailIncoming.value = bodyText;
 
         // HTML 메일이 있으면 iframe에 표시
         const htmlDiv = document.getElementById('mailIncomingHtml');
         const htmlFrame = document.getElementById('mailHtmlFrame');
-        if (data.body_html) {
+        if (htmlDiv && htmlFrame && data.body_html) {
             htmlFrame.srcdoc = data.body_html;
             htmlDiv.style.display = '';
-            document.getElementById('mailIncoming').style.display = 'none';
+            if (mailIncoming) mailIncoming.style.display = 'none';
         } else {
-            htmlDiv.style.display = 'none';
-            document.getElementById('mailIncoming').style.display = '';
+            if (htmlDiv) htmlDiv.style.display = 'none';
+            if (mailIncoming) mailIncoming.style.display = '';
         }
 
         // 초안이 있으면 채우기
+        const koreanDraft = document.getElementById('mailKoreanDraft');
+        const translated = document.getElementById('mailTranslated');
+        const targetLang = document.getElementById('mailTargetLang');
+        const translateBtn = document.getElementById('mailTranslateBtn');
+        const retranslateBtn = document.getElementById('mailRetranslateBtn');
+        const saveBtn = document.getElementById('mailSaveBtn');
+
         if (data.draft) {
-            document.getElementById('mailKoreanDraft').value = data.draft.korean_draft || '';
-            document.getElementById('mailTranslated').value = data.draft.translated_draft || '';
+            if (koreanDraft) koreanDraft.value = data.draft.korean_draft || '';
+            if (translated) translated.value = data.draft.translated_draft || '';
             mailDetectedLang = data.draft.detected_lang || 'en';
-            if (data.draft.detected_lang && data.draft.detected_lang !== 'ko') {
-                document.getElementById('mailTargetLang').value = data.draft.detected_lang;
+            if (data.draft.detected_lang && data.draft.detected_lang !== 'ko' && targetLang) {
+                targetLang.value = data.draft.detected_lang;
             }
             updateTargetLangBadge();
-            document.getElementById('mailTranslateBtn').disabled = false;
-            document.getElementById('mailRetranslateBtn').disabled = !(data.draft.translated_draft);
-            document.getElementById('mailSaveBtn').disabled = false;
+            if (translateBtn) translateBtn.disabled = false;
+            if (retranslateBtn) retranslateBtn.disabled = !(data.draft.translated_draft);
+            if (saveBtn) saveBtn.disabled = false;
         } else {
-            document.getElementById('mailKoreanDraft').value = '';
-            document.getElementById('mailTranslated').value = '';
+            if (koreanDraft) koreanDraft.value = '';
+            if (translated) translated.value = '';
         }
 
         // 분석 숨기기 + 번역 분할 뷰 리셋
-        document.getElementById('mailAnalysis').classList.remove('visible');
-        document.getElementById('mailIncomingSplit').classList.remove('visible');
+        const mailAnalysis = document.getElementById('mailAnalysis');
+        const mailIncomingSplit = document.getElementById('mailIncomingSplit');
+        if (mailAnalysis) mailAnalysis.classList.remove('visible');
+        if (mailIncomingSplit) mailIncomingSplit.classList.remove('visible');
 
         // 발송 버튼 활성화 (번역본이 있을 때)
         const sendBtn = document.getElementById('mailSendBtn');
-        if (data.draft && (data.draft.translated_draft || data.draft.korean_draft)) {
-            sendBtn.disabled = false;
-        } else {
-            sendBtn.disabled = true;
+        if (sendBtn) {
+            if (data.draft && (data.draft.translated_draft || data.draft.korean_draft)) {
+                sendBtn.disabled = false;
+            } else {
+                sendBtn.disabled = true;
+            }
         }
 
         // 활성 표시
@@ -725,8 +833,10 @@ async function loadInboxItem(id) {
             loadMailHistoryForInbox();
         }
 
+        console.log('[DEBUG] 수신 메일 로드 완료');
+
     } catch (e) {
-        console.error('수신 메일 로드 실패:', e);
+        console.error('[ERROR] 수신 메일 로드 실패:', e);
         alert('수신 메일을 불러오는데 실패했습니다.');
     }
 }
