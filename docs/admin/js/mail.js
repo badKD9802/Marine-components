@@ -175,6 +175,10 @@ async function translateIncoming() {
             translatedInput: !!translatedInput
         });
 
+        // 번역 결과를 표시할 영역 찾기
+        const koreanDraftArea = document.getElementById('mailKoreanDraft');
+        console.log('📝 [translateIncoming] 한국어 초안 영역:', !!koreanDraftArea);
+
         if (splitView && originalInput && translatedInput) {
             console.log('✅ [translateIncoming] 분할 뷰에 표시');
             mailIncoming.style.display = 'none';
@@ -188,11 +192,14 @@ async function translateIncoming() {
             originalInput.oninput = function() {
                 mailIncoming.value = this.value;
             };
+        } else if (koreanDraftArea) {
+            console.log('✅ [translateIncoming] 한국어 초안 영역에 표시');
+            // 한국어 초안 영역에 번역 결과 표시
+            koreanDraftArea.value = `📧 번역된 내용:\n\n${translated}\n\n---\n원문은 위의 수신 메일 영역에 있습니다.`;
+            alert('✅ 번역이 완료되었습니다!\n아래 한국어 초안 영역에서 확인하세요.');
         } else {
-            console.warn('⚠️ [translateIncoming] 분할 뷰 요소 없음, 원본 textarea에 표시');
-            // 분할 뷰가 없으면 원본 내용을 번역 결과로 교체
-            mailIncoming.value = `[원문]\n${incoming}\n\n[번역]\n${translated}`;
-            alert('번역이 완료되었습니다. 수신 메일 영역에서 확인하세요.');
+            console.warn('⚠️ [translateIncoming] 표시할 영역을 찾을 수 없음');
+            alert('번역 완료:\n\n' + translated.substring(0, 200) + '...');
         }
 
         // 소스 언어 배지 (감지된 언어가 있으면 표시)
