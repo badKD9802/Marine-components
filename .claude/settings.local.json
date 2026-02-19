@@ -37,7 +37,9 @@
       "Bash(node --check:*)",
       "Bash(echo:*)",
       "Bash(done)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git -c user.name=\"배경득\" -c user.email=\"qorudemr92@gmail.com\" commit -m \"$\\(cat <<''EOF''\nFeature: UI/UX 대규모 개선 \\(12개 기능\\)\n\nQ&A 개선:\n- 참조문서 카테고리 토글 기본 닫힌 상태로 변경\n- 새메시지 도착 알림 기능 제거\n\n대시보드:\n- 테이블명 오류 수정 \\(conversations → rag_conversations\\)\n\n문서 관리:\n- 삭제 버튼 위치 조정 \\(표 안으로 이동\\)\n- 카테고리 프리셋 선택 기능 \\(10개 프리셋 + 직접 입력\\)\n- 업로드 시 카테고리 선택 기능 추가\n- 백엔드: 업로드 API에 category 파라미터 추가\n\n메일:\n- \"빠른작업\" → \"메일 작성 도구\"로 문구 변경\n- 탭 열림 오류 수정 \\(display: block 명시\\)\n- 수신함 로드 로그 강화\n- Gmail 연결 시 입력란 숨김/표시 자동화\n\n설정 & UI:\n- 다크모드 기능 완전 제거\n- 로고 업로드 이벤트 리스너 개선 및 로그 추가\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

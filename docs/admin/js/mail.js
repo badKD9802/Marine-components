@@ -334,26 +334,38 @@ async function recomposeMail() {
 
 // --- 번역 ---
 async function translateMail() {
-    const koreanText = document.getElementById('mailKoreanDraft').value.trim();
+    const koreanDraftInput = document.getElementById('mailKoreanDraft');
+    if (!koreanDraftInput) { alert('한국어 초안 입력 영역을 찾을 수 없습니다.'); return; }
+
+    const koreanText = koreanDraftInput.value.trim();
     if (!koreanText) { alert('번역할 한국어 초안이 없습니다.'); return; }
 
-    const targetLang = document.getElementById('mailTargetLang').value;
+    const targetLangInput = document.getElementById('mailTargetLang');
+    const targetLang = targetLangInput ? targetLangInput.value : 'en';
 
     showMailLoading('번역 중...');
 
     try {
+        console.log('[DEBUG] 번역 시작, 대상 언어:', targetLang);
         const data = await (await api('/admin/mail/translate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ korean_text: koreanText, target_lang: targetLang }),
         })).json();
 
-        document.getElementById('mailTranslated').value = data.translated || '';
-        document.getElementById('mailRetranslateBtn').disabled = false;
+        console.log('[DEBUG] 번역 응답:', data);
+
+        const translatedInput = document.getElementById('mailTranslated');
+        const retranslateBtn = document.getElementById('mailRetranslateBtn');
+
+        if (translatedInput) translatedInput.value = data.translated || '';
+        if (retranslateBtn) retranslateBtn.disabled = false;
         updateTargetLangBadge();
 
+        console.log('[DEBUG] 번역 완료');
+
     } catch (e) {
-        console.error('번역 오류:', e);
+        console.error('[ERROR] 번역 오류:', e);
         alert('번역에 실패했습니다. 다시 시도해주세요.');
     } finally {
         hideMailLoading();
@@ -482,16 +494,25 @@ document.getElementById('mailTargetLang').addEventListener('change', updateTarge
 
 // --- 로딩 표시 ---
 function showMailLoading(text) {
-    document.getElementById('mailLoadingText').textContent = text || '처리 중...';
-    document.getElementById('mailLoading').classList.add('active');
-    document.getElementById('mailComposeBtn').disabled = true;
-    document.getElementById('mailRecomposeBtn').disabled = true;
-    document.getElementById('mailTranslateBtn').disabled = true;
+    const loadingText = document.getElementById('mailLoadingText');
+    const loading = document.getElementById('mailLoading');
+    const composeBtn = document.getElementById('mailComposeBtn');
+    const recomposeBtn = document.getElementById('mailRecomposeBtn');
+    const translateBtn = document.getElementById('mailTranslateBtn');
+
+    if (loadingText) loadingText.textContent = text || '처리 중...';
+    if (loading) loading.classList.add('active');
+    if (composeBtn) composeBtn.disabled = true;
+    if (recomposeBtn) recomposeBtn.disabled = true;
+    if (translateBtn) translateBtn.disabled = true;
 }
 
 function hideMailLoading() {
-    document.getElementById('mailLoading').classList.remove('active');
-    document.getElementById('mailComposeBtn').disabled = false;
+    const loading = document.getElementById('mailLoading');
+    const composeBtn = document.getElementById('mailComposeBtn');
+
+    if (loading) loading.classList.remove('active');
+    if (composeBtn) composeBtn.disabled = false;
 }
 
 // ============================================================
