@@ -1420,7 +1420,7 @@ function hideMailSettings() {
  * 설정 모달 탭 전환
  */
 function switchMailSettingsTab(tabName) {
-    const tabs = ['templates', 'signatures', 'docs', 'history', 'prompts'];
+    const tabs = ['templates', 'signatures', 'docs', 'inbox', 'prompts'];
     tabs.forEach(t => {
         const btns = document.querySelectorAll('.modal-tabs .modal-tab');
         btns.forEach(btn => {
@@ -1440,7 +1440,7 @@ function switchMailSettingsTab(tabName) {
     if (tabName === 'templates') loadTemplates();
     else if (tabName === 'signatures') loadSignatures();
     else if (tabName === 'docs') loadMailDocuments();
-    else if (tabName === 'history') loadMailHistory();
+    else if (tabName === 'inbox') loadInboxEmails();
     else if (tabName === 'prompts') loadPromptExamples();
 }
 
@@ -1449,7 +1449,7 @@ function getTabLabelByName(name) {
         'templates': '템플릿',
         'signatures': '서명',
         'docs': '참조 문서',
-        'history': '이력',
+        'inbox': '수신함',
         'prompts': '프롬프트'
     };
     return labels[name] || name;
