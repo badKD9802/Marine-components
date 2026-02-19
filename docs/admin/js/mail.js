@@ -2,6 +2,7 @@
 /**
  * mail.js
  * 메일 작성, Gmail 연동, 템플릿, 서명, 프롬프트 관리
+ * @version 2.0.0 - 2026-02-19 - DOM null 체크 완전 적용
  */
 
 var mailDocuments = [];
