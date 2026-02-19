@@ -1262,69 +1262,19 @@ async function loadSignaturesForMail() {
  * 메일 패널 전환 (수신함/문서/템플릿 등)
  */
 function showMailPanel(panel) {
-    currentMailPanel = panel;
+    console.log('메일 패널 열기:', panel);
 
-    // 왼쪽 사이드바 active 상태 변경
-    document.querySelectorAll('.mail-sidebar-item').forEach(item => item.classList.remove('active'));
-    var sidebarItem = document.getElementById('sidebar' + panel.charAt(0).toUpperCase() + panel.slice(1));
-    if (sidebarItem) sidebarItem.classList.add('active');
-
-    // 오른쪽 패널 표시/숨김
-    var rightPanel = document.getElementById('mailRightPanel');
-    var panelTitles = {
-        compose: '📨 메일 작성',
-        inbox: '📥 수신함',
-        docs: '📁 문서',
-        templates: '📝 템플릿',
-        history: '🕐 이력',
-        prompts: '💬 예시',
-        signatures: '✍️ 서명'
-    };
-
-    // 메일 작성은 패널 숨김, 나머지는 표시
-    if (panel === 'compose') {
-        rightPanel.style.display = 'none';
-    } else {
-        rightPanel.style.display = 'flex';
-        document.getElementById('mailPanelTitle').textContent = panelTitles[panel];
+    // mailSettingsModal 표시
+    const modal = document.getElementById('mailSettingsModal');
+    if (!modal) {
+        console.error('mailSettingsModal을 찾을 수 없습니다');
+        return;
     }
 
-    // 모든 패널 숨기기
-    document.getElementById('mailSidePanelInbox').style.display = 'none';
-    document.getElementById('mailSidePanelDocs').style.display = 'none';
-    document.getElementById('mailSidePanelTemplates').style.display = 'none';
-    document.getElementById('mailSidePanelHistory').style.display = 'none';
-    document.getElementById('mailSidePanelPrompts').style.display = 'none';
-    document.getElementById('mailSidePanelSignatures').style.display = 'none';
+    modal.style.display = 'flex';
 
-    // 선택한 패널만 표시
-    var panelMap = {
-        inbox: 'mailSidePanelInbox',
-        docs: 'mailSidePanelDocs',
-        templates: 'mailSidePanelTemplates',
-        history: 'mailSidePanelHistory',
-        prompts: 'mailSidePanelPrompts',
-        signatures: 'mailSidePanelSignatures'
-    };
-
-    if (panelMap[panel]) {
-        const panelElement = document.getElementById(panelMap[panel]);
-        if (panelElement) {
-            panelElement.style.display = 'block';
-            console.log('메일 패널 표시:', panel, panelMap[panel]);
-        } else {
-            console.error('메일 패널을 찾을 수 없음:', panelMap[panel]);
-        }
-    }
-
-    // 데이터 로드
-    if (panel === 'templates') {
-        loadTemplates();
-    } else if (panel === 'prompts') {
-        loadPromptExamples();
-    } else if (panel === 'signatures') {
-        loadSignatures();
-    }
+    // switchMailSettingsTab 호출하여 적절한 탭 표시
+    switchMailSettingsTab(panel);
 }
 
 function hideMailPanel() {
