@@ -126,22 +126,43 @@ function renderMailHistory(items) {
 
 // --- 수신 메일 한국어 번역 ---
 async function translateIncoming() {
+    console.log('🌏 [translateIncoming] 함수 호출됨');
+
     const mailIncoming = document.getElementById('mailIncoming');
-    if (!mailIncoming) { alert('메일 입력 영역을 찾을 수 없습니다.'); return; }
+    console.log('🔍 [translateIncoming] mailIncoming 요소:', mailIncoming);
+
+    if (!mailIncoming) {
+        console.error('❌ [translateIncoming] mailIncoming 요소를 찾을 수 없음');
+        alert('메일 입력 영역을 찾을 수 없습니다.');
+        return;
+    }
 
     const incoming = mailIncoming.value.trim();
-    if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
+    console.log('📧 [translateIncoming] 수신 메일 내용 길이:', incoming.length);
+
+    if (!incoming) {
+        console.warn('⚠️ [translateIncoming] 수신 메일 내용이 비어있음');
+        alert('수신 메일 내용을 입력해주세요.');
+        return;
+    }
 
     showMailLoading('수신 메일을 한국어로 번역하고 있습니다...');
+    console.log('⏳ [translateIncoming] 로딩 표시 시작');
 
     try {
-        const data = await (await api('/admin/mail/translate-incoming', {
+        console.log('🌐 [translateIncoming] API 호출 시작');
+        const response = await api('/admin/mail/translate-incoming', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ foreign_text: incoming, source_lang: 'auto' }),
-        })).json();
+        });
+        console.log('📥 [translateIncoming] API 응답 받음:', response.status);
+
+        const data = await response.json();
+        console.log('✅ [translateIncoming] 응답 데이터:', data);
 
         const translated = data.translated_korean || '';
+        console.log('🇰🇷 [translateIncoming] 번역 결과 길이:', translated.length);
 
         // 단일 textarea 숨기고 분할 뷰 표시
         const splitView = document.getElementById('mailIncomingSplit');
