@@ -75,9 +75,16 @@ async function uploadFile(file, purpose) {
     const fname = document.getElementById('uploadFileName');
     prog.style.display = 'block';
     fname.textContent = `처리 중: ${file.name}`;
+
+    // 선택된 카테고리 가져오기
+    const categorySelect = document.getElementById('uploadCategorySelect');
+    const category = categorySelect ? categorySelect.value : '미분류';
+
     const fd = new FormData();
     fd.append('file', file);
     fd.append('purpose', purpose);
+    fd.append('category', category);
+
     try {
         const res = await api('/admin/upload', { method: 'POST', body: fd });
         const d = await res.json();
@@ -255,13 +262,93 @@ function getMailSelectedDocIds() {
 }
 
 /**
+ * 카테고리 프리셋 목록
+ */
+const CATEGORY_PRESETS = [
+    '엔진',
+    '펌프',
+    '프로펠러',
+    '배터리',
+    '항해장비',
+    '안전장비',
+    '전기/전자',
+    '배관/호스',
+    '매뉴얼',
+    '기타'
+];
+
+/**
  * 카테고리 편집
  */
 function editCategory(docId, currentCategory) {
-    const newCategory = prompt('카테고리를 입력하세요:', currentCategory);
-    if (newCategory === null || newCategory.trim() === '') return;
+    // 모달 생성
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>카테고리 선택</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+            </div>
+            <div class="modal-body">
+                <label style="display:block;margin-bottom:8px;font-weight:600;">카테고리 선택</label>
+                <select id="categorySelect" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;margin-bottom:12px;font-size:0.9rem;">
+                    <option value="">-- 선택하세요 --</option>
+                    ${CATEGORY_PRESETS.map(cat => `<option value="${cat}" ${cat === currentCategory ? 'selected' : ''}>${cat}</option>`).join('')}
+                    <option value="__custom__">직접 입력...</option>
+                </select>
+                <div id="customCategoryInput" style="display:none;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;">직접 입력</label>
+                    <input type="text" id="customCategory" placeholder="카테고리 입력" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">취소</button>
+                <button class="btn btn-primary" onclick="saveCategoryFromModal(${docId})">저장</button>
+            </div>
+        </div>
+    `;
 
-    updateDocumentCategory(docId, newCategory.trim());
+    document.body.appendChild(modal);
+
+    // 선택 변경 이벤트
+    const select = document.getElementById('categorySelect');
+    const customInput = document.getElementById('customCategoryInput');
+    select.addEventListener('change', (e) => {
+        if (e.target.value === '__custom__') {
+            customInput.style.display = 'block';
+        } else {
+            customInput.style.display = 'none';
+        }
+    });
+
+    // 현재 카테고리가 프리셋에 없으면 직접 입력으로 설정
+    if (currentCategory && !CATEGORY_PRESETS.includes(currentCategory)) {
+        select.value = '__custom__';
+        customInput.style.display = 'block';
+        document.getElementById('customCategory').value = currentCategory;
+    }
+}
+
+/**
+ * 모달에서 카테고리 저장
+ */
+function saveCategoryFromModal(docId) {
+    const select = document.getElementById('categorySelect');
+    let category = select.value;
+
+    if (category === '__custom__') {
+        category = document.getElementById('customCategory').value.trim();
+    }
+
+    if (!category || category === '') {
+        alert('카테고리를 선택하거나 입력하세요.');
+        return;
+    }
+
+    updateDocumentCategory(docId, category);
+    document.querySelector('.modal-overlay').remove();
 }
 
 /**

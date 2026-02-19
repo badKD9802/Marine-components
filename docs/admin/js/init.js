@@ -1,27 +1,8 @@
 
 /**
  * init.js
- * 애플리케이션 초기화, 다크 모드, 이벤트 리스너, 탭 전환
+ * 애플리케이션 초기화, 이벤트 리스너, 탭 전환
  */
-
-/**
- * 다크 모드 토글
- */
-function toggleDarkMode() {
-    document.body.classList.toggle('dark');
-    const isDark = document.body.classList.contains('dark');
-    localStorage.setItem('darkMode', isDark ? 'true' : 'false');
-}
-
-/**
- * 다크 모드 초기화
- */
-function initDarkMode() {
-    const savedMode = localStorage.getItem('darkMode');
-    if (savedMode === 'true') {
-        document.body.classList.add('dark');
-    }
-}
 
 /**
  * 업로드 카드 설정
@@ -65,7 +46,6 @@ function switchTab(tab) {
  * DOM 준비 완료 이벤트 핸들러
  */
 document.addEventListener('DOMContentLoaded', () => {
-    initDarkMode();  // 다크 모드 복원
     loadSiteLogo();  // 로고 로드
     initLogoUpload(); // 로고 드래그앤드롭 초기화
     if (authToken) { showDashboard(); loadDashboardStats(); }

@@ -493,11 +493,11 @@ function renderRagDocuments(docs) {
         html += `
             <div class="ref-doc-category">
                 <div class="ref-doc-category-header" onclick="toggleCategory('${categoryId}')">
-                    <span class="category-toggle-icon" id="${categoryId}-icon">▼</span>
+                    <span class="category-toggle-icon" id="${categoryId}-icon">▶</span>
                     <span class="category-name">${esc(category)}</span>
                     <span class="category-count">${docsInCategory.length}개</span>
                 </div>
-                <div class="ref-doc-category-content" id="${categoryId}" style="display:block">
+                <div class="ref-doc-category-content" id="${categoryId}" style="display:none">
         `;
 
         for (const d of docsInCategory) {
@@ -949,49 +949,12 @@ async function checkForNewMessages() {
                     });
                 }, 100);
             }
-
-            // 새 메시지 알림 (선택적)
-            showNewMessageIndicator();
         }
     } catch (e) {
         console.error('❌ [POLLING] 메시지 체크 실패:', e);
     } finally {
         isPolling = false;
     }
-}
-
-/**
- * 새 메시지 알림 표시
- */
-function showNewMessageIndicator() {
-    // 간단한 시각적 피드백
-    const chatContainer = document.getElementById('chatMessages');
-    if (!chatContainer) return;
-
-    // 임시 배지 표시
-    const badge = document.createElement('div');
-    badge.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        z-index: 9999;
-        animation: slideInRight 0.3s ease;
-    `;
-    badge.textContent = '✨ 새 메시지가 도착했습니다';
-    document.body.appendChild(badge);
-
-    // 2초 후 제거
-    setTimeout(() => {
-        badge.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => badge.remove(), 300);
-    }, 2000);
 }
 
 /**

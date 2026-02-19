@@ -117,7 +117,17 @@ function initLogoUpload() {
     const dropZone = document.getElementById('logoDropZone');
     const fileInput = document.getElementById('logoFileInput');
 
-    if (!dropZone || !fileInput) return;
+    if (!dropZone || !fileInput) {
+        console.warn('로고 업로드 요소를 찾을 수 없습니다.');
+        return;
+    }
+
+    // 클릭 처리 (inline onclick 대신 이벤트 리스너 사용)
+    dropZone.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('로고 업로드 영역 클릭됨');
+        fileInput.click();
+    });
 
     // 드래그오버 효과
     dropZone.addEventListener('dragover', (e) => {
@@ -139,6 +149,7 @@ function initLogoUpload() {
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {
+            console.log('로고 파일 드롭됨:', files[0].name);
             handleLogoFile(files[0]);
         }
     });
@@ -146,9 +157,12 @@ function initLogoUpload() {
     // 파일 선택 처리
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
+            console.log('로고 파일 선택됨:', e.target.files[0].name);
             handleLogoFile(e.target.files[0]);
         }
     });
+
+    console.log('로고 업로드 초기화 완료');
 }
 
 /**

@@ -27,7 +27,6 @@
         <div class="header">
             <h1>Young Marine Tech 관리자</h1>
             <div style="display:flex;gap:10px;align-items:center;">
-                <button onclick="toggleDarkMode()" style="background:var(--bg-gray);border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:1.2rem;" title="다크 모드 전환">🌓</button>
                 <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
             </div>
         </div>
@@ -335,6 +334,26 @@
                     </div>
                 </div>
 
+                <div style="margin: 20px 0; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <label style="display:block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;">📁 업로드 카테고리 선택</label>
+                    <select id="uploadCategorySelect" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;">
+                        <option value="미분류">미분류 (기본)</option>
+                        <option value="엔진">엔진</option>
+                        <option value="펌프">펌프</option>
+                        <option value="프로펠러">프로펠러</option>
+                        <option value="배터리">배터리</option>
+                        <option value="항해장비">항해장비</option>
+                        <option value="안전장비">안전장비</option>
+                        <option value="전기/전자">전기/전자</option>
+                        <option value="배관/호스">배관/호스</option>
+                        <option value="매뉴얼">매뉴얼</option>
+                        <option value="기타">기타</option>
+                    </select>
+                    <div style="margin-top: 6px; font-size: 0.75rem; color: var(--text-muted);">
+                        💡 업로드할 문서의 카테고리를 선택하세요. 나중에 변경 가능합니다.
+                    </div>
+                </div>
+
                 <div class="upload-progress" id="uploadProgress">
                     <div class="file-name" id="uploadFileName">업로드 중...</div>
                     <div class="progress-bar"><div class="fill"></div></div>
@@ -451,7 +470,7 @@
                     <!-- 사이드바 헤더 -->
                     <div class="mail-sidebar-header">
                         <button class="btn btn-primary" style="width:100%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="showQuickActions()">
-                            ⚡ 빠른 작업
+                            🛠️ 메일 작성 도구
                         </button>
                     </div>
 
@@ -665,11 +684,11 @@
 
             </div>
 
-            <!-- 빠른 작업 모달 -->
+            <!-- 메일 작성 도구 모달 -->
             <div class="modal-overlay" id="quickActionsModal" style="display:none;" onclick="if(event.target===this) hideQuickActions()">
                 <div class="modal-container modal-md">
                     <div class="modal-header">
-                        <h3>⚡ 빠른 작업</h3>
+                        <h3>🛠️ 메일 작성 도구</h3>
                         <button class="modal-close" onclick="hideQuickActions()">×</button>
                     </div>
                     <div class="modal-body">
@@ -879,7 +898,7 @@
                             <div>
                                 <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">새 로고 업로드</label>
                                 <!-- 드래그앤드롭 영역 -->
-                                <div id="logoDropZone" style="border:2px dashed var(--border);border-radius:8px;padding:30px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg-gray);" onclick="document.getElementById('logoFileInput').click()">
+                                <div id="logoDropZone" style="border:2px dashed var(--border);border-radius:8px;padding:30px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg-gray);">
                                     <div style="font-size:2rem;margin-bottom:8px;">📁</div>
                                     <div style="font-size:0.85rem;color:var(--text-regular);margin-bottom:4px;">이미지 파일을 드래그하거나 클릭하세요</div>
                                     <div style="font-size:0.75rem;color:var(--text-muted);">PNG, JPG, GIF 지원</div>

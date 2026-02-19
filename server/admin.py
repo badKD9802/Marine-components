@@ -119,6 +119,7 @@ async def get_document(doc_id: int, _=Depends(verify_token)):
 async def upload_document(
     file: UploadFile = File(...),
     purpose: str = Form("consultant"),
+    category: str = Form("미분류"),
     _=Depends(verify_token),
 ):
     if not db.vector_pool:
@@ -137,10 +138,11 @@ async def upload_document(
     # DB에 문서 레코드 생성 (processing)
     async with db.vector_pool.acquire() as conn:
         row = await conn.fetchrow(
-            "INSERT INTO documents (filename, file_type, status, purpose) VALUES ($1, $2, 'processing', $3) RETURNING id",
+            "INSERT INTO documents (filename, file_type, status, purpose, category) VALUES ($1, $2, 'processing', $3, $4) RETURNING id",
             file.filename,
             file_type,
             purpose,
+            category,
         )
     doc_id = row["id"]
 
@@ -359,9 +361,9 @@ async def get_dashboard_stats(_=Depends(verify_token)):
         )
 
         # RAG 대화 통계
-        total_conversations = await conn.fetchval("SELECT COUNT(*) FROM conversations")
+        total_conversations = await conn.fetchval("SELECT COUNT(*) FROM rag_conversations")
         conversations_today = await conn.fetchval(
-            "SELECT COUNT(*) FROM conversations WHERE created_at::date = CURRENT_DATE"
+            "SELECT COUNT(*) FROM rag_conversations WHERE created_at::date = CURRENT_DATE"
         )
 
         # 프롬프트 예시 & 서명 개수

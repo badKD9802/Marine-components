@@ -481,8 +481,7 @@ function updateGmailUI(data) {
     const disconnectBtn = document.getElementById('gmailDisconnectBtn');
     const fetchBtn = document.getElementById('gmailFetchBtn');
     const autoSettings = document.getElementById('gmailAutoSettings');
-    const emailInput = document.getElementById('gmailEmail');
-    const pwInput = document.getElementById('gmailAppPassword');
+    const authSection = document.getElementById('gmailAuthSection');
     const sendBtn = document.getElementById('mailSendBtn');
 
     if (data.connected) {
@@ -491,9 +490,7 @@ function updateGmailUI(data) {
         disconnectBtn.style.display = '';
         fetchBtn.style.display = '';
         autoSettings.style.display = '';
-        emailInput.value = data.email;
-        emailInput.disabled = true;
-        pwInput.style.display = 'none';
+        authSection.style.display = 'none';  // 연결되면 입력란 숨김
         sendBtn.style.display = '';
 
         // 자동 체크 설정
@@ -519,11 +516,12 @@ function updateGmailUI(data) {
         disconnectBtn.style.display = 'none';
         fetchBtn.style.display = 'none';
         autoSettings.style.display = 'none';
-        emailInput.disabled = false;
-        emailInput.value = '';
-        pwInput.style.display = '';
-        pwInput.value = '';
+        authSection.style.display = 'flex';  // 연결 해제되면 입력란 다시 표시
         sendBtn.style.display = 'none';
+
+        // 입력란 초기화
+        document.getElementById('gmailEmail').value = '';
+        document.getElementById('gmailAppPassword').value = '';
     }
 }
 
@@ -606,11 +604,18 @@ document.getElementById('gmailCheckTime').addEventListener('change', async funct
 
 // --- 수신함 로드 ---
 async function loadInboxEmails() {
-    if (!gmailConnected) return;
+    if (!gmailConnected) {
+        console.warn('Gmail이 연결되지 않았습니다. 수신함을 로드할 수 없습니다.');
+        return;
+    }
     try {
+        console.log('수신함 로드 중...');
         const items = await (await api('/admin/mail/gmail/inbox')).json();
+        console.log('수신함 메일 개수:', items.length);
         renderInboxList(items);
-    } catch (e) { console.error('수신함 로드 실패:', e); }
+    } catch (e) {
+        console.error('수신함 로드 실패:', e);
+    }
 }
 
 function renderInboxList(items) {
@@ -1303,7 +1308,13 @@ function showMailPanel(panel) {
     };
 
     if (panelMap[panel]) {
-        document.getElementById(panelMap[panel]).style.display = '';
+        const panelElement = document.getElementById(panelMap[panel]);
+        if (panelElement) {
+            panelElement.style.display = 'block';
+            console.log('메일 패널 표시:', panel, panelMap[panel]);
+        } else {
+            console.error('메일 패널을 찾을 수 없음:', panelMap[panel]);
+        }
     }
 
     // 데이터 로드
