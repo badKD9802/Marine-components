@@ -719,6 +719,12 @@ async function loadInboxItem(id) {
         const clicked = document.querySelector(`.inbox-item[onclick*="loadInboxItem(${id})"]`);
         if (clicked) clicked.classList.add('active');
 
+        // 이력 탭이 열려있으면 자동으로 이력 업데이트
+        const historyPanel = document.getElementById('mailSidePanelHistory');
+        if (historyPanel && historyPanel.style.display === 'block') {
+            loadMailHistoryForInbox();
+        }
+
     } catch (e) {
         console.error('수신 메일 로드 실패:', e);
         alert('수신 메일을 불러오는데 실패했습니다.');
@@ -1420,7 +1426,7 @@ function hideMailSettings() {
  * 설정 모달 탭 전환
  */
 function switchMailSettingsTab(tabName) {
-    const tabs = ['templates', 'signatures', 'docs', 'inbox', 'prompts'];
+    const tabs = ['templates', 'signatures', 'docs', 'history', 'prompts'];
     tabs.forEach(t => {
         const btns = document.querySelectorAll('.modal-tabs .modal-tab');
         btns.forEach(btn => {
@@ -1440,7 +1446,7 @@ function switchMailSettingsTab(tabName) {
     if (tabName === 'templates') loadTemplates();
     else if (tabName === 'signatures') loadSignatures();
     else if (tabName === 'docs') loadMailDocuments();
-    else if (tabName === 'inbox') loadInboxEmails();
+    else if (tabName === 'history') loadMailHistoryForInbox();
     else if (tabName === 'prompts') loadPromptExamples();
 }
 
@@ -1449,7 +1455,7 @@ function getTabLabelByName(name) {
         'templates': '템플릿',
         'signatures': '서명',
         'docs': '참조 문서',
-        'inbox': '수신함',
+        'history': '이력',
         'prompts': '프롬프트'
     };
     return labels[name] || name;
@@ -1507,5 +1513,100 @@ function hideMailAnalysis() {
     const analysisDiv = document.getElementById('mailAnalysis');
     if (analysisDiv) {
         analysisDiv.classList.remove('active');
+    }
+}
+
+/**
+ * 선택된 수신 메일의 작성 이력 로드
+ */
+async function loadMailHistoryForInbox() {
+    const historyList = document.getElementById('mailHistoryList');
+    const emailInfo = document.getElementById('historyEmailInfo');
+    const emailSubject = document.getElementById('historyEmailSubject');
+    const emailFrom = document.getElementById('historyEmailFrom');
+
+    if (!currentInboxId) {
+        historyList.innerHTML = '<div class="empty-state-sm">왼쪽 수신함에서 메일을 선택하면<br/>해당 메일의 작성 이력이 표시됩니다</div>';
+        emailInfo.style.display = 'none';
+        return;
+    }
+
+    try {
+        console.log('수신 메일 이력 로드:', currentInboxId);
+
+        // 수신 메일 정보 가져오기
+        const inboxData = await (await api(`/admin/mail/gmail/inbox/${currentInboxId}`)).json();
+
+        // 메일 정보 표시
+        emailSubject.textContent = inboxData.subject || '(제목 없음)';
+        emailFrom.textContent = `${inboxData.from_name || ''} <${inboxData.from_addr}>`;
+        emailInfo.style.display = 'block';
+
+        // 해당 메일의 작성 이력 가져오기 (inbox_id로 필터링)
+        const allHistory = await (await api('/admin/mail/history')).json();
+        const filteredHistory = allHistory.filter(h => h.inbox_id === currentInboxId);
+
+        if (!filteredHistory.length) {
+            historyList.innerHTML = '<div class="empty-state-sm">이 메일에 대한 작성 이력이 없습니다</div>';
+            return;
+        }
+
+        // 이력 렌더링
+        let html = '';
+        for (const item of filteredHistory) {
+            const date = item.created_at ? new Date(item.created_at).toLocaleString('ko-KR', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : '';
+
+            html += `
+                <div class="history-item" onclick="loadHistoryItem(${item.id})">
+                    <div class="history-item-header">
+                        <span class="history-item-date">${date}</span>
+                        ${item.is_sent ? '<span class="badge badge-done">발송완료</span>' : '<span class="badge badge-draft">임시저장</span>'}
+                    </div>
+                    <div class="history-item-preview">${esc(item.korean_draft ? item.korean_draft.substring(0, 100) : '')}</div>
+                </div>
+            `;
+        }
+        historyList.innerHTML = html;
+
+    } catch (e) {
+        console.error('이력 로드 실패:', e);
+        historyList.innerHTML = '<div class="empty-state-sm">이력을 불러오는데 실패했습니다</div>';
+    }
+}
+
+/**
+ * 이력 항목 클릭 시 내용 불러오기
+ */
+async function loadHistoryItem(historyId) {
+    try {
+        const item = await (await api(`/admin/mail/history/${historyId}`)).json();
+
+        // 수신 메일 표시
+        document.getElementById('mailIncoming').value = item.incoming_email || '';
+
+        // 초안 채우기
+        document.getElementById('mailKoreanDraft').value = item.korean_draft || '';
+        document.getElementById('mailTranslated').value = item.translated_draft || '';
+
+        // 언어 설정
+        if (item.detected_lang) {
+            mailDetectedLang = item.detected_lang;
+            if (item.detected_lang !== 'ko') {
+                document.getElementById('mailTargetLang').value = item.detected_lang;
+            }
+            updateTargetLangBadge();
+        }
+
+        // 버튼 활성화
+        document.getElementById('mailTranslateBtn').disabled = false;
+        document.getElementById('mailSaveBtn').disabled = false;
+
+        console.log('이력 항목 로드 완료:', historyId);
+
+    } catch (e) {
+        console.error('이력 항목 로드 실패:', e);
+        alert('이력을 불러오는데 실패했습니다.');
     }
 }

@@ -701,9 +701,9 @@
                                 <div class="quick-action-icon">📝</div>
                                 <div class="quick-action-label">템플릿</div>
                             </button>
-                            <button class="quick-action-btn" onclick="showMailPanel('inbox'); hideQuickActions()">
-                                <div class="quick-action-icon">📥</div>
-                                <div class="quick-action-label">수신함</div>
+                            <button class="quick-action-btn" onclick="showMailPanel('history'); hideQuickActions()">
+                                <div class="quick-action-icon">🕐</div>
+                                <div class="quick-action-label">이력</div>
                             </button>
                             <button class="quick-action-btn" onclick="showMailPanel('prompts'); hideQuickActions()">
                                 <div class="quick-action-icon">💬</div>
@@ -731,7 +731,7 @@
                             <button class="modal-tab active" onclick="switchMailSettingsTab('templates')">템플릿</button>
                             <button class="modal-tab" onclick="switchMailSettingsTab('signatures')">서명</button>
                             <button class="modal-tab" onclick="switchMailSettingsTab('docs')">참조 문서</button>
-                            <button class="modal-tab" onclick="switchMailSettingsTab('inbox')">수신함</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('history')">이력</button>
                             <button class="modal-tab" onclick="switchMailSettingsTab('prompts')">프롬프트 예시</button>
                         </div>
 
@@ -814,11 +814,17 @@
                             </div>
                         </div>
 
-                        <!-- 수신함 패널 -->
-                        <div id="mailSidePanelInbox" class="modal-tab-content" style="display:none;">
-                            <div class="mail-inbox-list">
-                                <div class="empty-state-sm" id="inboxEmpty">Gmail을 연결하면 수신 메일이 표시됩니다</div>
-                                <div id="inboxList"></div>
+                        <!-- 이력 패널 -->
+                        <div id="mailSidePanelHistory" class="modal-tab-content" style="display:none;">
+                            <div class="mail-history-header">
+                                <div id="historyEmailInfo" style="padding:12px;background:var(--bg-secondary);border-radius:6px;margin-bottom:12px;display:none;">
+                                    <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:4px;">선택된 메일</div>
+                                    <div id="historyEmailSubject" style="font-weight:600;"></div>
+                                    <div id="historyEmailFrom" style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;"></div>
+                                </div>
+                            </div>
+                            <div class="mail-history-list" id="mailHistoryList">
+                                <div class="empty-state-sm">왼쪽 수신함에서 메일을 선택하면<br/>해당 메일의 작성 이력이 표시됩니다</div>
                             </div>
                         </div>
 
