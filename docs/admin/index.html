@@ -496,10 +496,7 @@
                         <div class="mail-panel-header">
                             <div class="mail-panel-tabs">
                                 <button class="mail-tab active" id="tabReadOriginal" onclick="switchMailReadTab('original')">
-                                    <span>📧</span> 원문
-                                </button>
-                                <button class="mail-tab" id="tabReadTranslated" onclick="switchMailReadTab('translated')">
-                                    <span>🇰🇷</span> 번역
+                                    <span>📧</span> 수신 메일
                                 </button>
                             </div>
                             <div class="mail-panel-actions">
@@ -535,26 +532,6 @@
                             <div class="mail-analysis" id="mailAnalysis">
                                 <div class="mail-analysis-label">🔍 메일 분석</div>
                                 <div id="mailAnalysisText"></div>
-                            </div>
-                        </div>
-
-                        <!-- 번역 컨텐츠 -->
-                        <div class="mail-read-content" id="mailReadTranslatedContent" style="display:none;">
-                            <div class="mail-split-view">
-                                <div class="mail-split-pane">
-                                    <div class="mail-split-pane-header">
-                                        <span>📄 원문</span>
-                                        <span class="mail-lang-badge" id="incomingSrcLangBadge">EN</span>
-                                    </div>
-                                    <textarea id="mailIncomingOriginal" readonly></textarea>
-                                </div>
-                                <div class="mail-split-pane">
-                                    <div class="mail-split-pane-header">
-                                        <span>🇰🇷 한국어 번역</span>
-                                        <span class="mail-lang-badge badge-ko">KO</span>
-                                    </div>
-                                    <textarea id="mailIncomingTranslated" readonly placeholder="번역 결과가 여기에 표시됩니다."></textarea>
-                                </div>
                             </div>
                         </div>
                     </section>

@@ -164,43 +164,104 @@ async function translateIncoming() {
         const translated = data.translated_korean || '';
         console.log('🇰🇷 [translateIncoming] 번역 결과 길이:', translated.length);
 
-        // 단일 textarea 숨기고 분할 뷰 표시
-        const splitView = document.getElementById('mailIncomingSplit');
-        const originalInput = document.getElementById('mailIncomingOriginal');
-        const translatedInput = document.getElementById('mailIncomingTranslated');
+        // 리사이즈 핸들이 없으면 추가 (mailIncoming 바로 다음에)
+        let resizeHandle = document.getElementById('translationResizeHandle');
+        console.log('🔍 [translateIncoming] resizeHandle 체크:', resizeHandle);
 
-        console.log('🔍 [translateIncoming] 분할 뷰 요소:', {
-            splitView: !!splitView,
-            originalInput: !!originalInput,
-            translatedInput: !!translatedInput
-        });
-
-        // 번역 결과를 표시할 영역 찾기
-        const koreanDraftArea = document.getElementById('mailKoreanDraft');
-        console.log('📝 [translateIncoming] 한국어 초안 영역:', !!koreanDraftArea);
-
-        if (splitView && originalInput && translatedInput) {
-            console.log('✅ [translateIncoming] 분할 뷰에 표시');
-            mailIncoming.style.display = 'none';
-            splitView.classList.add('visible');
-
-            // 원문 채우기
-            originalInput.value = incoming;
-            translatedInput.value = translated;
-
-            // 원문 편집 시 단일 textarea도 동기화
-            originalInput.oninput = function() {
-                mailIncoming.value = this.value;
-            };
-        } else if (koreanDraftArea) {
-            console.log('✅ [translateIncoming] 한국어 초안 영역에 표시');
-            // 한국어 초안 영역에 번역 결과 표시
-            koreanDraftArea.value = `📧 번역된 내용:\n\n${translated}\n\n---\n원문은 위의 수신 메일 영역에 있습니다.`;
-            alert('✅ 번역이 완료되었습니다!\n아래 한국어 초안 영역에서 확인하세요.');
-        } else {
-            console.warn('⚠️ [translateIncoming] 표시할 영역을 찾을 수 없음');
-            alert('번역 완료:\n\n' + translated.substring(0, 200) + '...');
+        // 기존 핸들이 있으면 삭제하고 새로 만들기 (디버깅용)
+        if (resizeHandle) {
+            console.log('🗑️ [translateIncoming] 기존 리사이즈 핸들 삭제');
+            resizeHandle.remove();
+            resizeHandle = null;
         }
+
+        if (!resizeHandle && mailIncoming.parentElement) {
+            console.log('🔧 [translateIncoming] 리사이즈 핸들 생성 시작');
+            resizeHandle = document.createElement('div');
+            resizeHandle.id = 'translationResizeHandle';
+            resizeHandle.style.cssText = `
+                height: 30px;
+                background: #fbbf24;
+                cursor: row-resize;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                margin: 12px 0;
+                transition: all 0.2s;
+                border-radius: 6px;
+                border: 2px solid #f59e0b;
+            `;
+            resizeHandle.innerHTML = '<div style="font-size: 14px; font-weight: bold; color: #78350f;">━━━ 드래그해서 크기 조절 ━━━</div>';
+
+            // hover 효과
+            resizeHandle.onmouseenter = () => {
+                resizeHandle.style.background = '#f59e0b';
+            };
+            resizeHandle.onmouseleave = () => {
+                resizeHandle.style.background = '#fbbf24';
+            };
+
+            // mailIncoming 바로 다음 형제로 추가
+            console.log('📍 [translateIncoming] mailIncoming.nextSibling:', mailIncoming.nextSibling);
+            mailIncoming.parentElement.insertBefore(resizeHandle, mailIncoming.nextSibling);
+            console.log('✅ [translateIncoming] 리사이즈 핸들 DOM에 추가 완료');
+            console.log('📊 [translateIncoming] resizeHandle 스타일:', resizeHandle.style.cssText);
+        } else {
+            console.warn('⚠️ [translateIncoming] 리사이즈 핸들 생성 조건 불만족');
+        }
+
+        // 원문 아래에 번역 결과 박스 생성 또는 업데이트 (리사이즈 핸들 다음에)
+        let translatedBox = document.getElementById('mailTranslatedBox');
+
+        if (!translatedBox) {
+            console.log('📦 [translateIncoming] 번역 결과 박스 생성');
+            // 박스가 없으면 새로 생성
+            translatedBox = document.createElement('div');
+            translatedBox.id = 'mailTranslatedBox';
+            translatedBox.style.cssText = `
+                margin-top: 0;
+                padding: 16px;
+                background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+                border: 2px solid #0ea5e9;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+            `;
+
+            // resizeHandle 바로 다음에 추가
+            if (resizeHandle && resizeHandle.parentElement) {
+                resizeHandle.parentElement.insertBefore(translatedBox, resizeHandle.nextSibling);
+            }
+        }
+
+        // 리사이즈 기능 추가 (처음 생성 시에만)
+        if (resizeHandle && !resizeHandle.dataset.initialized) {
+            setupTranslationResize(mailIncoming, translatedBox, resizeHandle);
+            resizeHandle.dataset.initialized = 'true';
+            console.log('✅ [translateIncoming] 리사이즈 기능 초기화 완료');
+        }
+
+        // 번역 결과 업데이트
+        translatedBox.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="font-weight: 600; color: #0369a1; font-size: 0.95rem;">
+                    🇰🇷 번역 결과
+                </div>
+                <button onclick="copyTranslatedText()" style="padding: 4px 12px; background: #0ea5e9; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                    📋 복사
+                </button>
+            </div>
+            <div style="white-space: pre-wrap; line-height: 1.6; color: #1e293b; max-height: 300px; overflow-y: auto; padding: 8px; background: white; border-radius: 4px;">${esc(translated)}</div>
+        `;
+
+        // 번역 결과 저장 (현재 수신 메일 ID와 연결)
+        if (currentInboxId) {
+            saveTranslation(currentInboxId, incoming, translated);
+            console.log('💾 [translateIncoming] 번역 결과 저장됨 (inbox_id:', currentInboxId + ')');
+        } else {
+            console.log('⚠️ [translateIncoming] currentInboxId 없음, 번역 결과 저장 안 됨');
+        }
+
+        console.log('✅ [translateIncoming] 번역 결과를 원문 아래 박스에 표시 완료');
 
         // 소스 언어 배지 (감지된 언어가 있으면 표시)
         const srcBadge = document.getElementById('incomingSrcLangBadge');
@@ -523,6 +584,216 @@ async function deleteMailHistory(id) {
         await api(`/admin/mail/history/${id}`, { method: 'DELETE' });
         loadMailHistory();
     } catch (e) { console.error('이력 삭제 실패:', e); }
+}
+
+// --- 원문-번역 리사이즈 기능 ---
+function setupTranslationResize(mailIncoming, translatedBox, handle) {
+    console.log('🎯 [setupTranslationResize] 함수 호출됨', { mailIncoming, translatedBox, handle });
+
+    let dragging = false;
+    let startY = 0;
+    let startHeight = 0;
+
+    handle.addEventListener('mousedown', function(e) {
+        console.log('🖱️ [resize] mousedown 이벤트 발생');
+        e.preventDefault();
+        dragging = true;
+        startY = e.clientY;
+        startHeight = mailIncoming.offsetHeight;
+        console.log('📏 [resize] 시작 높이:', startHeight);
+        handle.style.background = '#ef4444';  // 빨간색으로 변경 (드래그 중 표시)
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        const delta = e.clientY - startY;
+        const newHeight = Math.max(100, Math.min(startHeight + delta, 600));
+        console.log('📐 [resize] 새 높이:', newHeight, 'delta:', delta);
+        mailIncoming.style.height = newHeight + 'px';
+        mailIncoming.style.minHeight = newHeight + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (!dragging) return;
+        console.log('🖱️ [resize] mouseup 이벤트 발생');
+        dragging = false;
+        handle.style.background = '#fbbf24';  // 노란색으로 복귀
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    });
+
+    // 터치 지원
+    handle.addEventListener('touchstart', function(e) {
+        console.log('👆 [resize] touchstart 이벤트 발생');
+        e.preventDefault();
+        dragging = true;
+        startY = e.touches[0].clientY;
+        startHeight = mailIncoming.offsetHeight;
+        handle.style.background = '#ef4444';
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function(e) {
+        if (!dragging) return;
+        const delta = e.touches[0].clientY - startY;
+        const newHeight = Math.max(100, Math.min(startHeight + delta, 600));
+        mailIncoming.style.height = newHeight + 'px';
+        mailIncoming.style.minHeight = newHeight + 'px';
+    });
+
+    document.addEventListener('touchend', function() {
+        if (!dragging) return;
+        console.log('👆 [resize] touchend 이벤트 발생');
+        dragging = false;
+        handle.style.background = '#fbbf24';
+    });
+
+    console.log('✅ [setupTranslationResize] 이벤트 리스너 등록 완료');
+}
+}
+
+// --- 번역 결과 저장 및 불러오기 ---
+function saveTranslation(inboxId, original, translated) {
+    try {
+        const translations = JSON.parse(localStorage.getItem('mailTranslations') || '{}');
+        translations[inboxId] = {
+            original: original,
+            translated: translated,
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('mailTranslations', JSON.stringify(translations));
+    } catch (e) {
+        console.error('번역 저장 실패:', e);
+    }
+}
+
+function loadTranslation(inboxId) {
+    try {
+        const translations = JSON.parse(localStorage.getItem('mailTranslations') || '{}');
+        return translations[inboxId] || null;
+    } catch (e) {
+        console.error('번역 불러오기 실패:', e);
+        return null;
+    }
+}
+
+function displaySavedTranslation(inboxId) {
+    const saved = loadTranslation(inboxId);
+    if (!saved) return;
+
+    const mailIncoming = document.getElementById('mailIncoming');
+    if (!mailIncoming) return;
+
+    console.log('📂 [displaySavedTranslation] 저장된 번역 불러옴 (inbox_id:', inboxId + ')');
+
+    // 리사이즈 핸들이 없으면 추가 (mailIncoming 바로 다음에)
+    let resizeHandle = document.getElementById('translationResizeHandle');
+    console.log('🔍 [displaySavedTranslation] resizeHandle 체크:', resizeHandle);
+
+    // 기존 핸들이 있으면 삭제하고 새로 만들기
+    if (resizeHandle) {
+        console.log('🗑️ [displaySavedTranslation] 기존 리사이즈 핸들 삭제');
+        resizeHandle.remove();
+        resizeHandle = null;
+    }
+
+    if (!resizeHandle && mailIncoming.parentElement) {
+        console.log('🔧 [displaySavedTranslation] 리사이즈 핸들 생성 시작');
+        resizeHandle = document.createElement('div');
+        resizeHandle.id = 'translationResizeHandle';
+        resizeHandle.style.cssText = `
+            height: 30px;
+            background: #fbbf24;
+            cursor: row-resize;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            margin: 12px 0;
+            transition: all 0.2s;
+            border-radius: 6px;
+            border: 2px solid #f59e0b;
+        `;
+        resizeHandle.innerHTML = '<div style="font-size: 14px; font-weight: bold; color: #78350f;">━━━ 드래그해서 크기 조절 ━━━</div>';
+
+        // hover 효과
+        resizeHandle.onmouseenter = () => {
+            resizeHandle.style.background = '#f59e0b';
+        };
+        resizeHandle.onmouseleave = () => {
+            resizeHandle.style.background = '#fbbf24';
+        };
+
+        // mailIncoming 바로 다음 형제로 추가
+        console.log('📍 [displaySavedTranslation] mailIncoming.nextSibling:', mailIncoming.nextSibling);
+        mailIncoming.parentElement.insertBefore(resizeHandle, mailIncoming.nextSibling);
+        console.log('✅ [displaySavedTranslation] 리사이즈 핸들 DOM에 추가 완료');
+    }
+
+    // 번역 박스 생성 또는 업데이트 (리사이즈 핸들 다음에)
+    let translatedBox = document.getElementById('mailTranslatedBox');
+
+    if (!translatedBox) {
+        translatedBox = document.createElement('div');
+        translatedBox.id = 'mailTranslatedBox';
+        translatedBox.style.cssText = `
+            margin-top: 0;
+            padding: 16px;
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+        `;
+
+        // resizeHandle 바로 다음에 추가
+        if (resizeHandle && resizeHandle.parentElement) {
+            resizeHandle.parentElement.insertBefore(translatedBox, resizeHandle.nextSibling);
+            console.log('✅ [displaySavedTranslation] 번역 박스 DOM에 추가 완료');
+        }
+    }
+
+    // 리사이즈 기능 추가 (처음 생성 시에만)
+    if (resizeHandle && !resizeHandle.dataset.initialized) {
+        setupTranslationResize(mailIncoming, translatedBox, resizeHandle);
+        resizeHandle.dataset.initialized = 'true';
+        console.log('✅ [displaySavedTranslation] 리사이즈 기능 초기화 완료');
+    }
+
+    translatedBox.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div style="font-weight: 600; color: #0369a1; font-size: 0.95rem;">
+                🇰🇷 번역 결과 <span style="font-size: 0.75rem; color: #64748b;">(저장됨)</span>
+            </div>
+            <button onclick="copyTranslatedText()" style="padding: 4px 12px; background: #0ea5e9; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                📋 복사
+            </button>
+        </div>
+        <div style="white-space: pre-wrap; line-height: 1.6; color: #1e293b; max-height: 300px; overflow-y: auto; padding: 8px; background: white; border-radius: 4px;">${esc(saved.translated)}</div>
+    `;
+}
+
+// --- 번역 결과 복사 ---
+function copyTranslatedText() {
+    const box = document.getElementById('mailTranslatedBox');
+    if (!box) { alert('번역 결과가 없습니다.'); return; }
+
+    const textDiv = box.querySelector('div[style*="white-space"]');
+    const text = textDiv ? textDiv.textContent : '';
+
+    if (!text) { alert('복사할 내용이 없습니다.'); return; }
+
+    navigator.clipboard.writeText(text).then(() => {
+        alert('✅ 번역 결과가 클립보드에 복사되었습니다!');
+    }).catch(() => {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('✅ 번역 결과가 복사되었습니다!');
+    });
 }
 
 // --- 복사 ---
@@ -856,14 +1127,30 @@ async function loadInboxItem(id) {
         const mailIncoming = document.getElementById('mailIncoming');
         if (mailIncoming) mailIncoming.value = bodyText;
 
-        // HTML 메일이 있으면 iframe에 표시
+        // HTML 메일 확인 및 표시
         const htmlDiv = document.getElementById('mailIncomingHtml');
         const htmlFrame = document.getElementById('mailHtmlFrame');
-        if (htmlDiv && htmlFrame && data.body_html) {
-            htmlFrame.srcdoc = data.body_html;
+
+        console.log('📧 [loadInboxItem] HTML 메일 확인:', {
+            hasHtmlDiv: !!htmlDiv,
+            hasHtmlFrame: !!htmlFrame,
+            hasBodyHtml: !!data.body_html,
+            bodyHtmlLength: data.body_html ? data.body_html.length : 0,
+            bodyHtmlPreview: data.body_html ? data.body_html.substring(0, 100) : null
+        });
+
+        if (htmlDiv && htmlFrame && data.body_html && data.body_html.trim().length > 0) {
+            console.log('✅ [loadInboxItem] HTML 메일로 표시');
+
+            // HTML 정리 (불필요한 whitespace 제거)
+            const cleanHtml = data.body_html.trim();
+
+            // iframe에 HTML 설정
+            htmlFrame.srcdoc = cleanHtml;
             htmlDiv.style.display = '';
             if (mailIncoming) mailIncoming.style.display = 'none';
         } else {
+            console.log('📝 [loadInboxItem] 텍스트 메일로 표시');
             if (htmlDiv) htmlDiv.style.display = 'none';
             if (mailIncoming) mailIncoming.style.display = '';
         }
@@ -918,6 +1205,9 @@ async function loadInboxItem(id) {
         if (historyPanel && historyPanel.style.display === 'block') {
             loadMailHistoryForInbox();
         }
+
+        // 저장된 번역 결과 불러오기
+        displaySavedTranslation(id);
 
         console.log('[DEBUG] 수신 메일 로드 완료');
 
