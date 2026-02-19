@@ -365,9 +365,14 @@ async function composeMail() {
         const recomposeBtn = document.getElementById('mailRecomposeBtn');
         const translateBtn = document.getElementById('mailTranslateBtn');
         const saveBtn = document.getElementById('mailSaveBtn');
+        const sendBtn = document.getElementById('mailSendBtn');
         if (recomposeBtn) recomposeBtn.disabled = false;
         if (translateBtn) translateBtn.disabled = false;
         if (saveBtn) saveBtn.disabled = false;
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.style.display = '';  // 발송 버튼 보이기
+        }
 
     } catch (e) {
         console.error('메일 생성 오류:', e);
@@ -444,9 +449,14 @@ async function recomposeMail() {
         const recomposeBtn = document.getElementById('mailRecomposeBtn');
         const translateBtn = document.getElementById('mailTranslateBtn');
         const saveBtn = document.getElementById('mailSaveBtn');
+        const sendBtn = document.getElementById('mailSendBtn');
         if (recomposeBtn) recomposeBtn.disabled = false;
         if (translateBtn) translateBtn.disabled = false;
         if (saveBtn) saveBtn.disabled = false;
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.style.display = '';  // 발송 버튼 보이기
+        }
 
         alert('한국어 초안이 재작성되었습니다.');
 
@@ -483,9 +493,14 @@ async function translateMail() {
 
         const translatedInput = document.getElementById('mailTranslated');
         const retranslateBtn = document.getElementById('mailRetranslateBtn');
+        const sendBtn = document.getElementById('mailSendBtn');
 
         if (translatedInput) translatedInput.value = data.translated || '';
         if (retranslateBtn) retranslateBtn.disabled = false;
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.style.display = '';  // 발송 버튼 보이기
+        }
         updateTargetLangBadge();
 
         console.log('[DEBUG] 번역 완료');
@@ -650,7 +665,6 @@ function setupTranslationResize(mailIncoming, translatedBox, handle) {
     });
 
     console.log('✅ [setupTranslationResize] 이벤트 리스너 등록 완료');
-}
 }
 
 // --- 번역 결과 저장 및 불러오기 ---
@@ -1119,6 +1133,19 @@ function renderInboxList(items) {
 async function loadInboxItem(id) {
     try {
         console.log('[DEBUG] 수신 메일 로드:', id);
+
+        // 기존 번역 결과 및 리사이즈 핸들 제거
+        const oldResizeHandle = document.getElementById('translationResizeHandle');
+        const oldTranslatedBox = document.getElementById('mailTranslatedBox');
+        if (oldResizeHandle) {
+            console.log('🗑️ [loadInboxItem] 기존 리사이즈 핸들 제거');
+            oldResizeHandle.remove();
+        }
+        if (oldTranslatedBox) {
+            console.log('🗑️ [loadInboxItem] 기존 번역 박스 제거');
+            oldTranslatedBox.remove();
+        }
+
         const data = await (await api(`/admin/mail/gmail/inbox/${id}`)).json();
         currentInboxId = id;
 
@@ -1190,8 +1217,10 @@ async function loadInboxItem(id) {
         if (sendBtn) {
             if (data.draft && (data.draft.translated_draft || data.draft.korean_draft)) {
                 sendBtn.disabled = false;
+                sendBtn.style.display = '';  // 버튼 보이기
             } else {
                 sendBtn.disabled = true;
+                sendBtn.style.display = 'none';  // 버튼 숨기기
             }
         }
 
