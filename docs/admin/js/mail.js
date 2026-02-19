@@ -179,24 +179,47 @@ async function translateIncoming() {
 
 // --- 답장 생성 ---
 async function composeMail() {
+    console.log('🚀 [composeMail] 함수 호출됨');
+
     const mailIncoming = document.getElementById('mailIncoming');
-    if (!mailIncoming) { alert('메일 입력 영역을 찾을 수 없습니다.'); return; }
+    console.log('🔍 [composeMail] mailIncoming 요소:', mailIncoming);
+
+    if (!mailIncoming) {
+        console.error('❌ [composeMail] mailIncoming 요소를 찾을 수 없음');
+        alert('메일 입력 영역을 찾을 수 없습니다.');
+        return;
+    }
 
     const incoming = mailIncoming.value.trim();
-    if (!incoming) { alert('수신 메일 내용을 입력해주세요.'); return; }
+    console.log('📧 [composeMail] 수신 메일 내용 길이:', incoming.length);
+
+    if (!incoming) {
+        console.warn('⚠️ [composeMail] 수신 메일 내용이 비어있음');
+        alert('수신 메일 내용을 입력해주세요.');
+        return;
+    }
 
     const toneInput = document.getElementById('mailTone');
     const tone = toneInput ? toneInput.value : 'formal';
+    console.log('🎨 [composeMail] 톤:', tone);
+
     const docIds = getMailSelectedDocIds();
+    console.log('📚 [composeMail] 선택된 문서 IDs:', docIds);
 
     showMailLoading('수신 메일을 분석하고 답장을 생성하고 있습니다...');
+    console.log('⏳ [composeMail] 로딩 표시 시작');
 
     try {
-        const data = await (await api('/admin/mail/compose', {
+        console.log('🌐 [composeMail] API 호출 시작');
+        const response = await api('/admin/mail/compose', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ incoming_email: incoming, document_ids: docIds, tone: tone }),
-        })).json();
+        });
+        console.log('📥 [composeMail] API 응답 받음:', response.status);
+
+        const data = await response.json();
+        console.log('✅ [composeMail] 응답 데이터:', data);
 
         mailDetectedLang = data.detected_lang || 'en';
         mailCurrentRefs = data.references || [];
