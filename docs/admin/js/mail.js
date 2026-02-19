@@ -169,7 +169,14 @@ async function translateIncoming() {
         const originalInput = document.getElementById('mailIncomingOriginal');
         const translatedInput = document.getElementById('mailIncomingTranslated');
 
+        console.log('🔍 [translateIncoming] 분할 뷰 요소:', {
+            splitView: !!splitView,
+            originalInput: !!originalInput,
+            translatedInput: !!translatedInput
+        });
+
         if (splitView && originalInput && translatedInput) {
+            console.log('✅ [translateIncoming] 분할 뷰에 표시');
             mailIncoming.style.display = 'none';
             splitView.classList.add('visible');
 
@@ -181,14 +188,20 @@ async function translateIncoming() {
             originalInput.oninput = function() {
                 mailIncoming.value = this.value;
             };
+        } else {
+            console.warn('⚠️ [translateIncoming] 분할 뷰 요소 없음, 원본 textarea에 표시');
+            // 분할 뷰가 없으면 원본 내용을 번역 결과로 교체
+            mailIncoming.value = `[원문]\n${incoming}\n\n[번역]\n${translated}`;
+            alert('번역이 완료되었습니다. 수신 메일 영역에서 확인하세요.');
         }
-        // 분할 뷰가 없어도 번역은 정상 작동함
 
         // 소스 언어 배지 (감지된 언어가 있으면 표시)
         const srcBadge = document.getElementById('incomingSrcLangBadge');
         if (srcBadge && mailDetectedLang && mailDetectedLang !== 'ko') {
             srcBadge.textContent = mailDetectedLang.toUpperCase();
         }
+
+        console.log('✨ [translateIncoming] 번역 완료');
 
     } catch (e) {
         console.error('수신 메일 번역 오류:', e);
