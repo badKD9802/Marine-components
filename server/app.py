@@ -285,10 +285,6 @@ async def portfolio_chat(request: ChatRequest):
    - 다국어 지원: 일본어, 영어 번역 및 회신문/보고서 초안 생성
    - G-EVAL 품질 평가: 4.3/5.0
 
-**수상:**
-- 🏆 국무총리상 수상 - 한국자산관리공사 그룹웨어 재구축 사업 AI 도입 기여
-- 🏆 2025년 성과급 수령
-
 #### 2. 영마린테크 - 해양 엔진 부품 B2B 쇼핑몰 (2025.11 ~ 2026.02, 개인 프로젝트 100%)
 **실전 배포된 Full-Stack B2B 전자상거래 플랫폼**
 - 배포: Railway CI/CD (자동 배포)
@@ -298,13 +294,13 @@ async def portfolio_chat(request: ChatRequest):
 - GitHub: https://github.com/badKD9802/Marine-components
 
 **기술 스택:**
-Python, FastAPI, PostgreSQL, pgvector, RAG, Gemini-2.5-Flash, OpenAI Embedding, React, Gmail API, Railway CI/CD, 다국어(KO/EN/CN)
+Python, FastAPI, PostgreSQL, pgvector, RAG, Gemini-2.5-Flash, OpenAI Embedding, React, Railway CI/CD, 다국어(KO/EN/CN)
 
 **1. 시스템 아키텍처 - Full-Stack 구현**
 6개 레이어로 구성된 완전한 웹 서비스:
 - Layer 1 (고객 페이지): HTML5, Vanilla JavaScript, 다국어 지원, SEO 최적화
 - Layer 2 (관리자 페이지): React 18 SPA, JWT 인증, 제품/문서/메일 통합 관리
-- Layer 3 (FastAPI 서버): 비동기 처리(asyncpg), Lifespan 이벤트, 40개 이상 RESTful API
+- Layer 3 (FastAPI 서버): 비동기 처리(asyncpg), Lifespan 이벤트, 35개 이상 RESTful API
 - Layer 4 (PostgreSQL): JSONB 다국어 스키마 (name, description, specs 모두 {ko,en,cn} 구조)
 - Layer 5 (pgvector): 벡터 검색 엔진, OpenAI text-embedding-3-small (1536차원), 코사인 유사도
 - Layer 6 (AI APIs): Gemini 2.5 Flash (챗봇), GPT-4o-mini (번역), OpenAI Embedding (RAG)
@@ -318,35 +314,24 @@ PDF 카탈로그 업로드 → PyPDF2 텍스트 추출 → RecursiveCharacterTex
 - 대화 이력 관리: DB conversation 테이블로 세션별 메시지 저장, 1주일 후 자동 정리
 - Fallback 처리: RAG 검색 실패 시 DB 제품 정보로 대체
 
-**3. Gmail API 자동화 - 다국어 메일 번역/발송**
-30분마다 Gmail 수신함 체크 → langdetect 언어 감지 → GPT-4o-mini 번역(한↔영↔중)
-→ 템플릿 기반 답변 생성 → Gmail API 자동 발송 → DB 이력 저장
-
-핵심 기능:
-- 비동기 스케줄러: FastAPI lifespan에서 asyncio.create_task로 백그라운드 실행
-- 중복 방지: message_id로 재처리 방지
-- 관리자 제어: React 관리자 페이지에서 발송 이력 조회, 수동 재발송 가능
-
-**4. 다국어 JSONB 스키마 설계**
+**3. 다국어 JSONB 스키마 설계**
 - JSONB 컬럼: name, description, specs, compatibility를 {ko, en, cn} 구조로 저장
 - 정규화 없이 유연성 확보: 언어 추가 시 컬럼 수정 불필요
 - API 응답 최적화: FastAPI에서 언어 파라미터 받아 해당 언어만 추출
 - 성과: 3개 언어 지원, 100% 자동 번역, 0건 수동 작업
 
-**5. FastAPI 명세서 (9개 카테고리, 40개 이상 엔드포인트)**
+**4. FastAPI 명세서 (8개 카테고리, 35개 이상 엔드포인트)**
 - 공개 API (4개): POST /chat (챗봇), GET /api/products (제품 목록/상세), GET /api/health
 - 관리자 인증 (1개): POST /admin/login (JWT 토큰 발급)
 - 제품 관리 (5개): GET/POST/PUT/DELETE /admin/products, POST /admin/translate (자동 번역)
 - 문서 관리/RAG (5개): PDF 업로드, 문서 CRUD, 청크 수정
 - RAG 채팅 (5개): POST /rag/chat (RAG 기반), POST /rag/chat/stream (SSE 스트리밍), Conversations CRUD
 - 메일 작성 (4개): AI 메일 작성, 번역, 이력 조회, 초안 저장
-- Gmail 자동화 (5개): Gmail 연결/상태, 수신함 조회, 답장 발송, 수동 가져오기
 - 문의 관리 (3개): 고객 문의 등록(공개), 관리자 문의 관리, 답변 발송
 - 설정 관리 (3개): 사이트 설정 조회/수정, 대시보드 통계
 
 **비즈니스 임팩트:**
 - 70% 고객 응대 시간 단축 (RAG 기반 카탈로그 검색)
-- 30배 이메일 처리 속도 개선 (수동 15분 → 자동 30초)
 - 24/7 무인 고객 대응 가능 (3개 국가 대상 다국어 자동화)
 
 **기술적 하이라이트:**
