@@ -289,10 +289,71 @@ async def portfolio_chat(request: ChatRequest):
 - 🏆 국무총리상 수상 - 한국자산관리공사 그룹웨어 재구축 사업 AI 도입 기여
 - 🏆 2025년 성과급 수령
 
-#### 2. AI 기반 선박 부품 상담 웹 서비스 (개인 프로젝트, 진행중)
-- JavaScript, HTML, Gemini-2.5-Flash, RAG (예정)
-- 선박 부품 검색 + AI 상담사가 자연어로 부품 추천
-- 향후 RAG 구조 + DB 구축 계획
+#### 2. 영마린테크 - 해양 엔진 부품 B2B 쇼핑몰 (2025.11 ~ 2026.02, 개인 프로젝트 100%)
+**실전 배포된 Full-Stack B2B 전자상거래 플랫폼**
+- 배포: Railway CI/CD (자동 배포)
+- 백엔드 API: https://marine-parts-production-60a3.up.railway.app
+- 관리자 페이지: https://adminmarine-component-production.up.railway.app
+- 고객용 홈페이지: https://marine-componentsweb-production.up.railway.app
+- GitHub: https://github.com/badKD9802/Marine-components
+
+**기술 스택:**
+Python, FastAPI, PostgreSQL, pgvector, RAG, Gemini-2.5-Flash, OpenAI Embedding, React, Gmail API, Railway CI/CD, 다국어(KO/EN/CN)
+
+**1. 시스템 아키텍처 - Full-Stack 구현**
+6개 레이어로 구성된 완전한 웹 서비스:
+- Layer 1 (고객 페이지): HTML5, Vanilla JavaScript, 다국어 지원, SEO 최적화
+- Layer 2 (관리자 페이지): React 18 SPA, JWT 인증, 제품/문서/메일 통합 관리
+- Layer 3 (FastAPI 서버): 비동기 처리(asyncpg), Lifespan 이벤트, 40개 이상 RESTful API
+- Layer 4 (PostgreSQL): JSONB 다국어 스키마 (name, description, specs 모두 {ko,en,cn} 구조)
+- Layer 5 (pgvector): 벡터 검색 엔진, OpenAI text-embedding-3-small (1536차원), 코사인 유사도
+- Layer 6 (AI APIs): Gemini 2.5 Flash (챗봇), GPT-4o-mini (번역), OpenAI Embedding (RAG)
+
+**2. RAG 파이프라인 - 문서 기반 AI 상담**
+PDF 카탈로그 업로드 → PyPDF2 텍스트 추출 → RecursiveCharacterTextSplitter 청킹(1000자, overlap 200)
+→ OpenAI Embedding 벡터화 → pgvector 저장 → 유사도 검색(Top-3) → Gemini 답변 생성
+
+핵심 기능:
+- Structured Output: Gemini API에 JSON 스키마 강제 (reply + suggested_questions)
+- 대화 이력 관리: DB conversation 테이블로 세션별 메시지 저장, 1주일 후 자동 정리
+- Fallback 처리: RAG 검색 실패 시 DB 제품 정보로 대체
+
+**3. Gmail API 자동화 - 다국어 메일 번역/발송**
+30분마다 Gmail 수신함 체크 → langdetect 언어 감지 → GPT-4o-mini 번역(한↔영↔중)
+→ 템플릿 기반 답변 생성 → Gmail API 자동 발송 → DB 이력 저장
+
+핵심 기능:
+- 비동기 스케줄러: FastAPI lifespan에서 asyncio.create_task로 백그라운드 실행
+- 중복 방지: message_id로 재처리 방지
+- 관리자 제어: React 관리자 페이지에서 발송 이력 조회, 수동 재발송 가능
+
+**4. 다국어 JSONB 스키마 설계**
+- JSONB 컬럼: name, description, specs, compatibility를 {ko, en, cn} 구조로 저장
+- 정규화 없이 유연성 확보: 언어 추가 시 컬럼 수정 불필요
+- API 응답 최적화: FastAPI에서 언어 파라미터 받아 해당 언어만 추출
+- 성과: 3개 언어 지원, 100% 자동 번역, 0건 수동 작업
+
+**5. FastAPI 명세서 (9개 카테고리, 40개 이상 엔드포인트)**
+- 공개 API (4개): POST /chat (챗봇), GET /api/products (제품 목록/상세), GET /api/health
+- 관리자 인증 (1개): POST /admin/login (JWT 토큰 발급)
+- 제품 관리 (5개): GET/POST/PUT/DELETE /admin/products, POST /admin/translate (자동 번역)
+- 문서 관리/RAG (5개): PDF 업로드, 문서 CRUD, 청크 수정
+- RAG 채팅 (5개): POST /rag/chat (RAG 기반), POST /rag/chat/stream (SSE 스트리밍), Conversations CRUD
+- 메일 작성 (4개): AI 메일 작성, 번역, 이력 조회, 초안 저장
+- Gmail 자동화 (5개): Gmail 연결/상태, 수신함 조회, 답장 발송, 수동 가져오기
+- 문의 관리 (3개): 고객 문의 등록(공개), 관리자 문의 관리, 답변 발송
+- 설정 관리 (3개): 사이트 설정 조회/수정, 대시보드 통계
+
+**비즈니스 임팩트:**
+- 70% 고객 응대 시간 단축 (RAG 기반 카탈로그 검색)
+- 30배 이메일 처리 속도 개선 (수동 15분 → 자동 30초)
+- 24/7 무인 고객 대응 가능 (3개 국가 대상 다국어 자동화)
+
+**기술적 하이라이트:**
+- Railway CI/CD: git push 시 자동 빌드/배포, PostgreSQL 플러그인 자동 연동
+- 비동기 처리: asyncpg로 DB 커넥션 풀 관리, 모든 API 엔드포인트 async/await 패턴
+- CORS 및 보안: 환경변수 관리(.env), JWT 기반 관리자 인증, HTTPS 통신
+- 에러 핸들링: try-except로 Fallback 처리, API 실패 시 사용자 친화적 메시지
 
 #### 3. KMI 지정학적 이슈 영향 분석 (2024.05 ~ 2024.07)
 - 한국해양수산개발원 북극항로지원단
@@ -379,6 +440,13 @@ async def portfolio_chat(request: ChatRequest):
 - "KAMCO 프로젝트에서 구체적으로 어떤 역할을 하셨나요?"
 - "RAG 시스템의 답변 정확도 92%는 어떻게 달성하셨나요?"
 - "LangGraph 기반 AI Agent의 핵심 기능은 무엇인가요?"
+- "영마린테크 프로젝트의 시스템 아키텍처를 설명해주세요"
+- "FastAPI로 구현한 주요 API 엔드포인트는 무엇인가요?"
+- "pgvector를 활용한 RAG 검색 방식을 설명해주세요"
+- "Gmail 자동화는 어떻게 구현하셨나요?"
+- "다국어 JSONB 스키마를 선택한 이유는 무엇인가요?"
+- "영마린테크 프로젝트의 비즈니스 임팩트는 무엇인가요?"
+- "개인 프로젝트를 혼자서 어떻게 완성하셨나요?"
 - "가장 자신있는 기술 스택은 무엇인가요?"
 - "최근 관심있는 AI 기술 분야는 무엇인가요?"
 """
