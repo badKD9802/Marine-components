@@ -225,7 +225,6 @@ async def get_ai_response(user_message: str, history: list[dict]):
 
 # 4. API 엔드포인트
 @app.post("/chat")
-import json
 
 async def chat(request: ChatRequest):
     print(f"유저 질문: {request.message}")
