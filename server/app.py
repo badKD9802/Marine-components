@@ -19,17 +19,27 @@ from rag_chat import router as rag_chat_router, cleanup_old_conversations
 from mail_compose import router as mail_compose_router, gmail_auto_check_loop
 from inquiry import router as inquiry_router
 from rag import search_similar_chunks
+from portfolio_rag import init_portfolio_rag, search_portfolio
 
 _scheduler_task = None
 
 
-# Lifespan: DB init/close + Gmail 자동 체크 스케줄러
+# Lifespan: DB init/close + Gmail 자동 체크 스케줄러 + Portfolio RAG 초기화
 @asynccontextmanager
 async def lifespan(app):
     global _scheduler_task
     await init_db()
     await init_vector_db()
     await cleanup_old_conversations()
+
+    # Portfolio RAG 초기화
+    openai_api_key = config("OPENAI_API_KEY")
+    if openai_api_key:
+        init_portfolio_rag(openai_api_key)
+        print("[App] Portfolio RAG 초기화 완료")
+    else:
+        print("[App] Warning: OPENAI_API_KEY 없음, Portfolio RAG 비활성화")
+
     _scheduler_task = asyncio.create_task(gmail_auto_check_loop())
     yield
     if _scheduler_task:
@@ -229,16 +239,34 @@ async def chat(request: ChatRequest):
 # 포트폴리오 챗봇 전용 엔드포인트
 @app.post("/portfolio-chat")
 async def portfolio_chat(request: ChatRequest):
-    """배경득 지원자 포트폴리오 전용 AI 챗봇"""
+    """배경득 지원자 포트폴리오 전용 AI 챗봇 (RAG 기반)"""
     print(f"[포트폴리오] 유저 질문: {request.message}")
 
     api_key = config("GOOGLE_API_KEY")
     if not api_key:
         return {"reply": "API Key를 환경변수에서 찾지 못했습니다", "suggested_questions": []}
 
-    # 포트폴리오 전용 시스템 프롬프트
-    portfolio_content = """
-## 배경득 (AI Engineer) 프로필
+    # RAG로 관련 포트폴리오 섹션 검색
+    try:
+        portfolio_context = await search_portfolio(request.message, top_k=4)
+        print(f"[포트폴리오 RAG] 검색된 컨텍스트 길이: {len(portfolio_context)} 문자")
+    except Exception as e:
+        print(f"[포트폴리오 RAG] 검색 실패: {e}")
+        # Fallback: 기본 정보만 사용
+        portfolio_context = """
+## 배경득 프로필
+이름: 배경득
+직무: AI Engineer | RAG & AI Agent Specialist
+이메일: qorudemr00@naver.com
+
+## 핵심 역량
+RAG 검색 품질을 설계하고, 실무형 AI Agent를 구축하는 AI 엔지니어
+- RAG 답변 정확도: 92%
+- 검색 Hitrate@5: 91%
+- 할루시네이션 통과율: 91%
+"""
+
+    # 간소화된 시스템 프롬프트 (포트폴리오 전용 시스템 프롬프트 대체)
 
 ### 기본 정보
 - 이름: 배경득
@@ -524,14 +552,7 @@ PDF 카탈로그 업로드 → PyPDF2 텍스트 추출 → RecursiveCharacterTex
         nice_context_text = f"""
 
 ## NICE평가정보 관련 참고 정보
-아래 정보를 참조하여 배경득 지원자가 NICE평가정보에서 어떤 기여를 할 수 있는지 구체적으로 답변하세요.
-
 {json.dumps(request.niceContext, ensure_ascii=False, indent=2)}
-
-**답변 시 주의사항:**
-- NICE평가정보의 사업 분야와 배경득의 경험을 매칭하여 설명하세요
-- 구체적인 프로젝트 예시와 기대 효과를 제시하세요
-- 배경득의 정량적 성과(92% 정확도 등)를 NICE에서 어떻게 활용할 수 있는지 연결하세요
 """
 
     system_prompt = f"""당신은 배경득 지원자의 AI 비서입니다.
@@ -541,64 +562,30 @@ PDF 카탈로그 업로드 → PyPDF2 텍스트 추출 → RecursiveCharacterTex
 1. 항상 존댓말을 사용하고 전문적으로 답변하세요
 2. 포트폴리오에 명시된 내용만 답변하고, 없는 내용은 추측하지 마세요
 3. 기술적인 질문에는 구체적인 수치와 성과를 포함하여 답변하세요
-4. 프로젝트 관련 질문에는 역할, 기여도, 사용 기술, 성과를 명확히 설명하세요
-5. 응답은 JSON 형식으로 제공해야 합니다: {{"reply": "답변 내용", "suggested_questions": ["추천 질문1", "추천 질문2"]}}
-6. 배경득 지원자는 사용자보다 직급이 낮습니다. 압존법을 활용하여 사용자보다 낮은 직급에 대한 소개를 하듯이 답변하세요.
+4. 응답은 JSON 형식으로 제공해야 합니다: {{"reply": "답변 내용", "suggested_questions": ["추천 질문1", "추천 질문2"]}}
+5. 배경득 지원자는 사용자보다 직급이 낮습니다. 압존법을 활용하여 답변하세요.
 
 ## 답변 형식 (매우 중요!)
 **답변은 극도로 간결하게, 핵심만 작성:**
 - 전체 답변은 3-5줄을 넘지 마세요
-- 불릿 포인트 2-4개만 사용 (그 이상 금지)
+- 불릿 포인트 2-4개만 사용
 - 한 불릿은 한 줄로 끝내세요
-- 숫자 → 핵심 키워드만 (설명 최소화)
-- 배경 설명, 부연 설명 모두 제거
+- 숫자 → 핵심 키워드만
 
-**좋은 예시 (이것처럼!):**
+**좋은 예시:**
 "네, KAMCO 프로젝트 주요 성과입니다:
 • RAG 시스템: 답변정확도 92%, Hitrate 91%
-• AI Agent: 5종 API 연동, 자동화 파이프라인 구축
+• AI Agent: 5종 API 연동, 자동화 파이프라인
 • 기술: LangGraph, vLLM, Milvus DB"
 
-**나쁜 예시 (절대 금지):**
-"배경득 지원자는 한국자산관리공사 프로젝트에서 대규모 문서 기반 RAG 시스템을 구축하였으며..."
-
 **추천 질문 규칙:**
-- 최대 1-2개만 제시 (3개 이상 금지)
+- 최대 1-2개만 제시
 - 정말 중요한 질문만 선택
 - 질문이 없으면 빈 배열 [] 반환
 
-## NICE평가정보 관련 질문 응답 (극도로 간결하게!)
-
-**회사 소개 질문**
-3줄로 끝내기:
-• 1985년 설립, 국내 1위 신용정보 (매출: 개인CB 65%)
-• AI 사업: 신용평가 모델, 여신심사 자동화
-• 700명 규모, 마이데이터 선도 기업
-
-**기여 방안 질문**
-2-3개 핵심만:
-• KAMCO RAG 경험 → NICE 신용평가 데이터 처리
-• 92% 정확도 기술 → 여신심사 자동화
-• AI Agent 개발 → 의사결정 시스템 구축
-
-**절대 하지 말 것:**
-- 장황한 배경 설명
-- "~을 통해", "~함으로써" 같은 긴 표현
-- 5줄 이상 답변
-
-## 배경득 지원자 포트폴리오
-{portfolio_content}{nice_context_text}
-
-## 추천 질문 가이드
-**중요:** 추천 질문은 최대 1-2개만! 정말 중요한 것만 선택
-- 이미 답변한 내용과 관련된 질문만
-- 너무 일반적이거나 뻔한 질문은 제외
-- 질문이 적절치 않으면 빈 배열 [] 반환
-
-**질문 예시 (참고용, 모두 제시하지 말 것):**
-- "RAG 92% 정확도 달성 방법은?"
-- "AI Agent 핵심 기능은?"
-- "NICE 기여 방안은?"
+## 배경득 지원자 포트폴리오 (질문 관련 정보만)
+{portfolio_context}
+{nice_context_text}
 """
 
     try:
