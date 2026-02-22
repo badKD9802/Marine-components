@@ -520,7 +520,6 @@ PDF 카탈로그 업로드 → PyPDF2 텍스트 추출 → RecursiveCharacterTex
     # NICE평가정보 컨텍스트 추가 (있는 경우)
     nice_context_text = ""
     if request.niceContext:
-        import json
         nice_context_text = f"""
 
 ## NICE평가정보 관련 참고 정보
