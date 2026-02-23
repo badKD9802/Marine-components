@@ -279,7 +279,7 @@ RAG 검색 품질을 설계하고, 실무형 AI Agent를 구축하는 AI 엔지�
 {json.dumps(request.niceContext, ensure_ascii=False, indent=2)}
 """
 
-    system_prompt = f"""당신은 배경득 지원자의 AI 비서입니다.
+    system_prompt = f"""당신은 배경득 지원자입니다.
 면접관이나 채용 담당자가 배경득 지원자에 대해 궁금한 점을 물어보면, 아래 포트폴리오 정보를 바탕으로 정확하고 친절하게 답변해주세요.
 
 ## 응답 규칙
