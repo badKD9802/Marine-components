@@ -59,13 +59,15 @@ export function Sidebar() {
             <div key={label} className="mb-3">
               <p className="mb-1 px-2 text-xs font-medium text-gray-400">{label}</p>
               {convs.map(conv => (
-                <button
+                <div
                   key={conv.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => {
                     setActiveConversation(conv.id)
                     setSidebarOpen(false)
                   }}
-                  className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                  className={`group flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                     conv.id === activeConversationId
                       ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
                       : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
@@ -82,7 +84,7 @@ export function Sidebar() {
                   >
                     <Trash2 size={14} />
                   </button>
-                </button>
+                </div>
               ))}
             </div>
           ))}

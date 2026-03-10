@@ -24,16 +24,27 @@ def make_agent_progress(steps: list, writer=None) -> str:
     return json.dumps(progress_data, ensure_ascii=False)
 
 
-def make_agent_summary(title: str, result_text: str, writer=None) -> str:
-    """도구 실행 완료 요약을 writer로 전송."""
+def make_agent_summary(steps: list, writer=None) -> str:
+    """완료된 도구 실행 단계들을 summary로 변환하여 writer로 전송.
+
+    Args:
+        steps: _finalize_steps()로 완료 처리된 step 리스트
+        writer: SSEWriter (optional)
+    """
     summary_data = {
         "replace_chunk": True,
-        "steps": [{
-            "title": title,
-            "status": "done",
-            "preview": result_text[:200] if result_text else ""
-        }]
+        "steps": []
     }
+    for step in steps:
+        step_info = {
+            "title": step.get("title", ""),
+            "status": step.get("status", "done"),
+        }
+        if "result_count" in step:
+            step_info["result_count"] = step["result_count"]
+        if "preview" in step:
+            step_info["preview"] = step["preview"]
+        summary_data["steps"].append(step_info)
 
     if writer:
         writer(summary_data)
