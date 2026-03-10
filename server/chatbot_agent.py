@@ -13,6 +13,8 @@ from chatbot_sse import SSEWriter, format_sse
 from chatbot_llm import LLMClient
 from react_system.auth_context import AuthContext
 from react_system.react_agent import ReactAgent
+from react_system.tool_registry import ToolRegistry
+from react_system.tool_definitions import TOOLS
 
 logger = logging.getLogger(__name__)
 
@@ -59,16 +61,19 @@ async def run_agent_stream(message: str, session_id: str, queue: asyncio.Queue):
         llm = get_llm_client()
         auth = AuthContext.demo()
         writer = SSEWriter(queue)
+        registry = ToolRegistry(auth=auth)
 
         agent = ReactAgent(
-            llm=llm,
-            auth=auth,
+            just_llm=llm,
+            tool_registry=registry,
+            tools=TOOLS,
             writer=writer,
         )
 
         # 에이전트 실행
         history = session.get_history()
-        answer = await agent.run(message, history=history)
+        result = await agent.run(message, history=history)
+        answer = result.get("answer", "")
 
         # 응답 저장
         session.append("assistant", answer)
