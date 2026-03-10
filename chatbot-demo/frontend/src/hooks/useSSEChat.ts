@@ -61,13 +61,21 @@ export function useSSEChat() {
                 appendToken(data.content || '')
                 break
               case 'progress':
-                setProgress(data.steps as ProgressStep[])
+                if (Array.isArray(data.steps)) {
+                  setProgress(data.steps as ProgressStep[])
+                }
                 break
               case 'html':
-                addHtmlBlock(data.content || '')
+                if (data.content) {
+                  addHtmlBlock(data.content)
+                }
                 break
               case 'buttons':
-                setButtons(data.buttons as QuickButton[])
+                if (Array.isArray(data.buttons)) {
+                  setButtons(data.buttons as QuickButton[])
+                } else if (Array.isArray(data)) {
+                  setButtons(data as QuickButton[])
+                }
                 break
               case 'done':
                 finalizeMessage(data.answer)

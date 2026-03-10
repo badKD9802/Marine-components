@@ -18,17 +18,46 @@ export function ProgressSteps({ steps }: { steps: ProgressStep[] }) {
             <div className="flex-1">
               <p className="font-medium text-gray-700 dark:text-gray-300">
                 {step.title}
-                {step.result_count !== undefined && (
-                  <span className="ml-1 text-gray-400">({step.result_count}건)</span>
+                {step.result_count != null && (
+                  <span className="ml-1 text-gray-400">
+                    ({typeof step.result_count === 'number' ? `${step.result_count}건` : step.result_count})
+                  </span>
                 )}
               </p>
-              {step.preview && (
-                <p className="mt-0.5 text-xs text-gray-400 line-clamp-2">{step.preview}</p>
-              )}
+              <PreviewContent preview={step.preview} />
             </div>
           </div>
         ))}
       </div>
     </div>
   )
+}
+
+function PreviewContent({ preview }: { preview?: ProgressStep['preview'] }) {
+  if (!preview) return null
+
+  // 문자열인 경우
+  if (typeof preview === 'string') {
+    return <p className="mt-0.5 text-xs text-gray-400 line-clamp-2">{preview}</p>
+  }
+
+  // 객체 배열인 경우 [{icon, text, sub}]
+  if (Array.isArray(preview)) {
+    return (
+      <div className="mt-1 space-y-0.5">
+        {preview.slice(0, 3).map((item, i) => (
+          <p key={i} className="text-xs text-gray-400">
+            {item.icon && <span className="mr-1">{item.icon}</span>}
+            <span>{item.text}</span>
+            {item.sub && <span className="ml-1 text-gray-300">({item.sub})</span>}
+          </p>
+        ))}
+        {preview.length > 3 && (
+          <p className="text-xs text-gray-300">외 {preview.length - 3}건...</p>
+        )}
+      </div>
+    )
+  }
+
+  return null
 }

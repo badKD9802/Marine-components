@@ -1,8 +1,8 @@
 export interface ProgressStep {
   title: string
   status: 'running' | 'done' | 'error'
-  result_count?: number
-  preview?: string
+  result_count?: number | string
+  preview?: string | Array<{ icon?: string; text?: string; sub?: string }>
 }
 
 export interface QuickButton {

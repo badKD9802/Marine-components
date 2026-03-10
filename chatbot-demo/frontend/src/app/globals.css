@@ -43,3 +43,27 @@ body {
 @keyframes blink {
   50% { opacity: 0; }
 }
+
+/* HTML Block 내부 테이블 스타일 */
+.html-block table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 4px 0;
+}
+.html-block th,
+.html-block td {
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+}
+.html-block th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+.dark .html-block th,
+.dark .html-block td {
+  border-color: #475569;
+}
+.dark .html-block th {
+  background: #334155;
+}
