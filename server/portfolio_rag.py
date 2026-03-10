@@ -122,7 +122,8 @@ class PortfolioRAG:
                 'similarity': float(similarities[idx])
             })
 
-        print(f"[Portfolio RAG] 검색 완료: Top-{top_k} (유사도: {[f'{r['similarity']:.3f}' for r in results]})")
+        sims = [f"{r['similarity']:.3f}" for r in results]
+        print(f"[Portfolio RAG] 검색 완료: Top-{top_k} (유사도: {sims})")
         return results
 
     async def get_relevant_context(self, query: str, top_k: int = 3, min_similarity: float = 0.3) -> str:

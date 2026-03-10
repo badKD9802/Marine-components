@@ -41,7 +41,7 @@ async def lifespan(app):
     await cleanup_old_conversations()
 
     # Portfolio RAG 초기화
-    openai_api_key = config("OPENAI_API_KEY")
+    openai_api_key = config("OPENAI_API_KEY", default="")
     if openai_api_key:
         init_portfolio_rag(openai_api_key)
         print("[App] Portfolio RAG 초기화 완료")
