@@ -1,0 +1,76 @@
+{
+  "meeting_check": {
+    "required": ["start_dt", "end_dt", "equipment_ids"],
+    "optional": ["title"],
+    "additional_directions": "dt는 yyyy-mm-dd hh:mm:ss 형식으로 만들어 주세요."
+  },
+  "meeting_reservation": {
+    "required": ["title", "start_dt", "end_dt", "description", "equipment_ids"],
+    "optional": [],
+    "additional_directions": "dt는 한국시간 iso 8601인 yyyy-mm-dd hh:mm:ss 형식으로 만들어 주세요."
+  },
+  "meeting_cancellation": {
+    "required": ["title", "start_dt", "end_dt", "equipment_ids"],
+    "optional": [],
+    "additional_directions": "dt는 한국시간 iso 8601인 yyyy-mm-dd hh:mm:ss 형식으로 만들어 주세요."
+  },
+  "meeting_update": {
+    "required": ["title", "select_dt", "equipment_chg"],
+    "optional_1": ["start_dt", "end_dt"],
+    "optional_2": ["title_chg"],
+    "additional_directions": "start_dt와 end_dt는 원래 예약 관련이고, select_dt는 새로 바뀐 예약의 시작 dt야. dt는 yyyy-mm-dd hh:mm:ss 형식으로 만들어 주세요."
+  },
+  "calendar_check": {
+    "required": ["start_dt", "end_dt"],
+    "optional": ["title"],
+    "additional_directions": "dt는 yyyy-mm-dd hh:mm:ss 형식으로 만들어 주세요."
+  },
+  "calendar_reservation": {
+    "required": ["title", "start_dt", "end_dt"],
+    "optional": [ "description"],
+    "additional_directions": "dt는 yyyy-mm-dd hh:mm:ss 형식으로 만들어 주세요."
+  },
+  "calendar_cancellation": {
+    "required": ["title", "start_dt", "end_dt"],
+    "optional": ["attendees", "duration"],
+    "additional_directions": "dt는 yyyy-mm-dd hh:mm:ss 형식으로 만들어 주세요."
+  },
+  "calendar_update": {
+    "required": ["title", "select_dt"],
+    "optional_1": ["start_dt", "end_dt"],
+    "optional_2": ["title_chg"],
+    "additional_directions": "시간은 yyyy-mm-dd hh:mm:ss 형식으로 만들어주세요. title: 변경 이전 일정의 제목. start_dt : 변경 이후 일정의 시작 시간. end_dt : 변경 이후 일정의 끝 시간. title_chg: '4시~5시로 변경', '오후 8시~9시로 바꿔줘' 같이 시간이 포함된 표현은 시간 변경 요청이므로 title_chg에 넣지 말아주세요. select_dt: 변경 이전 일정의 시작 시간이거나 종료 시간"
+  },
+  "schedule": {
+    "required": ["name", "pos_name", "start_dt", "end_dt"],
+    "optional": [],
+    "additional_directions": "start_dt와 end_dt는 명확하지 않으면 추론이 가능한지 시도해 보세요. 예를 들면 8월 일정이면 8월 1일 00:00:00 부터 8월 31일 23:59:59 까지입니다. 특정 날짜만 언급되면 그 날 하루 종일(00:00:00~23:59:59)로 설정하세요. dt는 yyyy-mm-dd hh:mm:ss 형식으로 만들어 주세요."
+  },
+  "mail_draft": {
+    "required": [],
+    "optional": [],
+    "additional_directions": ""
+  },
+  "call": {
+    "required": ["document"],
+    "optional": [],
+    "additional_directions": ""
+  },
+  "search": {
+    "required_1": ["name"],
+    "required_2": ["emp_code"],
+    "required_3": ["email"],
+    "optional": ["pos_name","duty_name"],
+    "additional_directions": "emp_code는 6개의 숫자로 구성된 사원 번호이고, pos_name은 '디지털시스템'과 같은 직위명이고, duty_name은 팀장, 과장 등의 직책입니다."
+  },
+  "translate": {
+    "required": [],
+    "optional": [],
+    "additional_directions": ""
+  },
+  "LLM": {
+    "required": [],
+    "optional": [],
+    "additional_directions": ""
+  }
+}

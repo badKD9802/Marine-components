@@ -1,0 +1,25 @@
+DB보는 명령
+
+  1. 한 줄 명령어 (빠른 확인)                                                                                                                                                                                                 
+  # 문서 목록                                                                                                   
+  /usr/bin/python3 -c "                                                                                         
+  import psycopg2
+  conn =                                                                                                        
+  psycopg2.connect('postgresql://postgres:nb60xg31qnu4rm04v4zvv24htz5580o6@nozomi.proxy.rlwy.net:51615/railway')
+  cur = conn.cursor()
+  cur.execute('SELECT id, filename, status FROM documents ORDER BY id')
+  for r in cur.fetchall(): print(f'  id={r[0]} | {r[1]} | {r[2]}')
+  conn.close()
+  "
+
+  # 청크 미리보기
+  /usr/bin/python3 -c "
+  import psycopg2
+  conn =
+  psycopg2.connect('postgresql://postgres:nb60xg31qnu4rm04v4zvv24htz5580o6@nozomi.proxy.rlwy.net:51615/railway')
+  cur = conn.cursor()
+  cur.execute('SELECT document_id, chunk_index, LEFT(chunk_text, 80) FROM document_chunks ORDER BY document_id, 
+  chunk_index')
+  for r in cur.fetchall(): print(f'  [{r[0]}-{r[1]}] {r[2]}')
+  conn.close()
+  "

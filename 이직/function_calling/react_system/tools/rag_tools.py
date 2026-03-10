@@ -1,0 +1,287 @@
+"""
+RAG (Retrieval-Augmented Generation) 도구
+KAMCO 내부 문서를 검색하고 답변을 생성합니다.
+"""
+
+import sys
+import os
+
+# chatsam 경로 추가 (임시 - 나중에 독립적으로 포팅)
+CHATSAM_PATH = "C:/Users/qorud/Desktop/KAMCO_프로젝트/chatsam"
+if os.path.exists(CHATSAM_PATH):
+    sys.path.insert(0, CHATSAM_PATH)
+
+
+def search_knowledge_base(query: str, _auth=None) -> dict:
+    """
+    KAMCO 지식 기반에서 정보를 검색하고 답변을 생성합니다.
+
+    Args:
+        query: 검색할 질문 또는 키워드
+
+    Returns:
+        dict: {
+            "status": "success" | "error",
+            "answer": "생성된 답변",
+            "sources": [관련 문서 메타데이터],
+            "message": "오류 메시지 (실패 시)"
+        }
+    """
+
+    # ==========================================
+    # 1. 실제 RAG 시스템 연동 (Phase 4)
+    # ==========================================
+    # TODO: 벡터 DB 연동 및 실제 RAG 구현
+    # try:
+    #     # 1) 임베딩 생성
+    #     from openai import OpenAI
+    #     client = OpenAI()
+    #     embedding = client.embeddings.create(
+    #         input=query,
+    #         model="text-embedding-3-small"
+    #     ).data[0].embedding
+    #
+    #     # 2) 벡터 DB 검색 (Chroma/Pinecone/Weaviate)
+    #     from chroma import Client
+    #     chroma_client = Client()
+    #     collection = chroma_client.get_collection("kamco_docs")
+    #     results = collection.query(
+    #         query_embeddings=[embedding],
+    #         n_results=5
+    #     )
+    #
+    #     # 3) 컨텍스트 구성
+    #     context = "\n\n".join(results["documents"][0])
+    #
+    #     # 4) LLM으로 답변 생성
+    #     response = client.chat.completions.create(
+    #         model="gpt-4",
+    #         messages=[
+    #             {"role": "system", "content": "당신은 KAMCO 내부 규정 전문가입니다."},
+    #             {"role": "user", "content": f"다음 정보를 바탕으로 질문에 답하세요:\n\n{context}\n\n질문: {query}"}
+    #         ]
+    #     )
+    #
+    #     return {
+    #         "status": "success",
+    #         "answer": response.choices[0].message.content,
+    #         "sources": results["metadatas"][0]
+    #     }
+    # except Exception as e:
+    #     print(f"RAG 검색 실패: {e}")
+    #     pass
+
+
+    # ==========================================
+    # 2. 더미 RAG 검색 (테스트 환경)
+    # ==========================================
+    try:
+        answer, sources = _dummy_rag_search(query)
+
+        return {
+            "status": "success",
+            "answer": answer,
+            "sources": sources,
+            "message": "지식 기반 검색 완료 (더미 데이터)"
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"RAG 검색 중 오류 발생: {str(e)}",
+            "answer": "죄송합니다. 문서 검색 중 오류가 발생했습니다."
+        }
+
+
+def _dummy_rag_search(query: str) -> tuple:
+    """
+    더미 RAG 검색 (테스트용)
+
+    실제 구현은 Phase 4에서:
+    - 벡터 DB 연결 (Chroma/Pinecone/Weaviate)
+    - 임베딩 생성 (OpenAI embeddings)
+    - 유사도 검색 (cosine similarity)
+    - LLM 답변 생성 (GPT-4)
+
+    Args:
+        query: 검색 질문
+
+    Returns:
+        tuple: (답변, 출처 목록)
+    """
+    # 질문별 더미 답변 및 출처
+    dummy_kb = {
+        "출장비": {
+            "answer": """출장비 신청 절차는 다음과 같습니다:
+
+1. **사전 승인**: 출장 전 상사에게 구두 또는 서면으로 승인받기
+2. **전자결재**: 그룹웨어 > 전자결재 > 출장신청서 작성
+3. **출장 수행**: 승인 후 출장 진행
+4. **정산**: 출장 종료 후 7일 이내에 영수증과 함께 지출결의서 작성
+5. **승인 및 지급**: 결재 완료 후 급여일에 지급
+
+**필요 서류:**
+- 출장신청서
+- 지출결의서
+- 교통비/숙박비 영수증
+- 출장 보고서(필요시)
+
+더 자세한 내용은 그룹웨어의 업무 매뉴얼을 참고하세요.""",
+            "sources": [
+                {"source": "업무 매뉴얼.pdf", "page": 42, "chapter": "3. 출장비 관리"},
+                {"source": "회계 규정.pdf", "page": 15, "chapter": "제5조 출장비 정산"}
+            ]
+        },
+
+        "연차": {
+            "answer": """연차 사용 규정은 다음과 같습니다:
+
+**연차 발생:**
+- 1년 근속: 15일
+- 3년 이상 근속: 매 2년마다 1일 가산 (최대 25일)
+
+**사용 방법:**
+1. 그룹웨어 > 전자결재 > 휴가신청서 작성
+2. 최소 3일 전 신청 (긴급 시 당일 신청 가능)
+3. 상사 승인 후 사용
+
+**주의사항:**
+- 연차는 당해 연도 내 사용 원칙
+- 미사용 연차는 다음 연도로 이월 가능 (최대 15일)
+- 장기 휴가(5일 이상)는 2주 전 신청 권장
+
+더 자세한 내용은 인사규정을 참고하세요.""",
+            "sources": [
+                {"source": "인사규정.pdf", "page": 28, "chapter": "제12조 연차휴가"},
+                {"source": "HR 가이드.pdf", "page": 5, "chapter": "2. 휴가 제도"}
+            ]
+        },
+
+        "온보딩": {
+            "answer": """신규 입사자 온보딩 프로세스:
+
+**입사 전 (D-7):**
+- 인사팀에서 입사 안내 메일 발송
+- 필요 서류 제출 안내
+
+**입사일 (D-Day):**
+- 오전 9시 본사 1층 로비 집합
+- 사원증 발급
+- IT 기기 수령 (노트북, 휴대폰)
+- 신입사원 OT (2시간)
+
+**입사 1주차:**
+- 부서 배치 및 멘토 배정
+- 그룹웨어/업무시스템 교육
+- 팀 소개 및 업무 파악
+
+**입사 1개월:**
+- 기본 업무 교육
+- 멘토링 진행
+- 적응 상황 면담
+
+**입사 3개월:**
+- 신입사원 종합 교육
+- 시용기간 평가
+
+환영합니다! 🎉""",
+            "sources": [
+                {"source": "신입사원 안내서.pdf", "page": 1, "chapter": "1. 온보딩 프로세스"},
+                {"source": "인사팀 공지사항", "date": "2026-01-01"}
+            ]
+        },
+
+        "복리후생": {
+            "answer": """KAMCO 주요 복리후생 제도:
+
+**휴가/휴직:**
+- 연차, 경조사 휴가, 병가
+- 육아휴직, 배우자 출산휴가
+- 안식년 제도 (근속 10년 이상)
+
+**지원 제도:**
+- 학자금 지원 (본인 및 자녀)
+- 주택자금 대출 지원
+- 건강검진 (연 1회, 배우자 포함)
+- 체력단련비 (월 5만원)
+
+**기타 혜택:**
+- 명절 상여금
+- 직원 대출 우대 금리
+- 사내 동호회 지원
+- 경조사 지원금
+
+더 자세한 내용은 그룹웨어 > 복리후생 게시판을 확인하세요.""",
+            "sources": [
+                {"source": "복리후생 안내.pdf", "page": 2, "chapter": "전체 혜택 안내"},
+                {"source": "인사규정.pdf", "page": 45, "chapter": "제8장 복리후생"}
+            ]
+        }
+    }
+
+    # 키워드 매칭으로 답변 선택
+    query_lower = query.lower()
+
+    for keyword, data in dummy_kb.items():
+        if keyword in query_lower or keyword in query:
+            return data["answer"], data["sources"]
+
+    # 매칭되는 답변이 없으면 기본 답변
+    default_answer = f"""'{query}'에 대한 정보를 찾았습니다.
+
+현재는 테스트 모드로 실행 중입니다.
+실제 문서 검색 기능은 Phase 4에서 구현될 예정입니다.
+
+다음 키워드로 테스트해보세요:
+- "출장비 신청 방법"
+- "연차 사용 규정"
+- "신규 입사자 온보딩"
+- "복리후생 제도"
+
+문의사항은 디지털시스템실로 연락주세요. 📞"""
+
+    default_sources = [
+        {"source": "시스템 안내", "type": "더미 데이터"}
+    ]
+
+    return default_answer, default_sources
+
+
+def _search_using_chatsam(query: str) -> dict:
+    """
+    chatsam의 RAG 시스템 사용 (Phase 4에서 구현 예정)
+
+    TODO:
+    - LangGraphState 생성
+    - node_retrieve 호출
+    - node_generate 호출
+    - 결과 변환
+    """
+    # Phase 4에서 구현
+    pass
+
+
+# 테스트용
+if __name__ == "__main__":
+    # 테스트 1: 출장비
+    result1 = search_knowledge_base("출장비 신청 방법을 알려주세요")
+    print("=" * 60)
+    print("테스트 1: 출장비")
+    print("=" * 60)
+    print(result1["answer"])
+    print()
+
+    # 테스트 2: 연차
+    result2 = search_knowledge_base("연차 규정이 어떻게 되나요?")
+    print("=" * 60)
+    print("테스트 2: 연차")
+    print("=" * 60)
+    print(result2["answer"])
+    print()
+
+    # 테스트 3: 알 수 없는 질문
+    result3 = search_knowledge_base("AI 기술 동향")
+    print("=" * 60)
+    print("테스트 3: 알 수 없는 질문")
+    print("=" * 60)
+    print(result3["answer"])

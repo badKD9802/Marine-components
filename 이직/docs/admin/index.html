@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영마린테크 관리자</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+    <!-- Markdown 렌더링 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+</head>
+<body>
+    <!-- ===== 로그인 ===== -->
+    <div id="loginView" class="login-container">
+        <div class="login-box">
+            <h1>Young Marine Tech</h1>
+            <p>관리자 로그인 (비밀번호: 4781)</p>
+            <input type="password" id="passwordInput" placeholder="비밀번호를 입력하세요" />
+            <div class="error" id="loginError"></div>
+            <button class="btn btn-accent" style="width:100%" onclick="handleLogin()">로그인</button>
+        </div>
+    </div>
+
+    <!-- ===== 대시보드 ===== -->
+    <div id="dashboardView" class="dashboard">
+        <div class="header">
+            <h1>Young Marine Tech 관리자</h1>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+            </div>
+        </div>
+
+        <div class="tab-nav">
+            <!-- 운영 관리 -->
+            <button class="active" onclick="switchTab('guide')">📊 대시보드</button>
+            <button onclick="switchTab('products')">📦 상품</button>
+            <button onclick="switchTab('inquiry')">📋 견적문의</button>
+            <span class="tab-divider"></span>
+            <!-- AI 기능 -->
+            <button onclick="switchTab('mail')">✉️ 메일</button>
+            <button onclick="switchTab('rag')">💬 Q&A</button>
+            <button onclick="switchTab('docs')">📁 문서</button>
+            <span class="tab-divider"></span>
+            <!-- 시스템 -->
+            <button onclick="switchTab('homepage')">🏠 설정</button>
+            <button onclick="switchTab('logs')">📝 로그</button>
+        </div>
+
+        <!-- ===== 대시보드 탭 ===== -->
+        <div id="tabGuide" class="tab-content active">
+            <div class="guide-container">
+                <div class="guide-hero">
+                    <div class="hero-icon">&#128200;</div>
+                    <h2>대시보드</h2>
+                    <p>시스템 현황을 한눈에 확인하세요</p>
+                </div>
+
+                <!-- 통계 위젯 -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:30px;">
+                    <!-- 메일 작성 -->
+                    <div style="background:var(--bg-white);border:1px solid var(--border);padding:20px;border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">메일 작성</span>
+                            <span style="font-size:1.2rem;opacity:0.6;">📧</span>
+                        </div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--text-dark);margin-bottom:6px;" id="statMailTotal">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-light);">오늘 <span id="statMailToday" style="font-weight:600;color:var(--text-regular)">-</span> · 이번 주 <span id="statMailWeek" style="font-weight:600;color:var(--text-regular)">-</span></div>
+                    </div>
+                    <!-- 문서 관리 -->
+                    <div style="background:var(--bg-white);border:1px solid var(--border);padding:20px;border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">문서 관리</span>
+                            <span style="font-size:1.2rem;opacity:0.6;">📁</span>
+                        </div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--text-dark);margin-bottom:6px;" id="statDocTotal">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-light);">컨설턴트 <span id="statDocConsultant" style="font-weight:600;color:var(--text-regular)">-</span> · RAG <span id="statDocRag" style="font-weight:600;color:var(--text-regular)">-</span></div>
+                    </div>
+                    <!-- RAG 대화 -->
+                    <div style="background:var(--bg-white);border:1px solid var(--border);padding:20px;border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">RAG 대화</span>
+                            <span style="font-size:1.2rem;opacity:0.6;">💬</span>
+                        </div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--text-dark);margin-bottom:6px;" id="statConvTotal">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-light);">오늘 <span id="statConvToday" style="font-weight:600;color:var(--text-regular)">-</span></div>
+                    </div>
+                    <!-- 견적문의 -->
+                    <div style="background:var(--bg-white);border:1px solid var(--border);padding:20px;border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:500;">견적문의</span>
+                            <span style="font-size:1.2rem;opacity:0.6;">📋</span>
+                        </div>
+                        <div style="font-size:2rem;font-weight:700;color:var(--text-dark);margin-bottom:6px;" id="statInqTotal">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-light);">오늘 <span id="statInqToday" style="font-weight:600;color:var(--text-regular)">-</span></div>
+                    </div>
+                </div>
+
+                <div class="guide-cards">
+                    <div class="guide-card" onclick="switchTab('rag')">
+                        <div class="card-icon">&#128172;</div>
+                        <div class="card-title">문서 내 Q&A</div>
+                        <div class="card-desc">업로드된 문서 기반<br>문서 내 Q&A</div>
+                        <span class="card-link">바로가기 &rarr;</span>
+                    </div>
+                    <div class="guide-card" onclick="switchTab('mail')">
+                        <div class="card-icon">&#9993;</div>
+                        <div class="card-title">메일 작성</div>
+                        <div class="card-desc">수신 메일 AI 분석 &rarr;<br>자동 답장 생성 · 발송</div>
+                        <span class="card-link">바로가기 &rarr;</span>
+                    </div>
+                    <div class="guide-card" onclick="switchTab('inquiry')">
+                        <div class="card-icon">&#128221;</div>
+                        <div class="card-title">견적문의</div>
+                        <div class="card-desc">고객 견적문의<br>확인 · 답변 관리</div>
+                        <span class="card-link">바로가기 &rarr;</span>
+                    </div>
+                    <div class="guide-card" onclick="switchTab('docs')">
+                        <div class="card-icon">&#128218;</div>
+                        <div class="card-title">문서 관리</div>
+                        <div class="card-desc">PDF/이미지 업로드 후<br>AI가 자동 분석 · 색인</div>
+                        <span class="card-link">바로가기 &rarr;</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 상품 관리 탭 ===== -->
+        <div id="tabProducts" class="tab-content">
+            <div class="tab-header">
+                <h2>📦 상품 관리</h2>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <input type="text" id="productSearchInput" placeholder="상품명, 부품번호 검색..." style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;width:250px;">
+                    <select id="productCategoryFilter" onchange="loadProducts()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;">
+                        <option value="">전체 카테고리</option>
+                    </select>
+                    <button class="btn btn-ghost" onclick="toggleCategoryManage()">🏷️ 카테고리 관리</button>
+                    <button class="btn btn-primary" onclick="showProductForm()">➕ 상품 추가</button>
+                </div>
+            </div>
+
+            <!-- 카테고리 관리 패널 -->
+            <div id="categoryManagePanel" style="display:none;background:var(--bg-gray);padding:20px;margin:0 20px 20px;border-radius:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h3 style="margin:0;font-size:1rem;">카테고리 관리</h3>
+                    <button class="btn btn-ghost btn-sm" onclick="toggleCategoryManage()">닫기</button>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;margin-bottom:16px;">
+                    <input type="text" id="newCategoryCode" placeholder="코드 (예: engine)" style="padding:8px;border:1px solid var(--border);border-radius:6px;">
+                    <input type="text" id="newCategoryNameKo" placeholder="한글명 (예: 엔진)" style="padding:8px;border:1px solid var(--border);border-radius:6px;">
+                    <input type="text" id="newCategoryNameEn" placeholder="영문명 (예: Engine)" style="padding:8px;border:1px solid var(--border);border-radius:6px;">
+                    <button class="btn btn-primary" onclick="addCategory()">추가</button>
+                </div>
+                <div id="categoryList" style="display:flex;flex-wrap:wrap;gap:8px;">
+                    <div style="color:var(--text-muted);font-size:0.85rem;">로드 중...</div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div id="productList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+                    <div class="empty-state" style="grid-column:1/-1;padding:60px 20px;">상품 로드 중...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 견적문의 탭 ===== -->
+        <div id="tabInquiry" class="tab-content">
+            <!-- 헤더 & 통계 -->
+            <div class="inquiry-header">
+                <div class="inquiry-header-top">
+                    <h2 class="inquiry-title">
+                        <span class="inquiry-icon">💬</span>
+                        견적문의 관리
+                    </h2>
+                    <button class="btn btn-primary" onclick="refreshInquiries()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 019-5M20 15a9 9 0 01-9 5"/></svg>
+                        새로고침
+                    </button>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="inquiry-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-total">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-label">전체 문의</div>
+                            <div class="stat-value" id="statTotal">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-pending">⏰</div>
+                        <div class="stat-content">
+                            <div class="stat-label">답변 대기</div>
+                            <div class="stat-value" id="statPending">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-replied">✅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">답변 완료</div>
+                            <div class="stat-value" id="statReplied">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-today">📅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">오늘 문의</div>
+                            <div class="stat-value" id="statToday">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 필터 & 검색 바 -->
+                <div class="inquiry-filters">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-status="all" onclick="filterInquiries('all')">
+                            전체
+                        </button>
+                        <button class="filter-btn" data-status="pending" onclick="filterInquiries('pending')">
+                            답변 대기
+                        </button>
+                        <button class="filter-btn" data-status="replied" onclick="filterInquiries('replied')">
+                            답변 완료
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input type="text" id="inquirySearchInput" placeholder="제목, 작성자, 내용 검색..." onkeyup="searchInquiries()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 문의 목록 (카드 형태) -->
+            <div class="inquiry-container">
+                <div class="inquiry-list" id="adminInquiryList">
+                    <!-- 카드들이 여기에 동적으로 추가됩니다 -->
+                    <div class="empty-state-lg">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">견적문의가 없습니다</div>
+                        <div class="empty-state-text">고객으로부터 새로운 문의가 도착하면 여기에 표시됩니다</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상세보기 & 답변 모달 -->
+            <div class="modal-overlay" id="inquiryDetailModal" style="display:none;" onclick="if(event.target===this) closeInquiryDetail()">
+                <div class="modal-container modal-lg">
+                    <div class="modal-header">
+                        <h3 id="inquiryDetailTitle">문의 상세</h3>
+                        <button class="modal-close" onclick="closeInquiryDetail()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- 문의 정보 -->
+                        <div class="inquiry-detail-section">
+                            <div class="inquiry-detail-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">작성자</span>
+                                    <span class="meta-value" id="inquiryDetailAuthor">-</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">이메일</span>
+                                    <span class="meta-value" id="inquiryDetailEmail">-</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">작성일</span>
+                                    <span class="meta-value" id="inquiryDetailDate">-</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">상태</span>
+                                    <span class="inquiry-status-badge" id="inquiryDetailStatus">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 문의 내용 -->
+                        <div class="inquiry-detail-section">
+                            <h4 class="section-title">📝 문의 내용</h4>
+                            <div class="inquiry-content-box" id="inquiryDetailContent">
+                                <!-- 내용이 여기에 표시됩니다 -->
+                            </div>
+                        </div>
+
+                        <!-- 기존 답변 -->
+                        <div class="inquiry-detail-section" id="existingRepliesSection" style="display:none;">
+                            <h4 class="section-title">💬 답변 내역</h4>
+                            <div id="adminExistingReplies">
+                                <!-- 기존 답변들이 여기에 표시됩니다 -->
+                            </div>
+                        </div>
+
+                        <!-- 답변 작성 -->
+                        <div class="inquiry-detail-section">
+                            <h4 class="section-title">✍️ 답변 작성</h4>
+                            <div class="reply-editor">
+                                <textarea id="adminReplyText" class="reply-textarea" rows="6" placeholder="답변 내용을 입력하세요...&#10;&#10;예: 안녕하세요, 문의 주신 부품에 대해 답변드립니다..."></textarea>
+                                <div class="reply-actions">
+                                    <div class="reply-actions-left">
+                                        <button class="btn btn-ghost btn-sm" onclick="insertReplyTemplate()">
+                                            📝 템플릿 삽입
+                                        </button>
+                                    </div>
+                                    <div class="reply-actions-right">
+                                        <button class="btn btn-ghost" onclick="closeInquiryDetail()">취소</button>
+                                        <button class="btn btn-primary" onclick="submitAdminReply()">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                            답변 등록
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 문서 관리 탭 ===== -->
+        <div id="tabDocs" class="tab-content">
+            <div class="content">
+                <div class="upload-section">
+                    <div class="upload-card" id="uploadConsultant">
+                        <input type="file" id="fileInputConsultant" accept=".pdf,.jpg,.jpeg,.png" multiple />
+                        <span class="purpose-label purpose-consultant">AI 상담</span>
+                        <div class="icon">&#128206;</div>
+                        <div class="title">AI 상담 문서 업로드</div>
+                        <div class="subtitle">랜딩 페이지 채팅에서 참조</div>
+                    </div>
+                    <div class="upload-card" id="uploadRag">
+                        <input type="file" id="fileInputRag" accept=".pdf,.jpg,.jpeg,.png" multiple />
+                        <span class="purpose-label purpose-rag">RAG / 메일</span>
+                        <div class="icon">&#128218;</div>
+                        <div class="title">RAG / 메일 문서 업로드</div>
+                        <div class="subtitle">문서 내 Q&A · 메일 작성에서 참조</div>
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <label style="display:block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;">📁 업로드 카테고리 선택</label>
+                    <select id="uploadCategorySelect" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;">
+                        <option value="미분류">미분류 (기본)</option>
+                        <option value="엔진">엔진</option>
+                        <option value="펌프">펌프</option>
+                        <option value="프로펠러">프로펠러</option>
+                        <option value="배터리">배터리</option>
+                        <option value="항해장비">항해장비</option>
+                        <option value="안전장비">안전장비</option>
+                        <option value="전기/전자">전기/전자</option>
+                        <option value="배관/호스">배관/호스</option>
+                        <option value="매뉴얼">매뉴얼</option>
+                        <option value="기타">기타</option>
+                    </select>
+                    <div style="margin-top: 6px; font-size: 0.75rem; color: var(--text-muted);">
+                        💡 업로드할 문서의 카테고리를 선택하세요. 나중에 변경 가능합니다.
+                    </div>
+                </div>
+
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="file-name" id="uploadFileName">업로드 중...</div>
+                    <div class="progress-bar"><div class="fill"></div></div>
+                </div>
+
+                <div class="docs-section">
+                    <h2>업로드된 문서</h2>
+                    <div class="docs-table" id="docsTable">
+                        <div class="empty-state">
+                            <div class="icon">&#128196;</div>
+                            <div>아직 업로드된 문서가 없습니다</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 문서 내 Q&A 탭 ===== -->
+        <div id="tabRag" class="tab-content">
+            <div class="rag-layout">
+                <!-- 왼쪽: 대화 목록 -->
+                <div class="sidebar-conv">
+                    <div class="sidebar-conv-header">
+                        <button class="btn btn-accent btn-sm" style="width:100%" onclick="createConversation()">+ 새 대화</button>
+                    </div>
+                    <div class="conv-list" id="convList">
+                        <div class="empty-state" style="padding:32px 12px;font-size:0.82rem">
+                            <div style="font-size:1.3rem;margin-bottom:6px;">&#128172;</div>
+                            새 대화를 시작하세요
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 가운데: 채팅 -->
+                <div class="chat-center">
+                    <div class="chat-header-bar" id="chatHeaderBar">
+                        <span class="chat-header-title" id="chatHeaderTitle"></span>
+                        <div class="chat-header-actions">
+                            <button class="btn-icon" id="chatSaveBtn" onclick="toggleSaveConversation()" title="대화 저장">&#11088; 저장</button>
+                            <button class="btn-icon" onclick="startRenameFromHeader()" title="이름 변경">&#9998; 이름 변경</button>
+                            <button class="btn-icon btn-danger" onclick="clearAllMessages()" title="대화내역 전체 삭제">&#128465; 전체 삭제</button>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-welcome" id="chatWelcome">
+                            <div class="chat-welcome-icon">&#9875;</div>
+                            <h3>문서 내 Q&A</h3>
+                            <p>업로드된 기술 문서를 기반으로<br>정확한 답변을 받아보세요</p>
+                            <div class="welcome-docs" id="welcomeDocs"></div>
+                            <div class="welcome-input-wrap">
+                                <div class="welcome-input-box">
+                                    <input type="text" id="welcomeInput" placeholder="문서에 대해 질문을 입력해주시면 답변을 드리겠습니다" />
+                                    <button class="chat-send-btn" id="welcomeSendBtn" onclick="sendRagMessage()">&#10148;</button>
+                                </div>
+                                <div class="welcome-hint">Enter로 전송 — 대화가 자동 생성됩니다</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-wrap" id="chatInputWrap" style="display:none">
+                        <div class="chat-input-box">
+                            <input type="text" id="ragInput" placeholder="문서에 대해 질문을 입력해주시면 답변을 드리겠습니다" />
+                            <button class="chat-send-btn" id="ragSendBtn" onclick="sendRagMessage()">&#10148;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 참조 문서 -->
+                <div class="sidebar-ref">
+                    <div class="sidebar-ref-header">
+                        <span class="header-icon">&#128196;</span>
+                        참조 문서
+                    </div>
+                    <div class="ref-doc-list" id="refDocList">
+                        <div class="empty-state" style="padding:20px 12px;font-size:0.8rem">문서 로드 중...</div>
+                    </div>
+                    <div class="ref-resizer" id="refResizer"></div>
+                    <div class="ref-chunks-area" id="refChunksPanel">
+                        <div class="ref-chunks-title">&#128269; 참조된 문서 내용</div>
+                        <div style="font-size:0.76rem;color:var(--text-muted);text-align:center;padding:12px 0;">질문을 입력하면<br>참조 내용이 표시됩니다</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 메일 작성 탭 ===== -->
+        <div id="tabMail" class="tab-content">
+            <!-- Gmail 연동 상태바 (개선된 디자인) -->
+            <div class="mail-topbar">
+                <div class="mail-topbar-left">
+                    <div class="mail-topbar-icon">📧</div>
+                    <h3 class="mail-topbar-title">Smart Mail Assistant</h3>
+                </div>
+                <div class="mail-topbar-center" id="gmailAuthSection">
+                    <input type="text" id="gmailEmail" class="mail-topbar-input" placeholder="Gmail 주소" />
+                    <input type="password" id="gmailAppPassword" class="mail-topbar-input" placeholder="앱 비밀번호" />
+                    <button class="btn btn-accent btn-sm" onclick="gmailConnect()">연결</button>
+                </div>
+                <div class="mail-topbar-right">
+                    <div class="gmail-status-badge" id="gmailStatusBadge">
+                        <span class="gmail-status-dot disconnected" id="gmailDot"></span>
+                        <span id="gmailStatusText">연결 안됨</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="gmailFetch()" id="gmailFetchBtn" style="display:none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 019-5M20 15a9 9 0 01-9 5"/></svg>
+                        메일 가져오기
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="gmailDisconnect()" id="gmailDisconnectBtn" style="display:none">연결 해제</button>
+                </div>
+            </div>
+            <!-- 메일 메인 레이아웃 (3-Panel Design) -->
+            <div class="mail-layout">
+                <!-- 왼쪽: 수신함 & 퀵 액션 사이드바 -->
+                <aside class="mail-sidebar-left" id="mailSidebarLeft">
+                    <!-- 사이드바 헤더 -->
+                    <div class="mail-sidebar-header">
+                        <button class="btn btn-primary" style="width:100%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="showQuickActions()">
+                            🛠️ 메일 작성 도구
+                        </button>
+                    </div>
+
+                    <!-- 수신함 목록 -->
+                    <div class="mail-sidebar-section">
+                        <div class="mail-sidebar-section-title">
+                            <span>📥 수신함</span>
+                            <button class="btn-icon-sm" onclick="loadInboxEmails()" title="새로고침">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 019-5M20 15a9 9 0 01-9 5"/></svg>
+                            </button>
+                        </div>
+                        <div id="inboxList" class="mail-inbox-list">
+                            <div class="empty-state-sm">Gmail을 연결하면<br/>수신 메일이 표시됩니다</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- 중앙: 메인 작업 영역 (읽기 + 작성 패널) -->
+                <main class="mail-main-area">
+                    <!-- 읽기 패널 (원문/번역) -->
+                    <section class="mail-read-panel" id="mailReadPanel">
+                        <!-- 패널 헤더 -->
+                        <div class="mail-panel-header">
+                            <div class="mail-panel-tabs">
+                                <button class="mail-tab active" id="tabReadOriginal" onclick="switchMailReadTab('original')">
+                                    <span>📧</span> 수신 메일
+                                </button>
+                            </div>
+                            <div class="mail-panel-actions">
+                                <select id="mailTone" class="mail-select-sm">
+                                    <option value="formal">격식</option>
+                                    <option value="friendly">친근</option>
+                                    <option value="concise">간결</option>
+                                </select>
+                                <button class="btn btn-sm btn-primary" id="mailTranslateIncomingBtn" onclick="translateIncoming()">
+                                    🇰🇷 번역
+                                </button>
+                                <button class="btn btn-sm btn-accent" id="mailComposeBtn" onclick="composeMail()">
+                                    ✨ 답장 생성
+                                </button>
+                                <button class="btn-icon-sm" onclick="toggleMailReadPanel()" title="패널 접기">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 원문 컨텐츠 -->
+                        <div class="mail-read-content" id="mailReadOriginalContent">
+                            <textarea id="mailIncoming" class="mail-incoming-textarea" placeholder="수신된 견적/문의 메일 내용을 붙여넣으세요...&#10;&#10;예: Dear Young Marine Tech, We would like to request a quotation for the following spare parts..."></textarea>
+                            <!-- HTML 메일 프리뷰 -->
+                            <div id="mailIncomingHtml" class="mail-html-preview" style="display:none;">
+                                <div class="mail-html-preview-header">
+                                    <span>📎 HTML 메일</span>
+                                    <button class="btn-text-sm" onclick="toggleMailHtmlView()">텍스트 보기</button>
+                                </div>
+                                <iframe id="mailHtmlFrame" sandbox="allow-same-origin"></iframe>
+                            </div>
+                            <!-- 메일 분석 -->
+                            <div class="mail-analysis" id="mailAnalysis">
+                                <div class="mail-analysis-label">🔍 메일 분석</div>
+                                <div id="mailAnalysisText"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 읽기 패널 펼치기 버튼 (접혔을 때만 표시) -->
+                    <button class="mail-panel-expand-btn" id="mailReadExpandBtn" style="display:none;" onclick="toggleMailReadPanel()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+                    </button>
+
+                    <!-- 작성 패널 (초안/최종) -->
+                    <section class="mail-write-panel">
+                        <!-- 패널 헤더 -->
+                        <div class="mail-panel-header">
+                            <div class="mail-view-mode-toggle">
+                                <button class="mode-btn active" id="modeBtnTab" onclick="setMailViewMode('tab')">
+                                    기본 보기
+                                </button>
+                                <button class="mode-btn" id="modeBtnSplit" onclick="setMailViewMode('split')">
+                                    비교 보기
+                                </button>
+                            </div>
+                            <div class="mail-panel-actions">
+                                <button class="btn btn-sm btn-ghost" onclick="showMailSettings()">
+                                    ⚙️ 템플릿/서명
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 탭 모드 탭 헤더 -->
+                        <div class="mail-write-tabs" id="mailWriteTabs">
+                            <button class="mail-tab active" id="tabWriteDraft" onclick="switchMailWriteTab('draft')">
+                                ✍️ 한국어 초안
+                            </button>
+                            <button class="mail-tab" id="tabWriteFinal" onclick="switchMailWriteTab('final')">
+                                🌐 최종 메일
+                            </button>
+                        </div>
+
+                        <!-- 작성 영역 컨테이너 -->
+                        <div class="mail-write-workspace" id="mailWriteWorkspace">
+                            <!-- AI 프롬프트 입력 -->
+                            <div class="mail-ai-prompt">
+                                <input type="text" id="aiPromptInput" class="mail-ai-prompt-input" placeholder="AI에게 요청하기 (예: 정중하게 거절하는 답장 써줘, 견적서 첨부한다고 알려줘)">
+                                <button class="btn btn-accent" onclick="executeAIPrompt()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    실행
+                                </button>
+                            </div>
+
+                            <!-- 편집 영역 -->
+                            <div class="mail-editor-container" id="mailEditorContainer">
+                                <!-- 초안 영역 -->
+                                <div class="mail-editor-area" id="mailEditorDraft">
+                                    <div class="mail-editor-header split-only">
+                                        <span>✍️ 한국어 초안</span>
+                                        <div class="mail-editor-header-actions">
+                                            <select id="mailSignatureSelect" class="mail-select-sm">
+                                                <option value="">서명 선택...</option>
+                                            </select>
+                                            <button class="btn-text-sm" onclick="insertSignature()">+ 삽입</button>
+                                        </div>
+                                    </div>
+                                    <textarea id="mailKoreanDraft" class="mail-editor-textarea" placeholder="답장 생성 버튼을 클릭하면 한국어 초안이 여기에 표시됩니다.&#10;수정 후 번역 버튼을 눌러주세요."></textarea>
+                                </div>
+
+                                <!-- 분할선 (비교 모드에서만 표시) -->
+                                <div class="mail-editor-divider" id="mailEditorDivider" style="display:none;">
+                                    <div class="divider-icon">→</div>
+                                </div>
+
+                                <!-- 최종 영역 -->
+                                <div class="mail-editor-area" id="mailEditorFinal" style="display:none;">
+                                    <div class="mail-editor-header split-only">
+                                        <span>🌐 최종 메일</span>
+                                        <select id="mailTargetLang" class="mail-select-sm" onchange="updateTargetLangBadge()">
+                                            <option value="en">English</option>
+                                            <option value="ja">日本語</option>
+                                            <option value="zh">中文</option>
+                                            <option value="de">Deutsch</option>
+                                            <option value="fr">Français</option>
+                                            <option value="es">Español</option>
+                                        </select>
+                                        <span class="mail-lang-badge" id="mailTargetLangBadge">EN</span>
+                                    </div>
+                                    <textarea id="mailTranslated" class="mail-editor-textarea" readonly placeholder="한국어 초안을 번역하면 여기에 표시됩니다."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- 하단 액션바 -->
+                            <div class="mail-action-bar">
+                                <div class="mail-action-left">
+                                    <span class="mail-status" id="mailStatusIndicator">
+                                        <span class="status-dot"></span>
+                                        대기 중
+                                    </span>
+                                </div>
+                                <div class="mail-action-right">
+                                    <button class="btn btn-sm btn-ghost" id="mailRecomposeBtn" onclick="recomposeMail()" disabled>
+                                        🔄 재작성
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" id="mailTranslateBtn" onclick="translateMail()" disabled>
+                                        🌐 번역
+                                    </button>
+                                    <button class="btn btn-sm btn-ghost" onclick="copyMailDraft('ko')">
+                                        📋 초안 복사
+                                    </button>
+                                    <button class="btn btn-sm btn-ghost" onclick="copyMailDraft('translated')">
+                                        📋 최종 복사
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" id="mailSaveBtn" onclick="saveMailComposition()" disabled>
+                                        💾 저장
+                                    </button>
+                                    <!-- 발송 기능 임시 비활성화 (Railway SMTP 포트 차단) -->
+                                    <!-- <button class="btn btn-sm btn-accent" id="mailSendBtn" onclick="sendMailReply()" disabled style="display:none;">
+                                        📤 발송
+                                    </button> -->
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 로딩 오버레이 -->
+                    <div class="mail-loading-overlay" id="mailLoading">
+                        <div class="mail-loading-spinner"></div>
+                        <div class="mail-loading-text" id="mailLoadingText">답장을 생성하고 있습니다...</div>
+                    </div>
+                </main>
+
+            </div>
+
+            <!-- 메일 작성 도구 모달 -->
+            <div class="modal-overlay" id="quickActionsModal" style="display:none;" onclick="if(event.target===this) hideQuickActions()">
+                <div class="modal-container modal-md">
+                    <div class="modal-header">
+                        <h3>🛠️ 메일 작성 도구</h3>
+                        <button class="modal-close" onclick="hideQuickActions()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="quick-action-grid">
+                            <button class="quick-action-btn" onclick="showMailPanel('docs'); hideQuickActions()">
+                                <div class="quick-action-icon">📁</div>
+                                <div class="quick-action-label">문서 참조</div>
+                            </button>
+                            <button class="quick-action-btn" onclick="showMailPanel('templates'); hideQuickActions()">
+                                <div class="quick-action-icon">📝</div>
+                                <div class="quick-action-label">템플릿</div>
+                            </button>
+                            <button class="quick-action-btn" onclick="showMailPanel('history'); hideQuickActions()">
+                                <div class="quick-action-icon">🕐</div>
+                                <div class="quick-action-label">이력</div>
+                            </button>
+                            <button class="quick-action-btn" onclick="showMailPanel('prompts'); hideQuickActions()">
+                                <div class="quick-action-icon">💬</div>
+                                <div class="quick-action-label">프롬프트 예시</div>
+                            </button>
+                            <button class="quick-action-btn" onclick="showMailPanel('signatures'); hideQuickActions()">
+                                <div class="quick-action-icon">✍️</div>
+                                <div class="quick-action-label">서명 관리</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 설정/리소스 모달 (템플릿, 서명, 문서 등) -->
+            <div class="modal-overlay" id="mailSettingsModal" style="display:none;" onclick="if(event.target===this) hideMailSettings()">
+                <div class="modal-container modal-lg">
+                    <div class="modal-header">
+                        <h3 id="mailPanelTitle">📨 템플릿 & 서명</h3>
+                        <button class="modal-close" onclick="hideMailSettings()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- 탭 -->
+                        <div class="modal-tabs">
+                            <button class="modal-tab active" onclick="switchMailSettingsTab('templates')">템플릿</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('signatures')">서명</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('docs')">참조 문서</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('history')">이력</button>
+                            <button class="modal-tab" onclick="switchMailSettingsTab('prompts')">프롬프트 예시</button>
+                        </div>
+
+                        <!-- 참조 문서 패널 -->
+                        <div id="mailSidePanelDocs" class="modal-tab-content" style="display:none;">
+                            <div class="mail-doc-list" id="mailDocList">
+                                <div class="empty-state-sm">문서 로드 중...</div>
+                            </div>
+                        </div>
+
+                        <!-- 템플릿 패널 -->
+                        <div id="mailSidePanelTemplates" class="modal-tab-content">
+                            <div class="modal-section-header">
+                                <button class="btn btn-primary btn-sm" onclick="showTemplateForm()">+ 템플릿 추가</button>
+                                <select id="templateCategoryFilter" onchange="filterTemplates()" class="mail-select-sm">
+                                    <option value="">전체 카테고리</option>
+                                    <option value="general">일반</option>
+                                    <option value="quotation">견적</option>
+                                    <option value="inquiry">문의</option>
+                                    <option value="follow-up">후속</option>
+                                </select>
+                            </div>
+                            <div id="templateForm" class="form-card" style="display:none;">
+                                <input type="hidden" id="templateId" value="">
+                                <div class="form-group">
+                                    <label>템플릿 이름</label>
+                                    <input type="text" id="templateName" placeholder="예: 견적 요청 답변">
+                                </div>
+                                <div class="form-group">
+                                    <label>카테고리</label>
+                                    <select id="templateCategory">
+                                        <option value="general">일반</option>
+                                        <option value="quotation">견적</option>
+                                        <option value="inquiry">문의</option>
+                                        <option value="follow-up">후속</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>내용 (변수: {{고객명}}, {{제품명}} 등)</label>
+                                    <textarea id="templateContent" rows="5" placeholder="안녕하세요 {{고객명}}님,&#10;{{제품명}} 견적을 보내드립니다..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-accent btn-sm" onclick="saveTemplate()">저장</button>
+                                    <button class="btn btn-ghost btn-sm" onclick="hideTemplateForm()">취소</button>
+                                </div>
+                            </div>
+                            <div id="templateList">
+                                <div class="empty-state-sm">템플릿 로드 중...</div>
+                            </div>
+                        </div>
+
+                        <!-- 서명 패널 -->
+                        <div id="mailSidePanelSignatures" class="modal-tab-content" style="display:none;">
+                            <div class="modal-section-header">
+                                <button class="btn btn-primary btn-sm" onclick="showSignatureForm()">+ 서명 추가</button>
+                            </div>
+                            <div id="signatureForm" class="form-card" style="display:none;">
+                                <input type="hidden" id="signatureId" value="">
+                                <div class="form-group">
+                                    <label>서명 이름</label>
+                                    <input type="text" id="signatureName" placeholder="예: 기본 서명, 영문 서명">
+                                </div>
+                                <div class="form-group">
+                                    <label>서명 내용</label>
+                                    <textarea id="signatureContent" rows="5" placeholder="예:&#10;Best regards,&#10;홍길동&#10;영마린테크&#10;Tel: 02-1234-5678"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                                        <input type="checkbox" id="signatureIsDefault" style="cursor:pointer;">
+                                        <span>기본 서명으로 설정</span>
+                                    </label>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-accent btn-sm" onclick="saveSignature()">저장</button>
+                                    <button class="btn btn-ghost btn-sm" onclick="hideSignatureForm()">취소</button>
+                                </div>
+                            </div>
+                            <div id="signatureList">
+                                <div class="empty-state-sm">서명 로드 중...</div>
+                            </div>
+                        </div>
+
+                        <!-- 이력 패널 -->
+                        <div id="mailSidePanelHistory" class="modal-tab-content" style="display:none;">
+                            <div class="mail-history-header">
+                                <div id="historyEmailInfo" style="padding:12px;background:var(--bg-secondary);border-radius:6px;margin-bottom:12px;display:none;">
+                                    <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:4px;">선택된 메일</div>
+                                    <div id="historyEmailSubject" style="font-weight:600;"></div>
+                                    <div id="historyEmailFrom" style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;"></div>
+                                </div>
+                            </div>
+                            <div class="mail-history-list" id="mailHistoryList">
+                                <div class="empty-state-sm">왼쪽 수신함에서 메일을 선택하면<br/>해당 메일의 작성 이력이 표시됩니다</div>
+                            </div>
+                        </div>
+
+                        <!-- 프롬프트 예시 패널 -->
+                        <div id="mailSidePanelPrompts" class="modal-tab-content" style="display:none;">
+                            <div class="modal-section-header">
+                                <button class="btn btn-primary btn-sm" onclick="showPromptExampleForm()">+ 예시 추가</button>
+                            </div>
+                            <div id="promptExampleForm" class="form-card" style="display:none;">
+                                <input type="hidden" id="promptExampleId" value="">
+                                <div class="form-group">
+                                    <label>수신 메일 예시</label>
+                                    <textarea id="promptIncomingText" rows="3" placeholder="예: I need a quotation for..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>답장 예시</label>
+                                    <textarea id="promptReplyText" rows="3" placeholder="예: 견적서를 확인해주세요..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>정렬 순서</label>
+                                    <input type="number" id="promptSortOrder" value="0">
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-accent btn-sm" onclick="savePromptExample()">저장</button>
+                                    <button class="btn btn-ghost btn-sm" onclick="hidePromptExampleForm()">취소</button>
+                                </div>
+                            </div>
+                            <div id="promptExampleList">
+                                <div class="empty-state-sm">예시 로드 중...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 시스템 로그 탭 ===== -->
+        <div id="tabLogs" class="tab-content">
+            <div class="tab-header">
+                <h2>&#128221; 시스템 로그</h2>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px;">메일 작성 이력 및 시스템 활동 로그</p>
+            </div>
+
+            <div style="max-width:1200px;margin:0 auto;padding:20px;">
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;font-size:1.1rem;">&#9993; 메일 작성 이력</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="loadMailLogs()">&#128260; 새로고침</button>
+                    </div>
+                    <div id="mailLogsList" style="max-height:600px;overflow-y:auto;">
+                        <div class="empty-state" style="padding:40px 20px;">로그 로드 중...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 홈페이지 관리 탭 ===== -->
+        <div id="tabHomepage" class="tab-content">
+            <div class="tab-header">
+                <h2>&#127968; 홈페이지 관리</h2>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px;">사이트 로고, 회사 정보, 히어로 섹션 등을 관리합니다.</p>
+            </div>
+
+            <div style="max-width:900px;margin:0 auto;padding:20px;">
+                <!-- 로고 설정 -->
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <h3 style="margin:0 0 16px 0;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <span>&#128444;</span> 로고 이미지
+                    </h3>
+                    <div style="display:flex;gap:20px;align-items:start;">
+                        <div style="flex:1;">
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">현재 로고</label>
+                                <div id="currentLogo" style="border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;background:var(--bg-gray);min-height:120px;display:flex;align-items:center;justify-content:center;">
+                                    <span style="color:var(--text-muted);font-size:0.85rem;">로고 로드 중...</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">새 로고 업로드</label>
+                                <!-- 드래그앤드롭 영역 -->
+                                <div id="logoDropZone" style="border:2px dashed var(--border);border-radius:8px;padding:30px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg-gray);">
+                                    <div style="font-size:2rem;margin-bottom:8px;">📁</div>
+                                    <div style="font-size:0.85rem;color:var(--text-regular);margin-bottom:4px;">이미지 파일을 드래그하거나 클릭하세요</div>
+                                    <div style="font-size:0.75rem;color:var(--text-muted);">PNG, JPG, GIF 지원</div>
+                                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
+                                </div>
+                                <div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted);text-align:center;">또는</div>
+                                <input type="text" id="logoInput" placeholder="이미지 URL 입력 (https://...)" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;margin-top:8px;">
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" onclick="saveLogo()">로고 저장</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 회사 정보 -->
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <h3 style="margin:0 0 16px 0;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <span>&#128188;</span> 회사 정보
+                    </h3>
+                    <div style="display:grid;gap:12px;">
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">회사명</label>
+                            <input type="text" id="companyName" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">주소</label>
+                            <input type="text" id="companyAddress" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div>
+                                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">전화번호</label>
+                                <input type="text" id="companyPhone" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">이메일</label>
+                                <input type="text" id="companyEmail" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                            </div>
+                        </div>
+                        <div style="text-align:right;margin-top:8px;">
+                            <button class="btn btn-primary" onclick="saveCompanyInfo()">회사 정보 저장</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 히어로 섹션 -->
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <h3 style="margin:0 0 16px 0;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <span>&#127775;</span> 히어로 섹션
+                    </h3>
+                    <div style="display:grid;gap:12px;">
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">메인 제목</label>
+                            <input type="text" id="heroTitle" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: 해양 엔진 부품 전문">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">부제목</label>
+                            <textarea id="heroSubtitle" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="예: 신뢰할 수 있는 해양 엔진 부품 공급업체"></textarea>
+                        </div>
+                        <div style="text-align:right;margin-top:8px;">
+                            <button class="btn btn-primary" onclick="saveHeroSection()">히어로 섹션 저장</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 기타 설정 -->
+                <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:20px;">
+                    <h3 style="margin:0 0 16px 0;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+                        <span>&#9881;</span> 기타 설정
+                    </h3>
+                    <div style="display:grid;gap:12px;">
+                        <div>
+                            <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">푸터 저작권 문구</label>
+                            <input type="text" id="footerCopyright" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="© 2024 영마린테크. All rights reserved.">
+                        </div>
+                        <div style="text-align:right;margin-top:8px;">
+                            <button class="btn btn-primary" onclick="saveOtherSettings()">설정 저장</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 문서 상세 모달 ===== -->
+    <div class="modal-overlay" id="docModal">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <h3 id="modalTitle">문서 상세</h3>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- ===== 상품 추가/수정 모달 ===== -->
+    <div class="modal-overlay" id="productModal" style="display:none;">
+        <div class="modal" style="max-width:700px;max-height:90vh;overflow-y:auto;">
+            <button class="close-btn" onclick="closeProductModal()">&times;</button>
+            <h3 id="productModalTitle">상품 추가</h3>
+            <div style="margin-top:20px;">
+                <input type="hidden" id="productId">
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상품 이미지</label>
+                    <div id="imageDropZone" style="border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;background:var(--bg-gray);transition:all 0.2s;" onclick="document.getElementById('imageFileInput').click()">
+                        <div id="imagePreview" style="display:none;margin-bottom:10px;">
+                            <img id="previewImg" src="" style="max-width:100%;max-height:200px;border-radius:6px;">
+                        </div>
+                        <div id="dropZonePlaceholder">
+                            <div style="font-size:2rem;margin-bottom:8px;">📷</div>
+                            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:4px;">이미지를 드래그하거나 클릭하여 업로드</div>
+                            <div style="font-size:0.75rem;color:var(--text-light);">JPG, PNG, GIF (최대 5MB)</div>
+                        </div>
+                    </div>
+                    <input type="file" id="imageFileInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+                    <input type="hidden" id="productImage">
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">부품번호</label>
+                        <input type="text" id="productPartNo" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: ABC-1234">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">가격</label>
+                        <input type="text" id="productPrice" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: ₩150,000">
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">브랜드</label>
+                        <input type="text" id="productBrand" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: Volvo Penta">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">카테고리</label>
+                        <select id="productCategory" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;">
+                            <!-- 동적으로 로드됨 -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 다국어 탭 -->
+                <div style="margin-bottom:20px;">
+                    <div style="display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px;">
+                        <button type="button" class="lang-tab active" data-lang="ko" onclick="switchProductLang('ko')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;transition:all 0.2s;">한국어 *</button>
+                        <button type="button" class="lang-tab" data-lang="en" onclick="switchProductLang('en')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;transition:all 0.2s;">English</button>
+                        <button type="button" class="lang-tab" data-lang="cn" onclick="switchProductLang('cn')" style="padding:10px 20px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;transition:all 0.2s;">中文</button>
+                    </div>
+
+                    <!-- 한국어 탭 -->
+                    <div class="lang-content" data-lang="ko" style="display:block;">
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상품명 (필수)</label>
+                            <input type="text" id="productNameKo" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="예: 볼보펜타 엔진 오일 필터">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">설명</label>
+                            <textarea id="productDescKo" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="상품 설명을 입력하세요"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">상세 정보</label>
+                            <textarea id="productDetailInfoKo" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="상세 설명을 입력하세요"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">스펙</label>
+                            <div id="specsListKo" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addSpecRowLang('ko')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ 항목 추가</button>
+                        </div>
+                        <div style="margin-bottom:0;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">호환 정보</label>
+                            <div id="compatibilityListKo" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addCompatibilityRowLang('ko')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ 항목 추가</button>
+                        </div>
+                    </div>
+
+                    <!-- 영어 탭 -->
+                    <div class="lang-content" data-lang="en" style="display:none;">
+                        <div style="background:var(--bg-gray-100);padding:10px;border-radius:6px;margin-bottom:12px;font-size:0.85rem;color:var(--text-muted);">
+                            💡 비워두면 자동 번역됩니다 (LLM + 웹 검색)
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">Product Name</label>
+                            <input type="text" id="productNameEn" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="e.g., Volvo Penta Engine Oil Filter">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">Description</label>
+                            <textarea id="productDescEn" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="Product description"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">Detail Information</label>
+                            <textarea id="productDetailInfoEn" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="Detailed description"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">Specs</label>
+                            <div id="specsListEn" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addSpecRowLang('en')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ Add Item</button>
+                        </div>
+                        <div style="margin-bottom:0;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">Compatibility</label>
+                            <div id="compatibilityListEn" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addCompatibilityRowLang('en')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ Add Item</button>
+                        </div>
+                    </div>
+
+                    <!-- 중국어 탭 -->
+                    <div class="lang-content" data-lang="cn" style="display:none;">
+                        <div style="background:var(--bg-gray-100);padding:10px;border-radius:6px;margin-bottom:12px;font-size:0.85rem;color:var(--text-muted);">
+                            💡 留空将自动翻译 (LLM + 网络搜索)
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">产品名称</label>
+                            <input type="text" id="productNameCn" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;" placeholder="例: Volvo Penta 引擎机油滤清器">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">描述</label>
+                            <textarea id="productDescCn" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="产品描述"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:6px;color:var(--text-regular);">详细信息</label>
+                            <textarea id="productDetailInfoCn" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;resize:vertical;" placeholder="详细说明"></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">规格</label>
+                            <div id="specsListCn" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addSpecRowLang('cn')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ 添加项目</button>
+                        </div>
+                        <div style="margin-bottom:0;">
+                            <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:8px;color:var(--text-regular);">兼容性信息</label>
+                            <div id="compatibilityListCn" style="display:flex;flex-direction:column;gap:8px;"></div>
+                            <button type="button" onclick="addCompatibilityRowLang('cn')" style="margin-top:8px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.85rem;">+ 添加项目</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;justify-content:space-between;">
+                    <button class="btn btn-ghost" onclick="deleteProductConfirm()" id="productDeleteBtn" style="background:var(--error);color:white;display:none;">🗑️ 삭제</button>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-ghost" onclick="closeProductModal()">취소</button>
+                        <button class="btn btn-primary" onclick="saveProduct()">저장</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 참조 문서 팝업 ===== -->
+    <div class="ref-popup-overlay" id="refPopup">
+        <div class="ref-popup">
+            <div class="ref-popup-header">
+                <div class="popup-icon">&#128196;</div>
+                <div class="popup-info">
+                    <div class="popup-filename" id="refPopupFilename"></div>
+                    <div class="popup-score" id="refPopupScore"></div>
+                </div>
+                <button class="ref-popup-close" onclick="closeRefPopup()">&times;</button>
+            </div>
+            <div class="ref-popup-body" id="refPopupBody"></div>
+        </div>
+    </div>
+
+
+    <!-- Admin JavaScript Modules -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/docs.js"></script>
+    <script src="js/rag.js"></script>
+    <script src="js/inquiry.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/mail.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/logs.js"></script>
+    <script src="js/init.js"></script> <!-- MUST BE LAST -->
+</body>
+</html>
