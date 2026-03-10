@@ -20,7 +20,14 @@ from mail_compose import router as mail_compose_router, gmail_auto_check_loop
 from inquiry import router as inquiry_router
 from rag import search_similar_chunks
 from portfolio_rag import init_portfolio_rag, search_portfolio
-from chatbot_agent import router as chatbot_router
+try:
+    from chatbot_agent import router as chatbot_router
+    print("[Chatbot] chatbot_agent import 성공")
+except Exception as e:
+    chatbot_router = None
+    print(f"[Chatbot] chatbot_agent import 실패: {e}")
+    import traceback
+    traceback.print_exc()
 
 _scheduler_task = None
 
@@ -79,7 +86,11 @@ app.include_router(admin_router)
 app.include_router(rag_chat_router)
 app.include_router(mail_compose_router)
 app.include_router(inquiry_router)
-app.include_router(chatbot_router)
+if chatbot_router:
+    app.include_router(chatbot_router)
+    print("[Chatbot] chatbot_router 등록 완료")
+else:
+    print("[Chatbot] chatbot_router 미등록 (import 실패)")
 print("app 생성완료")
 
 
