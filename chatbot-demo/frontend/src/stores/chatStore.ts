@@ -11,7 +11,7 @@ interface ChatState {
 
   // Actions
   createConversation: (id?: string) => string
-  setActiveConversation: (id: string) => void
+  setActiveConversation: (id: string | null) => void
   deleteConversation: (id: string) => void
   addUserMessage: (content: string) => void
   startAssistantMessage: () => void
@@ -53,7 +53,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return convId
   },
 
-  setActiveConversation: (id: string) => {
+  setActiveConversation: (id: string | null) => {
     set({ activeConversationId: id })
   },
 

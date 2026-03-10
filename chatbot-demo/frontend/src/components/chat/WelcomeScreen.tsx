@@ -7,7 +7,7 @@ const EXAMPLE_QUESTIONS = [
   { icon: Calendar, text: '이번 주 일정 알려줘', color: 'text-blue-500' },
   { icon: Search, text: '홍길동 직원 검색해줘', color: 'text-green-500' },
   { icon: Mail, text: '이메일 초안 작성해줘', color: 'text-orange-500' },
-  { icon: FileText, text: '회의실 예약해줘', color: 'text-purple-500' },
+  { icon: FileText, text: '공공기관 문서 초안 작성하기', color: 'text-purple-500' },
 ]
 
 export function WelcomeScreen() {

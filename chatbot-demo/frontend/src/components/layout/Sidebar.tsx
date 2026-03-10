@@ -9,7 +9,7 @@ export function Sidebar() {
   const { sidebarOpen, setSidebarOpen } = useUIStore()
 
   const handleNew = () => {
-    createConversation()
+    setActiveConversation(null)
   }
 
   // 날짜별 그룹핑
