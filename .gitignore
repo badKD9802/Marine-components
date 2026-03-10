@@ -13,6 +13,7 @@ __pycache__/
 node_modules/
 translation_server/
 translations/
+.next/
 
 
 # 특정 확장자 전체 무시
