@@ -104,6 +104,28 @@ async def create_tables():
             );
         """)
 
+        # 챗봇 세션 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_sessions (
+                id          SERIAL PRIMARY KEY,
+                session_id  TEXT UNIQUE NOT NULL,
+                title       TEXT NOT NULL DEFAULT '새 대화',
+                created_at  TIMESTAMPTZ DEFAULT NOW(),
+                updated_at  TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        # 챗봇 메시지 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_messages (
+                id          SERIAL PRIMARY KEY,
+                session_id  TEXT NOT NULL REFERENCES chatbot_sessions(session_id) ON DELETE CASCADE,
+                role        TEXT NOT NULL,
+                content     TEXT NOT NULL,
+                created_at  TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
 
 async def create_vector_tables():
     """Create RAG tables in the pgvector DB."""
