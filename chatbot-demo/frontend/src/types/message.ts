@@ -1,6 +1,6 @@
 export interface ProgressStep {
   title: string
-  status: 'running' | 'done' | 'error'
+  status: 'running' | 'done' | 'error' | 'active' | 'completed'
   result_count?: number | string
   preview?: string | Array<{ icon?: string; text?: string; sub?: string }>
 }

@@ -17,7 +17,13 @@ export function AssistantMessage({ message }: { message: Message }) {
             {message.parts.map((part, i) => {
               switch (part.type) {
                 case 'progress':
-                  return <ProgressSteps key={i} steps={part.steps || []} />
+                  return (
+                    <ProgressSteps
+                      key={i}
+                      steps={part.steps || []}
+                      isStreaming={message.isStreaming}
+                    />
+                  )
                 case 'html':
                   return <HtmlBlock key={i} html={part.content || ''} />
                 case 'text':

@@ -1,16 +1,21 @@
 'use client'
 
-import { sanitizeHtml } from '@/lib/sanitize'
+import { useRef, useEffect } from 'react'
 
 export function HtmlBlock({ html }: { html: string }) {
-  if (!html || !html.trim()) return null
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const clean = sanitizeHtml(html)
+  useEffect(() => {
+    if (!containerRef.current || !html) return
+    containerRef.current.innerHTML = html
+  }, [html])
+
+  if (!html || !html.trim()) return null
 
   return (
     <div
+      ref={containerRef}
       className="html-block overflow-x-auto rounded-lg border border-gray-200 bg-white p-4 text-sm dark:border-gray-600 dark:bg-gray-800"
-      dangerouslySetInnerHTML={{ __html: clean }}
     />
   )
 }
