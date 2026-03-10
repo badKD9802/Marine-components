@@ -109,11 +109,11 @@ async def sse_generator(queue: asyncio.Queue):
 @router.post("/chat")
 async def chat_stream(request: ChatRequest):
     """SSE 스트리밍으로 AI 챗봇 응답."""
-    # 세션 자동 생성
+    # 세션 자동 생성 (없는 session_id가 오면 새로 생성)
     if request.session_id:
         session = await session_manager.get(request.session_id)
         if not session:
-            raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다.")
+            session = await session_manager.create()
     else:
         session = await session_manager.create()
 

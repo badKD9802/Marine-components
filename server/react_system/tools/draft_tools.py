@@ -1140,7 +1140,8 @@ async def draft_document(document_type, title, content_requirements=None, sectio
             logger.warning("LLM 생성 실패, 템플릿 구조로 fallback")
             fallback_body = f"제목: {title}\n작성일: {datetime.now().strftime('%Y년 %m월 %d일')}\n\n"
             for s in template["sections"]:
-                fallback_body += f"\n{s}\n{'\u2500' * 40}\n[내용을 작성하세요]\n"
+                sep = '\u2500' * 40
+                fallback_body += f"\n{s}\n{sep}\n[내용을 작성하세요]\n"
             return {"status": "success", "draft": {"document_type": template["label"], "title": title, "sections": template["sections"], "body": fallback_body, "generated_by": "Template (LLM 호출 실패)"}, "message": f"{template['label']} 템플릿이 생성되었습니다. (LLM 호출 실패로 구조만 제공)"}
 
     if not sections:
