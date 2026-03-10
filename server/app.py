@@ -61,7 +61,7 @@ async def lifespan(app):
 
 
 # 1. 앱 생성
-print("app 생성 중...")
+print("app 생성 중... [v2-chatbot]")
 app = FastAPI(lifespan=lifespan)
 print("=== 환경변수 확인 ===")
 print(f"  GOOGLE_API_KEY: {'설정됨 (' + os.environ['GOOGLE_API_KEY'][:8] + '...)' if os.environ.get('GOOGLE_API_KEY') else '미설정'}")
