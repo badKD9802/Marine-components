@@ -10,6 +10,7 @@ export function Sidebar() {
 
   const handleNew = () => {
     setActiveConversation(null)
+    setSidebarOpen(false)
   }
 
   // 날짜별 그룹핑
