@@ -20,6 +20,7 @@ from mail_compose import router as mail_compose_router, gmail_auto_check_loop
 from inquiry import router as inquiry_router
 from rag import search_similar_chunks
 from portfolio_rag import init_portfolio_rag, search_portfolio
+from chatbot_agent import router as chatbot_router
 
 _scheduler_task = None
 
@@ -78,6 +79,7 @@ app.include_router(admin_router)
 app.include_router(rag_chat_router)
 app.include_router(mail_compose_router)
 app.include_router(inquiry_router)
+app.include_router(chatbot_router)
 print("app 생성완료")
 
 

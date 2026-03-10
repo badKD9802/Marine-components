@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+  --sidebar-bg: #f8fafc;
+  --chat-bg: #ffffff;
+  --user-bubble: #4f46e5;
+  --assistant-bubble: #f1f5f9;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  --sidebar-bg: #1e293b;
+  --chat-bg: #0f172a;
+  --user-bubble: #4f46e5;
+  --assistant-bubble: #1e293b;
+}
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+/* SSE streaming cursor */
+.streaming-cursor::after {
+  content: '▊';
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
