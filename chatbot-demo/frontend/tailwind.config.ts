@@ -26,6 +26,20 @@ const config: Config = {
       fontFamily: {
         sans: ['Noto Sans KR', 'sans-serif'],
       },
+      animation: {
+        'shimmer': 'shimmer 2s linear infinite',
+        'fade-in-up': 'fadeInUp 0.3s ease-out forwards',
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        fadeInUp: {
+          from: { opacity: '0', transform: 'translateY(6px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
     },
   },
   plugins: [require('@tailwindcss/typography')],

@@ -44,6 +44,37 @@ body {
   50% { opacity: 0; }
 }
 
+/* ProgressSteps shimmer 효과 */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ProgressSteps step 등장 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Shimmer 텍스트 (진행 중 헤더) */
+.shimmer-text {
+  background: linear-gradient(90deg, currentColor 0%, currentColor 40%, #818cf8 50%, currentColor 60%, currentColor 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s linear infinite;
+}
+
+.dark .shimmer-text {
+  background: linear-gradient(90deg, #94a3b8 0%, #94a3b8 40%, #a5b4fc 50%, #94a3b8 60%, #94a3b8 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s linear infinite;
+}
+
 /* HTML Block 내부 테이블 스타일 */
 .html-block table {
   border-collapse: collapse;

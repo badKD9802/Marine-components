@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { CheckCircle2, XCircle, Circle, Loader2, ChevronDown } from 'lucide-react'
 import type { ProgressStep } from '@/types/message'
 
 export function ProgressSteps({ steps, isStreaming }: { steps: ProgressStep[]; isStreaming?: boolean }) {
   const [isOpen, setIsOpen] = useState(true)
+  const [elapsed, setElapsed] = useState(0)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const hasActive = steps.some(s => s.status === 'active' || s.status === 'running')
   const completedCount = steps.filter(s => s.status === 'completed' || s.status === 'done').length
@@ -16,69 +19,84 @@ export function ProgressSteps({ steps, isStreaming }: { steps: ProgressStep[]; i
     }
   }, [hasActive, completedCount, isStreaming])
 
+  // 경과 시간 타이머
+  useEffect(() => {
+    if (hasActive) {
+      setElapsed(0)
+      intervalRef.current = setInterval(() => setElapsed(prev => prev + 1), 1000)
+    } else {
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null }
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [hasActive])
+
   if (!steps.length) return null
 
   return (
-    <div className="my-2">
+    <div className="my-2 rounded-lg border border-gray-200 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/50">
+      {/* 헤더 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+        aria-expanded={isOpen}
+        aria-label={hasActive ? '진행 중인 작업 목록' : '완료된 작업 목록'}
+        className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm transition-colors
+                   text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
       >
         {hasActive ? (
-          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+          <Loader2 size={16} className="animate-spin text-primary-500" />
         ) : (
-          <span className="text-green-500 text-base">&#10003;</span>
+          <CheckCircle2 size={16} className="text-green-500" />
         )}
-        <span className="font-medium">
+        <span className={`flex-1 text-left font-medium ${hasActive ? 'shimmer-text' : ''}`}>
           {hasActive
             ? `작업 수행 중... (${completedCount}/${steps.length})`
             : `${completedCount}개 작업 완료`}
         </span>
-        <svg
-          className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        {hasActive && elapsed > 0 && (
+          <span className="text-xs text-gray-400 tabular-nums">{elapsed}s</span>
+        )}
+        <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen && (
-        <div className="ml-6 mt-2 space-y-1.5 border-l-2 border-gray-200 pl-4 dark:border-gray-600">
-          {steps.map((step, i) => (
-            <div key={i} className="flex items-start gap-2 text-sm">
-              <StepIcon status={step.status} />
-              <div className="flex-1 min-w-0">
-                <span className="text-gray-700 dark:text-gray-300">{step.title}</span>
-                {step.result_count != null && (
-                  <span className="ml-1.5 text-gray-400 text-xs">
-                    ({typeof step.result_count === 'number' ? `${step.result_count}건` : step.result_count})
-                  </span>
-                )}
-                <PreviewContent preview={step.preview} />
+      {/* Steps — CSS Grid 접힘/펼침 */}
+      <div
+        className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+        style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
+      >
+        <div className="overflow-hidden">
+          <div className="space-y-1 px-3 pb-3 pt-0.5" role="list">
+            {steps.map((step, i) => (
+              <div key={step.title} role="listitem"
+                   className="flex items-start gap-2.5 text-sm animate-fade-in-up"
+                   style={{ animationDelay: `${i * 50}ms` }}>
+                <StepIcon status={step.status} />
+                <div className="flex-1 min-w-0">
+                  <span className="text-gray-700 dark:text-gray-300">{step.title}</span>
+                  {step.result_count != null && (
+                    <span className="ml-1.5 text-gray-400 text-xs">
+                      ({typeof step.result_count === 'number' ? `${step.result_count}건` : step.result_count})
+                    </span>
+                  )}
+                  <PreviewContent preview={step.preview} />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
 
 function StepIcon({ status }: { status: string }) {
-  if (status === 'active' || status === 'running') {
-    return (
-      <span className="mt-0.5 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent shrink-0" />
-    )
-  }
-  if (status === 'completed' || status === 'done') {
-    return <span className="text-green-500 shrink-0 mt-0.5">&#10003;</span>
-  }
-  if (status === 'error') {
-    return <span className="text-red-500 shrink-0 mt-0.5">&#10007;</span>
-  }
-  return <span className="text-gray-300 shrink-0 mt-0.5">&#9675;</span>
+  const base = "mt-0.5 shrink-0"
+  if (status === 'active' || status === 'running')
+    return <Loader2 size={14} className={`${base} animate-spin text-primary-500`} />
+  if (status === 'completed' || status === 'done')
+    return <CheckCircle2 size={14} className={`${base} text-green-500`} />
+  if (status === 'error')
+    return <XCircle size={14} className={`${base} text-red-500`} />
+  return <Circle size={14} className={`${base} text-gray-300 dark:text-gray-600`} />
 }
 
 function PreviewContent({ preview }: { preview?: ProgressStep['preview'] }) {
