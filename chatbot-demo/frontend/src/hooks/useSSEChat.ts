@@ -61,8 +61,11 @@ export function useSSEChat() {
                 appendToken(data.content || '')
                 break
               case 'progress':
+                console.log('[SSE] progress event:', JSON.stringify(data))
                 if (Array.isArray(data.steps)) {
                   setProgress(data.steps as ProgressStep[])
+                } else if (Array.isArray(data)) {
+                  setProgress(data as ProgressStep[])
                 }
                 break
               case 'html':

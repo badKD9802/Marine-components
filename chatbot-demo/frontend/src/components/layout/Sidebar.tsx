@@ -5,11 +5,13 @@ import { useChatStore } from '@/stores/chatStore'
 import { useUIStore } from '@/stores/uiStore'
 
 export function Sidebar() {
-  const { conversations, activeConversationId, createConversation, setActiveConversation, deleteConversation } = useChatStore()
+  const { conversations, activeConversationId, isStreaming, createConversation, setActiveConversation, deleteConversation } = useChatStore()
   const { sidebarOpen, setSidebarOpen } = useUIStore()
 
   const handleNew = () => {
+    if (isStreaming) return
     setActiveConversation(null)
+    setSidebarOpen(false)
   }
 
   // 날짜별 그룹핑

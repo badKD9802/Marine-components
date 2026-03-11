@@ -67,3 +67,29 @@ body {
 .dark .html-block th {
   background: #334155;
 }
+
+/* HTML Block 내부 버튼 스타일 */
+.html-block button,
+.html-block .btn {
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  transition: background 0.15s;
+}
+.html-block button:hover,
+.html-block .btn:hover {
+  background: #e5e7eb;
+}
+.dark .html-block button,
+.dark .html-block .btn {
+  border-color: #4b5563;
+  background: #374151;
+  color: #e5e7eb;
+}
+.dark .html-block button:hover,
+.dark .html-block .btn:hover {
+  background: #4b5563;
+}

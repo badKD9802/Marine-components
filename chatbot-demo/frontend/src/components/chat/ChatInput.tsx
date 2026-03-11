@@ -36,8 +36,8 @@ export function ChatInput() {
 
   return (
     <div className="border-t border-gray-200 bg-[var(--chat-bg)] px-4 py-3 dark:border-gray-700">
-      <div className="mx-auto flex max-w-3xl items-end gap-2">
-        <div className="relative flex-1">
+      <div className="mx-auto max-w-4xl">
+        <div className="relative">
           <textarea
             ref={textareaRef}
             value={input}
@@ -48,19 +48,19 @@ export function ChatInput() {
             onKeyDown={handleKeyDown}
             placeholder="메시지를 입력하세요..."
             rows={1}
-            className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-12 text-sm outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 pr-12 text-sm outline-none transition-colors focus:border-primary-400 focus:bg-white focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:bg-gray-800"
             disabled={isStreaming}
           />
+          <button
+            onClick={handleSubmit}
+            disabled={!input.trim() || isStreaming}
+            className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white transition-colors hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Send size={16} />
+          </button>
         </div>
-        <button
-          onClick={handleSubmit}
-          disabled={!input.trim() || isStreaming}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-white transition-colors hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Send size={18} />
-        </button>
       </div>
-      <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-gray-400">
+      <p className="mx-auto mt-2 max-w-4xl text-center text-xs text-gray-400">
         AI 응답은 데모 목적이며, 실제 데이터와 다를 수 있습니다.
       </p>
     </div>
