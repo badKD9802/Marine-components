@@ -7,11 +7,12 @@ import { AssistantMessage } from './AssistantMessage'
 import { WelcomeScreen } from './WelcomeScreen'
 
 export function MessageList() {
-  const activeConversation = useChatStore(s => s.activeConversation)
+  const conv = useChatStore(s =>
+    s.conversations.find(c => c.id === s.activeConversationId)
+  )
   const isStreaming = useChatStore(s => s.isStreaming)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  const conv = activeConversation()
   const messages = conv?.messages || []
 
   useEffect(() => {
