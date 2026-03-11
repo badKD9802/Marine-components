@@ -29,12 +29,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // SSE 스트림을 그대로 프록시
-    return new Response(backendRes.body, {
+    // SSE 스트림을 실시간으로 파이핑 (버퍼링 방지)
+    const { readable, writable } = new TransformStream()
+
+    const pipe = async () => {
+      const reader = backendRes.body!.getReader()
+      const writer = writable.getWriter()
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          await writer.write(value)
+        }
+      } finally {
+        writer.close()
+      }
+    }
+    pipe()
+
+    return new Response(readable, {
       headers: {
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
         'X-Session-Id': backendRes.headers.get('X-Session-Id') || '',
       },
     })

@@ -57,6 +57,11 @@ async def run_agent_stream(message: str, session_id: str, queue: asyncio.Queue):
         # 사용자 메시지 저장
         await session_manager.append(session_id, "user", message)
 
+        # 즉시 초기 progress 이벤트 전송
+        queue.put_nowait(("progress", {
+            "steps": [{"title": "질문을 분석하고 있습니다...", "status": "active"}]
+        }))
+
         # ReAct Agent 생성
         llm = get_llm_client()
         auth = AuthContext.demo()
@@ -100,6 +105,7 @@ async def sse_generator(queue: asyncio.Queue):
                 break
             event_type, data = item
             yield format_sse(event_type, data)
+            await asyncio.sleep(0)  # 이벤트 루프에 제어권 양보 → 플러시 유도
     except asyncio.TimeoutError:
         yield format_sse("error", {"message": "Timeout"})
 

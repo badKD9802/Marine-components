@@ -38,6 +38,7 @@ class SSEWriter:
             try:
                 parsed = json.loads(stripped)
                 if "steps" in parsed:
+                    logger.info("[SSEWriter] progress (string): steps=%d", len(parsed["steps"]))
                     self.queue.put_nowait(("progress", {"steps": parsed["steps"]}))
                     return
             except (json.JSONDecodeError, KeyError):
@@ -67,6 +68,7 @@ class SSEWriter:
         if "replace_chunk" in data:
             # {"replace_chunk": true, "steps": [...]} 형태
             if "steps" in data:
+                logger.info("[SSEWriter] progress (dict): steps=%d", len(data["steps"]))
                 self.queue.put_nowait(("progress", {"steps": data["steps"]}))
                 return
 
@@ -77,6 +79,7 @@ class SSEWriter:
                 try:
                     parsed = json.loads(new_tag) if isinstance(new_tag, str) else new_tag
                     steps = parsed.get("steps", [])
+                    logger.info("[SSEWriter] progress (dict/replace_chunk): steps=%d", len(steps))
                     self.queue.put_nowait(("progress", {"steps": steps}))
                 except (json.JSONDecodeError, KeyError, AttributeError):
                     self.queue.put_nowait(("progress", data))

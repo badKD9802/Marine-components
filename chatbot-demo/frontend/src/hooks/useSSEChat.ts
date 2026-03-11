@@ -35,6 +35,9 @@ export function useSSEChat() {
       startAssistantMessage()
       setStreaming(true)
 
+      // 초기 progress 표시 (백엔드에서 실제 progress 오면 덮어씀)
+      setProgress([{ title: '질문을 분석하고 있습니다...', status: 'active' as const }])
+
       try {
         const res = await fetch(API_BASE, {
           method: 'POST',
