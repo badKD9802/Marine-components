@@ -8,6 +8,7 @@ from google.genai import types
 import os
 from dotenv import load_dotenv
 import json
+
 load_dotenv()
 
 import asyncio
@@ -384,13 +385,6 @@ async def health_check():
         "db_url_set": db_url != "NOT SET",
         "db_url_preview": safe_url[:80]
     }
-
-
-# --- 안전법령 인제스트 (임시 비활성화) ---
-# _ingest_status = {"state": "idle", "message": ""}
-# async def _run_ingest(): ...
-# @app.post("/admin/ingest-safety-reg"): ...
-# @app.get("/admin/ingest-safety-reg/status"): ...
 
 
 @app.get("/api/products")
