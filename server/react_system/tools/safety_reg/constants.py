@@ -45,9 +45,8 @@ CATEGORY_TO_DOC_TYPES = {
     "현장서식": ["현장서식"],
 }
 
-# Milvus 컬렉션명
-COLLECTION_DENSE = "safety_reg_dense"
-COLLECTION_SPARSE = "safety_reg_sparse"
+# Milvus 컬렉션명 (Dense + Sparse 하이브리드 단일 컬렉션)
+COLLECTION_NAME = "safety_reg"
 
 # 검색 기본값
 DEFAULT_CHILD_TOP_K = 20  # 하이브리드 검색 초기 후보 (Rerank 없으므로 후보풀 확대)
