@@ -8,26 +8,54 @@ from google.genai import types
 import os
 from dotenv import load_dotenv
 import json
+import sys
 
 load_dotenv()
 
 import asyncio
 
+print("[DEBUG] === 모듈 임포트 시작 ===", flush=True)
+print(f"[DEBUG] Python: {sys.version}", flush=True)
+print(f"[DEBUG] CWD: {os.getcwd()}", flush=True)
+
+print("[DEBUG] db 임포트 중...", flush=True)
 from db import init_db, close_db, init_vector_db, close_vector_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
+print("[DEBUG] db 임포트 완료", flush=True)
+
+print("[DEBUG] admin 임포트 중...", flush=True)
 from admin import router as admin_router
+print("[DEBUG] admin 임포트 완료", flush=True)
+
+print("[DEBUG] rag_chat 임포트 중...", flush=True)
 from rag_chat import router as rag_chat_router, cleanup_old_conversations
+print("[DEBUG] rag_chat 임포트 완료", flush=True)
+
+print("[DEBUG] mail_compose 임포트 중...", flush=True)
 from mail_compose import router as mail_compose_router, gmail_auto_check_loop
+print("[DEBUG] mail_compose 임포트 완료", flush=True)
+
+print("[DEBUG] inquiry 임포트 중...", flush=True)
 from inquiry import router as inquiry_router
+print("[DEBUG] inquiry 임포트 완료", flush=True)
+
+print("[DEBUG] rag 임포트 중...", flush=True)
 from rag import search_similar_chunks
+print("[DEBUG] rag 임포트 완료", flush=True)
+
+print("[DEBUG] portfolio_rag 임포트 중...", flush=True)
 from portfolio_rag import init_portfolio_rag, search_portfolio
+print("[DEBUG] portfolio_rag 임포트 완료", flush=True)
+
+print("[DEBUG] chatbot_agent 임포트 중...", flush=True)
 try:
     from chatbot_agent import router as chatbot_router
-    print("[Chatbot] chatbot_agent import 성공")
+    print("[DEBUG] chatbot_agent import 성공", flush=True)
 except Exception as e:
     chatbot_router = None
-    print(f"[Chatbot] chatbot_agent import 실패: {e}")
+    print(f"[DEBUG] chatbot_agent import 실패: {e}", flush=True)
     import traceback
     traceback.print_exc()
+print("[DEBUG] === 모듈 임포트 완료 ===", flush=True)
 
 _scheduler_task = None
 
@@ -36,19 +64,29 @@ _scheduler_task = None
 @asynccontextmanager
 async def lifespan(app):
     global _scheduler_task
+    print("[DEBUG-LIFESPAN] init_db 시작...", flush=True)
     await init_db()
+    print("[DEBUG-LIFESPAN] init_db 완료", flush=True)
+
+    print("[DEBUG-LIFESPAN] init_vector_db 시작...", flush=True)
     await init_vector_db()
+    print("[DEBUG-LIFESPAN] init_vector_db 완료", flush=True)
+
+    print("[DEBUG-LIFESPAN] cleanup_old_conversations 시작...", flush=True)
     await cleanup_old_conversations()
+    print("[DEBUG-LIFESPAN] cleanup_old_conversations 완료", flush=True)
 
     # Portfolio RAG 초기화
     openai_api_key = config("OPENAI_API_KEY", default="")
     if openai_api_key:
+        print("[DEBUG-LIFESPAN] Portfolio RAG 초기화 중...", flush=True)
         init_portfolio_rag(openai_api_key)
-        print("[App] Portfolio RAG 초기화 완료")
+        print("[DEBUG-LIFESPAN] Portfolio RAG 초기화 완료", flush=True)
     else:
-        print("[App] Warning: OPENAI_API_KEY 없음, Portfolio RAG 비활성화")
+        print("[DEBUG-LIFESPAN] Warning: OPENAI_API_KEY 없음, Portfolio RAG 비활성화", flush=True)
 
     _scheduler_task = asyncio.create_task(gmail_auto_check_loop())
+    print("[DEBUG-LIFESPAN] === lifespan 시작 완료 — 요청 수락 준비됨 ===", flush=True)
     yield
     if _scheduler_task:
         _scheduler_task.cancel()
@@ -73,7 +111,7 @@ print("====================")
 
 
 # 2. CORS 설정
-print("app 생성 중...2")
+print("[DEBUG] CORS 미들웨어 등록 중...", flush=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -82,16 +120,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+print("[DEBUG] 라우터 등록 중...", flush=True)
 app.include_router(admin_router)
+print("[DEBUG]   admin_router 등록 완료", flush=True)
 app.include_router(rag_chat_router)
+print("[DEBUG]   rag_chat_router 등록 완료", flush=True)
 app.include_router(mail_compose_router)
+print("[DEBUG]   mail_compose_router 등록 완료", flush=True)
 app.include_router(inquiry_router)
+print("[DEBUG]   inquiry_router 등록 완료", flush=True)
 if chatbot_router:
     app.include_router(chatbot_router)
-    print("[Chatbot] chatbot_router 등록 완료")
+    print("[DEBUG]   chatbot_router 등록 완료", flush=True)
 else:
-    print("[Chatbot] chatbot_router 미등록 (import 실패)")
-print("app 생성완료")
+    print("[DEBUG]   chatbot_router 미등록 (import 실패)", flush=True)
+print("[DEBUG] === 라우터 등록 완료 ===", flush=True)
 
 
 # 3. 데이터 형식 정의
