@@ -402,17 +402,28 @@ async def _run_ingest():
         t0 = time.time()
         data_dir = os.path.join(os.path.dirname(__file__), "react_system", "tools", "safety_reg", "data", "laws")
 
-        _ingest_status = {"state": "running", "message": "JSON 로드 중..."}
+        # 디버그: Milvus 연결 정보 출력
+        milvus_host = os.getenv("MILVUS_HOST", "NOT_SET")
+        milvus_port = os.getenv("MILVUS_PORT", "NOT_SET")
+        print(f"[INGEST DEBUG] MILVUS_HOST={milvus_host}")
+        print(f"[INGEST DEBUG] MILVUS_PORT={milvus_port}")
+        print(f"[INGEST DEBUG] OPENAI_API_KEY={'설정됨' if os.getenv('OPENAI_API_KEY') else 'NOT_SET'}")
+        print(f"[INGEST DEBUG] data_dir={data_dir}")
+        print(f"[INGEST DEBUG] data_dir exists={os.path.isdir(data_dir)}")
+        _ingest_status = {"state": "running", "message": f"JSON 로드 중... (MILVUS={milvus_host}:{milvus_port})"}
+
         client = LawApiClient()
         docs = client.load_from_json(data_dir)
+        print(f"[INGEST DEBUG] 문서 로드: {len(docs)}개")
 
         _ingest_status["message"] = f"청킹 중... ({len(docs)}개 문서)"
         chunker = SafetyChunker()
         chunks = chunker.chunk_all(docs)
         parents = [c for c in chunks if c.chunk_type == "parent"]
         children = [c for c in chunks if c.chunk_type == "child"]
+        print(f"[INGEST DEBUG] 청킹 완료: {len(chunks)}개 (P:{len(parents)}, C:{len(children)})")
 
-        _ingest_status["message"] = f"임베딩+인덱싱 중... ({len(chunks)}개 청크)"
+        _ingest_status["message"] = f"임베딩+인덱싱 중... ({len(chunks)}개 청크, MILVUS={milvus_host}:{milvus_port})"
 
         from openai import AsyncOpenAI
         async def embedding_fn(texts):
@@ -439,7 +450,10 @@ async def _run_ingest():
             "message": f"완료! {len(docs)}개 문서, {len(chunks)}개 청크 (Parent {len(parents)}, Child {len(children)}) — {round(elapsed, 1)}초",
         }
     except Exception as e:
-        _ingest_status = {"state": "error", "message": str(e)}
+        import traceback
+        err_detail = traceback.format_exc()
+        print(f"[INGEST ERROR] {err_detail}")
+        _ingest_status = {"state": "error", "message": f"{str(e)}\n\n{err_detail}"}
 
 
 @app.post("/admin/ingest-safety-reg")
@@ -458,7 +472,14 @@ async def ingest_safety_regulations(background_tasks: "BackgroundTasks" = None):
 @app.get("/admin/ingest-safety-reg/status")
 async def ingest_status():
     """인덱싱 진행 상태 확인."""
-    return _ingest_status
+    return {
+        **_ingest_status,
+        "env": {
+            "MILVUS_HOST": os.getenv("MILVUS_HOST", "NOT_SET"),
+            "MILVUS_PORT": os.getenv("MILVUS_PORT", "NOT_SET"),
+            "OPENAI_API_KEY": "설정됨" if os.getenv("OPENAI_API_KEY") else "NOT_SET",
+        },
+    }
 
 
 @app.get("/api/products")
