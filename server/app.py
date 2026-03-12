@@ -8,26 +8,54 @@ from google.genai import types
 import os
 from dotenv import load_dotenv
 import json
+import sys
 
 load_dotenv()
 
 import asyncio
 
+print("[DEBUG] === 모듈 임포트 시작 ===", flush=True)
+print(f"[DEBUG] Python: {sys.version}", flush=True)
+print(f"[DEBUG] CWD: {os.getcwd()}", flush=True)
+
+print("[DEBUG] db 임포트 중...", flush=True)
 from db import init_db, close_db, init_vector_db, close_vector_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
+print("[DEBUG] db 임포트 완료", flush=True)
+
+print("[DEBUG] admin 임포트 중...", flush=True)
 from admin import router as admin_router
+print("[DEBUG] admin 임포트 완료", flush=True)
+
+print("[DEBUG] rag_chat 임포트 중...", flush=True)
 from rag_chat import router as rag_chat_router, cleanup_old_conversations
+print("[DEBUG] rag_chat 임포트 완료", flush=True)
+
+print("[DEBUG] mail_compose 임포트 중...", flush=True)
 from mail_compose import router as mail_compose_router, gmail_auto_check_loop
+print("[DEBUG] mail_compose 임포트 완료", flush=True)
+
+print("[DEBUG] inquiry 임포트 중...", flush=True)
 from inquiry import router as inquiry_router
+print("[DEBUG] inquiry 임포트 완료", flush=True)
+
+print("[DEBUG] rag 임포트 중...", flush=True)
 from rag import search_similar_chunks
+print("[DEBUG] rag 임포트 완료", flush=True)
+
+print("[DEBUG] portfolio_rag 임포트 중...", flush=True)
 from portfolio_rag import init_portfolio_rag, search_portfolio
+print("[DEBUG] portfolio_rag 임포트 완료", flush=True)
+
+print("[DEBUG] chatbot_agent 임포트 중...", flush=True)
 try:
     from chatbot_agent import router as chatbot_router
-    print("[Chatbot] chatbot_agent import 성공")
+    print("[DEBUG] chatbot_agent import 성공", flush=True)
 except Exception as e:
     chatbot_router = None
-    print(f"[Chatbot] chatbot_agent import 실패: {e}")
+    print(f"[DEBUG] chatbot_agent import 실패: {e}", flush=True)
     import traceback
     traceback.print_exc()
+print("[DEBUG] === 모듈 임포트 완료 ===", flush=True)
 
 _scheduler_task = None
 
@@ -36,19 +64,29 @@ _scheduler_task = None
 @asynccontextmanager
 async def lifespan(app):
     global _scheduler_task
+    print("[DEBUG-LIFESPAN] init_db 시작...", flush=True)
     await init_db()
+    print("[DEBUG-LIFESPAN] init_db 완료", flush=True)
+
+    print("[DEBUG-LIFESPAN] init_vector_db 시작...", flush=True)
     await init_vector_db()
+    print("[DEBUG-LIFESPAN] init_vector_db 완료", flush=True)
+
+    print("[DEBUG-LIFESPAN] cleanup_old_conversations 시작...", flush=True)
     await cleanup_old_conversations()
+    print("[DEBUG-LIFESPAN] cleanup_old_conversations 완료", flush=True)
 
     # Portfolio RAG 초기화
     openai_api_key = config("OPENAI_API_KEY", default="")
     if openai_api_key:
+        print("[DEBUG-LIFESPAN] Portfolio RAG 초기화 중...", flush=True)
         init_portfolio_rag(openai_api_key)
-        print("[App] Portfolio RAG 초기화 완료")
+        print("[DEBUG-LIFESPAN] Portfolio RAG 초기화 완료", flush=True)
     else:
-        print("[App] Warning: OPENAI_API_KEY 없음, Portfolio RAG 비활성화")
+        print("[DEBUG-LIFESPAN] Warning: OPENAI_API_KEY 없음, Portfolio RAG 비활성화", flush=True)
 
     _scheduler_task = asyncio.create_task(gmail_auto_check_loop())
+    print("[DEBUG-LIFESPAN] === lifespan 시작 완료 — 요청 수락 준비됨 ===", flush=True)
     yield
     if _scheduler_task:
         _scheduler_task.cancel()
@@ -73,7 +111,7 @@ print("====================")
 
 
 # 2. CORS 설정
-print("app 생성 중...2")
+print("[DEBUG] CORS 미들웨어 등록 중...", flush=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -82,16 +120,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+print("[DEBUG] 라우터 등록 중...", flush=True)
 app.include_router(admin_router)
+print("[DEBUG]   admin_router 등록 완료", flush=True)
 app.include_router(rag_chat_router)
+print("[DEBUG]   rag_chat_router 등록 완료", flush=True)
 app.include_router(mail_compose_router)
+print("[DEBUG]   mail_compose_router 등록 완료", flush=True)
 app.include_router(inquiry_router)
+print("[DEBUG]   inquiry_router 등록 완료", flush=True)
 if chatbot_router:
     app.include_router(chatbot_router)
-    print("[Chatbot] chatbot_router 등록 완료")
+    print("[DEBUG]   chatbot_router 등록 완료", flush=True)
 else:
-    print("[Chatbot] chatbot_router 미등록 (import 실패)")
-print("app 생성완료")
+    print("[DEBUG]   chatbot_router 미등록 (import 실패)", flush=True)
+print("[DEBUG] === 라우터 등록 완료 ===", flush=True)
 
 
 # 3. 데이터 형식 정의
@@ -384,6 +427,100 @@ async def health_check():
         "db_pool": "connected" if pool else "None",
         "db_url_set": db_url != "NOT SET",
         "db_url_preview": safe_url[:80]
+    }
+
+
+_ingest_status = {"state": "idle", "message": ""}
+
+
+async def _run_ingest():
+    """백그라운드 인덱싱 실행."""
+    import time
+    global _ingest_status
+    try:
+        from react_system.tools.safety_reg.law_api_client import LawApiClient
+        from react_system.tools.safety_reg.chunker import SafetyChunker
+        from react_system.tools.safety_reg.indexer import SafetyRegIndexer
+
+        t0 = time.time()
+        data_dir = os.path.join(os.path.dirname(__file__), "react_system", "tools", "safety_reg", "data", "laws")
+
+        # 디버그: Milvus 연결 정보 출력
+        milvus_host = os.getenv("MILVUS_HOST", "NOT_SET")
+        milvus_port = os.getenv("MILVUS_PORT", "NOT_SET")
+        print(f"[INGEST DEBUG] MILVUS_HOST={milvus_host}")
+        print(f"[INGEST DEBUG] MILVUS_PORT={milvus_port}")
+        print(f"[INGEST DEBUG] OPENAI_API_KEY={'설정됨' if os.getenv('OPENAI_API_KEY') else 'NOT_SET'}")
+        print(f"[INGEST DEBUG] data_dir={data_dir}")
+        print(f"[INGEST DEBUG] data_dir exists={os.path.isdir(data_dir)}")
+        _ingest_status = {"state": "running", "message": f"JSON 로드 중... (MILVUS={milvus_host}:{milvus_port})"}
+
+        client = LawApiClient()
+        docs = client.load_from_json(data_dir)
+        print(f"[INGEST DEBUG] 문서 로드: {len(docs)}개")
+
+        _ingest_status["message"] = f"청킹 중... ({len(docs)}개 문서)"
+        chunker = SafetyChunker()
+        chunks = chunker.chunk_all(docs)
+        parents = [c for c in chunks if c.chunk_type == "parent"]
+        children = [c for c in chunks if c.chunk_type == "child"]
+        print(f"[INGEST DEBUG] 청킹 완료: {len(chunks)}개 (P:{len(parents)}, C:{len(children)})")
+
+        _ingest_status["message"] = f"임베딩+인덱싱 중... ({len(chunks)}개 청크, MILVUS={milvus_host}:{milvus_port})"
+
+        from openai import AsyncOpenAI
+        async def embedding_fn(texts):
+            oai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
+            resp = await oai.embeddings.create(input=texts, model="text-embedding-3-small", dimensions=1024)
+            return [item.embedding for item in resp.data]
+
+        from kiwipiepy import Kiwi
+        kiwi = Kiwi()
+        def tokenize_fn(text):
+            tokens = kiwi.tokenize(text)
+            sparse = {}
+            for token in tokens:
+                key = hash(token.form) % (2**31)
+                sparse[key] = sparse.get(key, 0) + 1.0
+            return sparse
+
+        indexer = SafetyRegIndexer()
+        await indexer.ingest(chunks, embedding_fn=embedding_fn, tokenize_fn=tokenize_fn)
+
+        elapsed = time.time() - t0
+        _ingest_status = {
+            "state": "done",
+            "message": f"완료! {len(docs)}개 문서, {len(chunks)}개 청크 (Parent {len(parents)}, Child {len(children)}) — {round(elapsed, 1)}초",
+        }
+    except Exception as e:
+        import traceback
+        err_detail = traceback.format_exc()
+        print(f"[INGEST ERROR] {err_detail}")
+        _ingest_status = {"state": "error", "message": f"{str(e)}\n\n{err_detail}"}
+
+
+@app.post("/admin/ingest-safety-reg")
+async def ingest_safety_regulations():
+    """안전법령 데이터를 Milvus에 인덱싱합니다 (백그라운드 실행)."""
+    global _ingest_status
+    if _ingest_status["state"] == "running":
+        return {"status": "already_running", "message": _ingest_status["message"]}
+    _ingest_status = {"state": "running", "message": "시작 중..."}
+    import asyncio
+    asyncio.create_task(_run_ingest())
+    return {"status": "started", "message": "백그라운드 인덱싱 시작. GET /admin/ingest-safety-reg/status 로 진행 확인"}
+
+
+@app.get("/admin/ingest-safety-reg/status")
+async def ingest_status():
+    """인덱싱 진행 상태 확인."""
+    return {
+        **_ingest_status,
+        "env": {
+            "MILVUS_HOST": os.getenv("MILVUS_HOST", "NOT_SET"),
+            "MILVUS_PORT": os.getenv("MILVUS_PORT", "NOT_SET"),
+            "OPENAI_API_KEY": "설정됨" if os.getenv("OPENAI_API_KEY") else "NOT_SET",
+        },
     }
 
 

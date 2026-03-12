@@ -46,6 +46,7 @@ TOOL_SENTENCE_ACTIVE = {
     "format_data_as_table": "데이터를 표로 정리하고 있습니다",
     "format_data_as_excel": "엑셀 데이터를 생성하고 있습니다",
     "guide_document_draft": "문서 유형을 안내하고 있습니다",
+    "search_safety_regulations": "안전법령을 검색하고 있습니다",
 }
 
 # 도구 실행 완료 문장형 문구
@@ -83,6 +84,7 @@ TOOL_SENTENCE_DONE = {
     "format_data_as_table": "데이터를 표로 정리했습니다",
     "format_data_as_excel": "엑셀 데이터를 생성했습니다",
     "guide_document_draft": "문서 유형 안내를 완료했습니다",
+    "search_safety_regulations": "안전법령을 검색했습니다",
 }
 
 
