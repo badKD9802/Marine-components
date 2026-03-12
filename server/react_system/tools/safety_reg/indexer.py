@@ -30,8 +30,8 @@ HYBRID_FIELDS = [
     {"name": "section_hierarchy", "dtype": "VARCHAR", "max_length": 1024},
     {"name": "source_url", "dtype": "VARCHAR", "max_length": 1024},
     {"name": "effective_date", "dtype": "VARCHAR", "max_length": 32},
-    {"name": "references_to", "dtype": "VARCHAR", "max_length": 4096},
-    {"name": "referenced_by", "dtype": "VARCHAR", "max_length": 4096},
+    {"name": "references_to", "dtype": "VARCHAR", "max_length": 16384},
+    {"name": "referenced_by", "dtype": "VARCHAR", "max_length": 16384},
 ]
 
 # 인덱스 정의 (Dense + Sparse)
@@ -184,8 +184,8 @@ class SafetyRegIndexer:
                     "section_hierarchy": chunk.section_hierarchy,
                     "source_url": chunk.source_url,
                     "effective_date": chunk.effective_date,
-                    "references_to": chunk.references_to[:4000],
-                    "referenced_by": chunk.referenced_by[:4000],
+                    "references_to": chunk.references_to[:16000],
+                    "referenced_by": chunk.referenced_by[:16000],
                 }
 
                 # Dense 벡터
