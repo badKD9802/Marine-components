@@ -108,3 +108,4 @@ pandas
 openpyxl
 lxml
 aiohttp
+pymilvus>=2.4.0
