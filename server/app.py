@@ -474,15 +474,25 @@ async def _run_ingest():
             resp = await oai.embeddings.create(input=texts, model="text-embedding-3-small", dimensions=1024)
             return [item.embedding for item in resp.data]
 
-        from kiwipiepy import Kiwi
-        kiwi = Kiwi()
-        def tokenize_fn(text):
-            tokens = kiwi.tokenize(text)
-            sparse = {}
-            for token in tokens:
-                key = hash(token.form) % (2**31)
-                sparse[key] = sparse.get(key, 0) + 1.0
-            return sparse
+        try:
+            from kiwipiepy import Kiwi
+            kiwi = Kiwi()
+            def tokenize_fn(text):
+                tokens = kiwi.tokenize(text)
+                sparse = {}
+                for token in tokens:
+                    key = hash(token.form) % (2**31)
+                    sparse[key] = sparse.get(key, 0) + 1.0
+                return sparse
+            print("[INGEST] Kiwi 형태소 분석기 사용")
+        except ImportError:
+            def tokenize_fn(text):
+                sparse = {}
+                for word in text.split():
+                    key = hash(word) % (2**31)
+                    sparse[key] = sparse.get(key, 0) + 1.0
+                return sparse
+            print("[INGEST] Kiwi 미설치 — 공백 분리 토크나이저 사용")
 
         indexer = SafetyRegIndexer()
         await indexer.ingest(chunks, embedding_fn=embedding_fn, tokenize_fn=tokenize_fn)
