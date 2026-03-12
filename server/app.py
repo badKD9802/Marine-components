@@ -387,58 +387,78 @@ async def health_check():
     }
 
 
-@app.post("/admin/ingest-safety-reg")
-async def ingest_safety_regulations():
-    """안전법령 데이터를 Milvus에 인덱싱합니다 (1회 실행용)."""
+_ingest_status = {"state": "idle", "message": ""}
+
+
+async def _run_ingest():
+    """백그라운드 인덱싱 실행."""
     import time
-    from react_system.tools.safety_reg.law_api_client import LawApiClient
-    from react_system.tools.safety_reg.chunker import SafetyChunker
-    from react_system.tools.safety_reg.indexer import SafetyRegIndexer
+    global _ingest_status
+    try:
+        from react_system.tools.safety_reg.law_api_client import LawApiClient
+        from react_system.tools.safety_reg.chunker import SafetyChunker
+        from react_system.tools.safety_reg.indexer import SafetyRegIndexer
 
-    t0 = time.time()
-    data_dir = os.path.join(os.path.dirname(__file__), "react_system", "tools", "safety_reg", "data", "laws")
+        t0 = time.time()
+        data_dir = os.path.join(os.path.dirname(__file__), "react_system", "tools", "safety_reg", "data", "laws")
 
-    # 1. JSON 로드
-    client = LawApiClient()
-    docs = client.load_from_json(data_dir)
+        _ingest_status = {"state": "running", "message": "JSON 로드 중..."}
+        client = LawApiClient()
+        docs = client.load_from_json(data_dir)
 
-    # 2. 청킹
-    chunker = SafetyChunker()
-    chunks = chunker.chunk_all(docs)
-    parents = [c for c in chunks if c.chunk_type == "parent"]
-    children = [c for c in chunks if c.chunk_type == "child"]
+        _ingest_status["message"] = f"청킹 중... ({len(docs)}개 문서)"
+        chunker = SafetyChunker()
+        chunks = chunker.chunk_all(docs)
+        parents = [c for c in chunks if c.chunk_type == "parent"]
+        children = [c for c in chunks if c.chunk_type == "child"]
 
-    # 3. 임베딩 함수
-    from openai import AsyncOpenAI
-    async def embedding_fn(texts):
-        oai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
-        resp = await oai.embeddings.create(input=texts, model="text-embedding-3-small", dimensions=1024)
-        return [item.embedding for item in resp.data]
+        _ingest_status["message"] = f"임베딩+인덱싱 중... ({len(chunks)}개 청크)"
 
-    # 4. 토크나이즈 함수
-    from kiwipiepy import Kiwi
-    kiwi = Kiwi()
-    def tokenize_fn(text):
-        tokens = kiwi.tokenize(text)
-        sparse = {}
-        for token in tokens:
-            key = hash(token.form) % (2**31)
-            sparse[key] = sparse.get(key, 0) + 1.0
-        return sparse
+        from openai import AsyncOpenAI
+        async def embedding_fn(texts):
+            oai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
+            resp = await oai.embeddings.create(input=texts, model="text-embedding-3-small", dimensions=1024)
+            return [item.embedding for item in resp.data]
 
-    # 5. 인덱싱
-    indexer = SafetyRegIndexer()
-    await indexer.ingest(chunks, embedding_fn=embedding_fn, tokenize_fn=tokenize_fn)
+        from kiwipiepy import Kiwi
+        kiwi = Kiwi()
+        def tokenize_fn(text):
+            tokens = kiwi.tokenize(text)
+            sparse = {}
+            for token in tokens:
+                key = hash(token.form) % (2**31)
+                sparse[key] = sparse.get(key, 0) + 1.0
+            return sparse
 
-    elapsed = time.time() - t0
-    return {
-        "status": "success",
-        "documents": len(docs),
-        "total_chunks": len(chunks),
-        "parents": len(parents),
-        "children": len(children),
-        "elapsed_seconds": round(elapsed, 1),
-    }
+        indexer = SafetyRegIndexer()
+        await indexer.ingest(chunks, embedding_fn=embedding_fn, tokenize_fn=tokenize_fn)
+
+        elapsed = time.time() - t0
+        _ingest_status = {
+            "state": "done",
+            "message": f"완료! {len(docs)}개 문서, {len(chunks)}개 청크 (Parent {len(parents)}, Child {len(children)}) — {round(elapsed, 1)}초",
+        }
+    except Exception as e:
+        _ingest_status = {"state": "error", "message": str(e)}
+
+
+@app.post("/admin/ingest-safety-reg")
+async def ingest_safety_regulations(background_tasks: "BackgroundTasks" = None):
+    """안전법령 데이터를 Milvus에 인덱싱합니다 (백그라운드 실행)."""
+    from fastapi import BackgroundTasks as BT
+    global _ingest_status
+    if _ingest_status["state"] == "running":
+        return {"status": "already_running", "message": _ingest_status["message"]}
+    _ingest_status = {"state": "running", "message": "시작 중..."}
+    import asyncio
+    asyncio.create_task(_run_ingest())
+    return {"status": "started", "message": "백그라운드 인덱싱 시작. GET /admin/ingest-safety-reg/status 로 진행 확인"}
+
+
+@app.get("/admin/ingest-safety-reg/status")
+async def ingest_status():
+    """인덱싱 진행 상태 확인."""
+    return _ingest_status
 
 
 @app.get("/api/products")
