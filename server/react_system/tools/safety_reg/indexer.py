@@ -184,8 +184,8 @@ class SafetyRegIndexer:
                     "section_hierarchy": chunk.section_hierarchy,
                     "source_url": chunk.source_url,
                     "effective_date": chunk.effective_date,
-                    "references_to": chunk.references_to,
-                    "referenced_by": chunk.referenced_by,
+                    "references_to": chunk.references_to[:4000],
+                    "referenced_by": chunk.referenced_by[:4000],
                 }
 
                 # Dense 벡터

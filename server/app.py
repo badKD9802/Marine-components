@@ -495,6 +495,8 @@ async def _run_ingest():
             print("[INGEST] Kiwi 미설치 — 공백 분리 토크나이저 사용")
 
         indexer = SafetyRegIndexer()
+        # 기존 컬렉션 삭제 후 재생성 (스키마 변경 반영)
+        await indexer.create_collection(drop_existing=True)
         await indexer.ingest(chunks, embedding_fn=embedding_fn, tokenize_fn=tokenize_fn)
 
         elapsed = time.time() - t0
