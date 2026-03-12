@@ -97,7 +97,7 @@ class SafetyRegIndexer:
                 logger.info(f"컬렉션 이미 존재: {COLLECTION_NAME}")
                 return
 
-        from pymilvus import CollectionSchema, DataType, FieldSchema
+        from pymilvus import CollectionSchema, DataType, FieldSchema, MilvusClient
 
         fields = []
         for f in HYBRID_FIELDS:
@@ -119,20 +119,21 @@ class SafetyRegIndexer:
         schema = CollectionSchema(fields=fields, description="Safety Regulation Hybrid")
         client.create_collection(collection_name=COLLECTION_NAME, schema=schema)
 
-        # 인덱스 생성 (Dense + Sparse)
+        # 인덱스 생성 (Dense + Sparse) — MilvusClient는 IndexParams 객체 필요
+        index_params = MilvusClient.prepare_index_params()
         for idx in HYBRID_INDEXES:
-            index_params = {
-                "index_type": idx["index_type"],
-                "metric_type": idx["metric_type"],
-            }
-            if "params" in idx:
-                index_params["params"] = idx["params"]
-
-            client.create_index(
-                collection_name=COLLECTION_NAME,
+            params = idx.get("params", {})
+            index_params.add_index(
                 field_name=idx["field_name"],
-                index_params=index_params,
+                index_type=idx["index_type"],
+                metric_type=idx["metric_type"],
+                params=params,
             )
+
+        client.create_index(
+            collection_name=COLLECTION_NAME,
+            index_params=index_params,
+        )
 
         logger.info(f"하이브리드 컬렉션 생성 완료: {COLLECTION_NAME}")
 
