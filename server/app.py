@@ -457,9 +457,8 @@ async def _run_ingest():
 
 
 @app.post("/admin/ingest-safety-reg")
-async def ingest_safety_regulations(background_tasks: "BackgroundTasks" = None):
+async def ingest_safety_regulations():
     """안전법령 데이터를 Milvus에 인덱싱합니다 (백그라운드 실행)."""
-    from fastapi import BackgroundTasks as BT
     global _ingest_status
     if _ingest_status["state"] == "running":
         return {"status": "already_running", "message": _ingest_status["message"]}
