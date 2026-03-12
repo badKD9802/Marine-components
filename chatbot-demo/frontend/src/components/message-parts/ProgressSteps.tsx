@@ -64,7 +64,7 @@ export function ProgressSteps({ steps, isStreaming }: { steps: ProgressStep[]; i
         style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <div className="space-y-1 px-3 pb-3 pt-0.5" role="list">
+          <div className="max-h-28 space-y-1 overflow-y-auto px-3 pb-3 pt-0.5" role="list">
             {steps.map((step, i) => (
               <div key={step.title} role="listitem"
                    className="flex items-start gap-2.5 text-sm animate-fade-in-up"
