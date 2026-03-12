@@ -187,6 +187,9 @@ class SafetyRegIndexer:
 
         client = await self._get_client()
 
+        # 컬렉션이 없으면 자동 생성
+        await self.create_collections(drop_existing=False)
+
         # 배치 처리
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i: i + batch_size]
