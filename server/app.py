@@ -536,6 +536,76 @@ async def ingest_status():
     }
 
 
+@app.get("/admin/safety-reg/browse")
+async def browse_safety_reg(doc_name: str = "", chunk_type: str = "parent", limit: int = 20, offset: int = 0):
+    """Milvus 컬렉션 데이터 브라우저 — 인덱싱 결과 확인용."""
+    try:
+        from react_system.tools.safety_reg.constants import COLLECTION_NAME
+        from pymilvus import MilvusClient
+
+        host = os.getenv("MILVUS_HOST", "localhost")
+        port = os.getenv("MILVUS_PORT", "19530")
+        client = MilvusClient(uri=f"http://{host}:{port}")
+
+        # 컬렉션 통계
+        if not client.has_collection(COLLECTION_NAME):
+            return {"error": "컬렉션이 존재하지 않습니다.", "collection": COLLECTION_NAME}
+
+        stats = client.get_collection_stats(COLLECTION_NAME)
+
+        # 필터 구성
+        filters = []
+        if chunk_type:
+            filters.append(f'chunk_type == "{chunk_type}"')
+        if doc_name:
+            filters.append(f'doc_name like "%{doc_name}%"')
+        filter_expr = " and ".join(filters) if filters else ""
+
+        # 데이터 조회
+        results = client.query(
+            collection_name=COLLECTION_NAME,
+            filter=filter_expr if filter_expr else None,
+            output_fields=["chunk_id", "chunk_type", "doc_name", "doc_type", "article_ref", "orig_text", "section_hierarchy"],
+            limit=limit,
+            offset=offset,
+        )
+
+        # 법령별 통계
+        doc_stats = client.query(
+            collection_name=COLLECTION_NAME,
+            filter='chunk_type == "parent"',
+            output_fields=["doc_name"],
+            limit=5000,
+        )
+        doc_counts = {}
+        for r in doc_stats:
+            name = r.get("doc_name", "?")
+            doc_counts[name] = doc_counts.get(name, 0) + 1
+
+        return {
+            "collection": COLLECTION_NAME,
+            "total_entities": stats.get("row_count", 0),
+            "doc_summary": dict(sorted(doc_counts.items(), key=lambda x: -x[1])),
+            "filter": filter_expr or "(전체)",
+            "results_count": len(results),
+            "results": [
+                {
+                    "chunk_id": r.get("chunk_id", ""),
+                    "chunk_type": r.get("chunk_type", ""),
+                    "doc_name": r.get("doc_name", ""),
+                    "doc_type": r.get("doc_type", ""),
+                    "article_ref": r.get("article_ref", ""),
+                    "section_hierarchy": r.get("section_hierarchy", ""),
+                    "text_preview": r.get("orig_text", "")[:300],
+                }
+                for r in results
+            ],
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "detail": traceback.format_exc()}
+
+
 @app.get("/api/products")
 async def api_get_products(category: str = None, search: str = None):
     products = await get_all_products(category=category, search=search)
