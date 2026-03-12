@@ -16,7 +16,12 @@ from react_system.tools import (
     translate_tools,
     user_tools,
 )
-from react_system.tools.safety_reg import safety_reg_tools
+try:
+    from react_system.tools.safety_reg import safety_reg_tools
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning(f"[ToolRegistry] safety_reg 임포트 실패: {_e}")
+    safety_reg_tools = None
 
 
 class ToolRegistry:
@@ -78,7 +83,7 @@ class ToolRegistry:
             # Summary tools (1) ⚠️ OPTIONAL - 주간 요약 (필요시 주석 처리)
             "get_weekly_summary": summary_tools.get_weekly_summary,
             # Safety regulation RAG tools (1) ⭐ NEW - 안전법령 검색
-            "search_safety_regulations": safety_reg_tools.search_safety_regulations,
+            **({"search_safety_regulations": safety_reg_tools.search_safety_regulations} if safety_reg_tools else {}),
         }
 
     async def dispatch(self, function_name, arguments):
