@@ -387,6 +387,60 @@ async def health_check():
     }
 
 
+@app.post("/admin/ingest-safety-reg")
+async def ingest_safety_regulations():
+    """안전법령 데이터를 Milvus에 인덱싱합니다 (1회 실행용)."""
+    import time
+    from react_system.tools.safety_reg.law_api_client import LawApiClient
+    from react_system.tools.safety_reg.chunker import SafetyChunker
+    from react_system.tools.safety_reg.indexer import SafetyRegIndexer
+
+    t0 = time.time()
+    data_dir = os.path.join(os.path.dirname(__file__), "react_system", "tools", "safety_reg", "data", "laws")
+
+    # 1. JSON 로드
+    client = LawApiClient()
+    docs = client.load_from_json(data_dir)
+
+    # 2. 청킹
+    chunker = SafetyChunker()
+    chunks = chunker.chunk_all(docs)
+    parents = [c for c in chunks if c.chunk_type == "parent"]
+    children = [c for c in chunks if c.chunk_type == "child"]
+
+    # 3. 임베딩 함수
+    from openai import AsyncOpenAI
+    async def embedding_fn(texts):
+        oai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
+        resp = await oai.embeddings.create(input=texts, model="text-embedding-3-small", dimensions=1024)
+        return [item.embedding for item in resp.data]
+
+    # 4. 토크나이즈 함수
+    from kiwipiepy import Kiwi
+    kiwi = Kiwi()
+    def tokenize_fn(text):
+        tokens = kiwi.tokenize(text)
+        sparse = {}
+        for token in tokens:
+            key = hash(token.form) % (2**31)
+            sparse[key] = sparse.get(key, 0) + 1.0
+        return sparse
+
+    # 5. 인덱싱
+    indexer = SafetyRegIndexer()
+    await indexer.ingest(chunks, embedding_fn=embedding_fn, tokenize_fn=tokenize_fn)
+
+    elapsed = time.time() - t0
+    return {
+        "status": "success",
+        "documents": len(docs),
+        "total_chunks": len(chunks),
+        "parents": len(parents),
+        "children": len(children),
+        "elapsed_seconds": round(elapsed, 1),
+    }
+
+
 @app.get("/api/products")
 async def api_get_products(category: str = None, search: str = None):
     products = await get_all_products(category=category, search=search)
