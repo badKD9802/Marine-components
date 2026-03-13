@@ -11,7 +11,6 @@ export function Sidebar() {
   const handleNew = () => {
     if (isStreaming) return
     setActiveConversation(null)
-    setSidebarOpen(false)
   }
 
   // 날짜별 그룹핑
