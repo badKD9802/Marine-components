@@ -68,6 +68,15 @@
         .log-table .truncate { max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .tool-badge { display:inline-block; background:var(--bg-gray); padding:2px 6px; border-radius:4px; font-size:0.72rem; margin:1px; }
 
+        /* 답변 detail */
+        .answer-detail { max-width:300px; }
+        .answer-detail summary { cursor:pointer; color:var(--text-muted); font-size:0.83rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:300px; list-style:none; }
+        .answer-detail summary::-webkit-details-marker { display:none; }
+        .answer-detail summary::before { content:'▸ '; font-size:0.7rem; color:var(--accent); }
+        .answer-detail[open] summary::before { content:'▾ '; }
+        .answer-detail[open] summary { white-space:normal; overflow:visible; }
+        .answer-detail .full-answer { margin-top:8px; padding:10px 12px; background:var(--bg-gray); border-radius:6px; font-size:0.82rem; line-height:1.6; color:var(--text-regular); white-space:pre-wrap; word-break:break-word; max-height:300px; overflow-y:auto; }
+
         /* 차트 */
         .chart-container { display:flex; align-items:flex-end; gap:8px; height:160px; padding:0 10px; }
         .chart-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
@@ -312,10 +321,15 @@
                     const ltime = ldt ? `${String(ldt.getHours()).padStart(2,'0')}:${String(ldt.getMinutes()).padStart(2,'0')}` : '-';
                     const tools = (log.tools_used || []).map(t => `<span class="tool-badge">${esc(t)}</span>`).join('');
                     const dur = log.duration_ms ? `${(log.duration_ms / 1000).toFixed(1)}s` : '-';
+                    const answerShort = log.answer ? (log.answer.length > 80 ? log.answer.slice(0, 80) + '...' : log.answer) : '-';
+                    const answerFull = log.answer || '-';
                     html += `<tr>
                         <td style="white-space:nowrap;">${ltime}</td>
                         <td class="truncate" title="${esc(log.question)}">${esc(log.question)}</td>
-                        <td class="truncate" style="color:var(--text-muted);" title="${esc(log.answer)}">${esc(log.answer)}</td>
+                        <td><details class="answer-detail">
+                            <summary>${esc(answerShort)}</summary>
+                            <div class="full-answer">${esc(answerFull)}</div>
+                        </details></td>
                         <td>${tools || '-'}</td>
                         <td style="white-space:nowrap;">${dur}</td>
                         <td><button class="btn btn-ghost btn-sm btn-danger" style="padding:3px 8px;font-size:0.72rem;" onclick="deleteOne(${log.id})">삭제</button></td>

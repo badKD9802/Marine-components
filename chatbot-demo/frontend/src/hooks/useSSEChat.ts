@@ -100,6 +100,8 @@ export function useSSEChat() {
         appendToken('\n\n연결 오류가 발생했습니다. 다시 시도해주세요.')
         finalizeMessage()
       } finally {
+        // 안전장치: done 이벤트 누락 시에도 progress step을 completed로 전환
+        finalizeMessage()
         setStreaming(false)
       }
     },

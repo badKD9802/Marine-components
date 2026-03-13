@@ -89,7 +89,14 @@ async def run_agent_stream(message: str, session_id: str, queue: asyncio.Queue,
         await session_manager.append(session_id, "assistant", answer)
 
         # progress 마무리 (active 상태 남아있으면 completed로 전환)
-        agent.finalize_progress()
+        summary_tag = agent.finalize_progress()
+
+        # finalize_progress가 no-op인 경우 (도구 호출 없이 텍스트만 응답)
+        # → 초기 progress step을 명시적으로 completed로 전송
+        if not summary_tag:
+            queue.put_nowait(("progress", {
+                "steps": [{"title": "답변을 생성했습니다", "status": "completed"}]
+            }))
 
         # 챗봇 사용 로그 저장
         duration_ms = int((time.time() - start_time) * 1000)

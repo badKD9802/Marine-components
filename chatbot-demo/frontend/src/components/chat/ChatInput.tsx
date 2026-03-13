@@ -61,7 +61,7 @@ export function ChatInput() {
         </div>
       </div>
       <p className="mx-auto mt-2 max-w-4xl text-center text-xs text-gray-400">
-        AI 응답은 데모 목적이며, 실제 데이터와 다를 수 있습니다.
+        AI 응답은 데모 목적이며, 실제 데이터와 다를 수 있습니다. · Made by 배경득
       </p>
     </div>
   )
