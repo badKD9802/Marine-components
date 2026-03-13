@@ -9,12 +9,18 @@ import logging
 from typing import List, Optional
 
 from react_system.tools.safety_reg.answer_generator import generate_answer
+from react_system.tools.safety_reg.constants import (
+    DEFAULT_MAX_CROSS_REF_HOPS,
+    DEFAULT_MAX_CROSS_REF_TOTAL,
+)
 from react_system.tools.safety_reg.prompts import (
     CROSS_REFERENCE_EXTRACTION_PROMPT,
+    CROSS_REFERENCE_RELEVANCE_PROMPT,
     MULTI_QUERY_PROMPT,
 )
 from react_system.tools.safety_reg.search_client import (
     SafetyRegSearchClient,
+    SearchHit,
     SearchResult,
 )
 
@@ -188,6 +194,116 @@ async def _extract_cross_references(parents, llm_fn) -> List[dict]:
         return []
 
 
+async def _filter_relevant_refs(
+    parents: List[SearchHit], query: str, llm_fn
+) -> List[SearchHit]:
+    """LLM으로 교차 참조 결과 중 원래 질문과 관련 있는 것만 필터링."""
+    if not llm_fn or not parents:
+        return parents
+
+    # 번호 매긴 목록 구성
+    numbered_parts = []
+    for i, p in enumerate(parents, 1):
+        numbered_parts.append(f"[{i}] 「{p.doc_name}」 {p.article_ref}\n{p.orig_text[:300]}")
+    numbered_refs = "\n\n".join(numbered_parts)
+
+    try:
+        result = await llm_fn(
+            "법령 조문의 관련성을 판단하세요.",
+            CROSS_REFERENCE_RELEVANCE_PROMPT.format(query=query, numbered_refs=numbered_refs),
+        )
+
+        if "없음" in result:
+            return []
+
+        # 번호 파싱
+        import re
+        numbers = re.findall(r'\d+', result)
+        indices = []
+        for n in numbers:
+            idx = int(n) - 1
+            if 0 <= idx < len(parents):
+                indices.append(idx)
+
+        if indices:
+            filtered = [parents[i] for i in sorted(set(indices))]
+            logger.info(f"관련성 필터: {len(parents)}건 → {len(filtered)}건")
+            return filtered
+
+        # 파싱 실패 시 전체 반환
+        return parents
+    except Exception as e:
+        logger.debug(f"관련성 필터 실패 (전체 유지): {e}")
+        return parents
+
+
+async def _expand_cross_references(
+    initial_parents: List[SearchHit],
+    llm_fn,
+    query: str,
+    client: SafetyRegSearchClient,
+    existing_ids: set,
+    max_hops: int = DEFAULT_MAX_CROSS_REF_HOPS,
+    max_total: int = DEFAULT_MAX_CROSS_REF_TOTAL,
+) -> tuple:
+    """멀티홉 교차 참조 확장 (최대 max_hops홉).
+
+    Returns:
+        (new_parents, new_sources) — 추가된 Parent 리스트 + 출처 리스트
+    """
+    all_new_parents = []
+    all_new_sources = []
+    seen_ids = set(existing_ids)
+    current_parents = initial_parents
+
+    for hop in range(max_hops):
+        # 1. 교차 참조 추출
+        refs = await _extract_cross_references(current_parents, llm_fn)
+        if not refs:
+            logger.info(f"홉 {hop + 1}: 교차 참조 없음, 종료")
+            break
+
+        # 2. Milvus에서 조회
+        fetched = await client.fetch_cross_references(refs)
+        # 이미 본 것 제외
+        new_parents = [p for p in fetched if p.chunk_id not in seen_ids]
+        if not new_parents:
+            logger.info(f"홉 {hop + 1}: 새로운 조문 없음, 종료")
+            break
+
+        # 3. LLM 관련성 필터링
+        filtered = await _filter_relevant_refs(new_parents, query, llm_fn)
+        if not filtered:
+            logger.info(f"홉 {hop + 1}: 관련 조문 없음, 종료")
+            break
+
+        # 4. 결과 누적
+        for p in filtered:
+            if len(all_new_parents) >= max_total:
+                break
+            if p.chunk_id not in seen_ids:
+                all_new_parents.append(p)
+                seen_ids.add(p.chunk_id)
+                all_new_sources.append({
+                    "doc_name": p.doc_name,
+                    "article_ref": p.article_ref,
+                    "source_url": p.source_url,
+                    "excerpt": p.orig_text[:200] + "..." if len(p.orig_text) > 200 else p.orig_text,
+                    "full_text": p.orig_text,
+                })
+
+        logger.info(f"홉 {hop + 1}: {len(filtered)}건 추가 (누적 {len(all_new_parents)}건)")
+
+        if len(all_new_parents) >= max_total:
+            logger.info(f"최대 교차 참조 수 도달 ({max_total}), 종료")
+            break
+
+        # 다음 홉의 시작점
+        current_parents = filtered
+
+    return all_new_parents, all_new_sources
+
+
 async def search_safety_regulations(
     query: str,
     category: str = "전체",
@@ -247,25 +363,17 @@ async def search_safety_regulations(
                 "sources": [],
             }
 
-        # 교차 참조 확장: Parent 조문에서 다른 법령 참조 추출 → 추가 조회
-        cross_refs = await _extract_cross_references(search_result.parents, llm_fn)
-        if cross_refs:
-            cross_ref_parents = await client.fetch_cross_references(cross_refs)
-            if cross_ref_parents:
-                # 기존 Parent에 없는 것만 추가
-                existing_ids = {p.chunk_id for p in search_result.parents}
-                for crp in cross_ref_parents:
-                    if crp.chunk_id not in existing_ids:
-                        search_result.parents.append(crp)
-                        existing_ids.add(crp.chunk_id)
-                        # 출처에도 추가
-                        search_result.sources.append({
-                            "doc_name": crp.doc_name,
-                            "article_ref": crp.article_ref,
-                            "source_url": crp.source_url,
-                            "excerpt": crp.orig_text[:200] + "..." if len(crp.orig_text) > 200 else crp.orig_text,
-                            "full_text": crp.orig_text,
-                        })
+        # 멀티홉 교차 참조 확장 (최대 2홉 + LLM 관련성 필터)
+        existing_ids = {p.chunk_id for p in search_result.parents}
+        new_parents, new_sources = await _expand_cross_references(
+            initial_parents=search_result.parents,
+            llm_fn=llm_fn,
+            query=query,
+            client=client,
+            existing_ids=existing_ids,
+        )
+        search_result.parents.extend(new_parents)
+        search_result.sources.extend(new_sources)
 
         # LLM 답변 생성
         answer_result = await generate_answer(

@@ -56,6 +56,8 @@ DEFAULT_RRF_SPARSE_WEIGHT = 0.6  # Sparse(BM25) 비중 (법률 용어 정확 매
 DEFAULT_RRF_K = 40  # RRF k값 (상위 순위 차별화 강화)
 DEFAULT_MAX_PER_DOC = 3  # 동일 법령 최대 결과 수 (다양성 확보)
 TOKEN_THRESHOLD = 10000  # LLM 검증 기준 토큰 수
+DEFAULT_MAX_CROSS_REF_HOPS = 2  # 교차 참조 최대 홉 수
+DEFAULT_MAX_CROSS_REF_TOTAL = 8  # 교차 참조 추가 Parent 상한
 
 # API 수집 대상 법령 목록
 LAW_LIST = [

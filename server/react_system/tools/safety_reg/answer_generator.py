@@ -48,14 +48,51 @@ def _build_numbered_list(parents: List[SearchHit]) -> str:
     return "\n\n".join(parts)
 
 
+def _build_source_lookup(sources: List[dict]) -> dict:
+    """sources를 (doc_name, article_ref) → source dict로 매핑."""
+    lookup = {}
+    for src in sources:
+        key = (src["doc_name"], src["article_ref"])
+        if key not in lookup:
+            lookup[key] = src
+    return lookup
+
+
+def _make_inline_dialog_id(doc_name: str, article_ref: str) -> str:
+    """인라인 dialog ID 생성 — 동일 조문은 같은 ID."""
+    import hashlib
+    key = f"{doc_name}_{article_ref}"
+    return f"sr-inline-{hashlib.md5(key.encode()).hexdigest()[:8]}"
+
+
 def _render_html(answer: str, sources: List[dict]) -> str:
     """답변 + 출처를 구조화된 HTML로 렌더링."""
     html_parts = ['<div class="safety-reg-answer" style="font-size:14px;line-height:1.8;color:#333;">']
 
-    # 답변 본문 — 마크다운 → HTML 변환
+    # source lookup 구성
+    source_lookup = _build_source_lookup(sources) if sources else None
+
+    # 답변 본문 — 마크다운 → HTML 변환 (인라인 조문 클릭 포함)
+    dialog_collector = []
     html_parts.append('<div class="answer-content">')
-    html_parts.append(_markdown_to_html(answer))
+    html_parts.append(_markdown_to_html(answer, source_lookup, dialog_collector))
     html_parts.append('</div>')
+
+    # 인라인 조문 dialog 일괄 삽입 (중복 ID 제거)
+    seen_dialog_ids = set()
+    for dlg in dialog_collector:
+        if dlg["id"] not in seen_dialog_ids:
+            seen_dialog_ids.add(dlg["id"])
+            escaped_text = dlg["full_text"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            html_parts.append(
+                f'<dialog id="{dlg["id"]}" class="sr-modal">'
+                f'<div class="sr-modal-header">'
+                f'<p class="sr-modal-title">「{dlg["doc_name"]}」 {dlg["article_ref"]}</p>'
+                f'<button class="sr-modal-close" onclick="this.closest(\'dialog\').close()">&times;</button>'
+                f'</div>'
+                f'<div class="sr-modal-body">{escaped_text}</div>'
+                f'</dialog>'
+            )
 
     # 출처 카드
     if sources:
@@ -65,12 +102,15 @@ def _render_html(answer: str, sources: List[dict]) -> str:
     return '\n'.join(html_parts)
 
 
-def _markdown_to_html(text: str) -> str:
+def _markdown_to_html(text: str, source_lookup: dict = None, dialog_collector: list = None) -> str:
     """마크다운 → HTML 변환 (법령 답변 특화)."""
     lines = text.split('\n')
     html_lines = []
     in_list = False
     in_ol = False
+
+    def fmt(t):
+        return _inline_format(t, source_lookup, dialog_collector)
 
     for line in lines:
         stripped = line.strip()
@@ -83,7 +123,7 @@ def _markdown_to_html(text: str) -> str:
             if in_ol:
                 html_lines.append('</ol>')
                 in_ol = False
-            html_lines.append(f'<h4 style="margin:16px 0 8px;color:#1a5276;">{_inline_format(stripped[4:])}</h4>')
+            html_lines.append(f'<h4 style="margin:16px 0 8px;color:#1a5276;">{fmt(stripped[4:])}</h4>')
             continue
         if stripped.startswith('## '):
             if in_list:
@@ -92,7 +132,7 @@ def _markdown_to_html(text: str) -> str:
             if in_ol:
                 html_lines.append('</ol>')
                 in_ol = False
-            html_lines.append(f'<h3 style="margin:20px 0 10px;color:#1a5276;">{_inline_format(stripped[3:])}</h3>')
+            html_lines.append(f'<h3 style="margin:20px 0 10px;color:#1a5276;">{fmt(stripped[3:])}</h3>')
             continue
 
         # 번호 목록: "1. "
@@ -104,7 +144,7 @@ def _markdown_to_html(text: str) -> str:
             if not in_ol:
                 html_lines.append('<ol style="margin:8px 0;padding-left:24px;">')
                 in_ol = True
-            html_lines.append(f'<li>{_inline_format(ol_match.group(2))}</li>')
+            html_lines.append(f'<li>{fmt(ol_match.group(2))}</li>')
             continue
 
         # 불렛 목록: "- " 또는 "* "
@@ -115,7 +155,7 @@ def _markdown_to_html(text: str) -> str:
             if not in_list:
                 html_lines.append('<ul style="margin:8px 0;padding-left:24px;">')
                 in_list = True
-            html_lines.append(f'<li>{_inline_format(stripped[2:])}</li>')
+            html_lines.append(f'<li>{fmt(stripped[2:])}</li>')
             continue
 
         # 빈 줄
@@ -135,7 +175,7 @@ def _markdown_to_html(text: str) -> str:
         if in_ol:
             html_lines.append('</ol>')
             in_ol = False
-        html_lines.append(f'<p style="margin:6px 0;">{_inline_format(stripped)}</p>')
+        html_lines.append(f'<p style="margin:6px 0;">{fmt(stripped)}</p>')
 
     if in_list:
         html_lines.append('</ul>')
@@ -144,15 +184,55 @@ def _markdown_to_html(text: str) -> str:
     return '\n'.join(html_lines)
 
 
-def _inline_format(text: str) -> str:
-    """인라인 마크다운 포맷팅 — bold, 법령명, 조문 강조."""
+def _inline_format(text: str, source_lookup: dict = None, dialog_collector: list = None) -> str:
+    """인라인 마크다운 포맷팅 — bold, 법령명, 조문 강조 + 클릭 팝업."""
     # **bold** → <strong>
     text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
-    # 「법령명」 강조
-    text = re.sub(r'「(.+?)」', r'<strong style="color:#1a5276;">「\1」</strong>', text)
-    # 제N조 강조
+
+    # 「법령명」 제N조 패턴 — source_lookup에 있으면 클릭 가능 링크
+    if source_lookup:
+        def _replace_law_ref(m):
+            law_name = m.group(1)
+            article = m.group(2)
+            # source_lookup에서 매칭 (doc_name에 law_name 포함 + article_ref에 article 포함)
+            matched_src = None
+            for (dn, ar), src in source_lookup.items():
+                if law_name in dn and article in ar:
+                    matched_src = src
+                    break
+            if matched_src:
+                dialog_id = _make_inline_dialog_id(matched_src["doc_name"], matched_src["article_ref"])
+                if dialog_collector is not None:
+                    dialog_collector.append({
+                        "id": dialog_id,
+                        "doc_name": matched_src["doc_name"],
+                        "article_ref": matched_src["article_ref"],
+                        "full_text": matched_src.get("full_text", matched_src.get("excerpt", "")),
+                        "source_url": matched_src.get("source_url", ""),
+                    })
+                return (
+                    f'<span class="sr-inline-ref" '
+                    f"onclick=\"document.getElementById('{dialog_id}').showModal()\">"
+                    f'「{law_name}」 {article}</span>'
+                )
+            # 매칭 안 되면 기존 스타일링만
+            return (
+                f'<strong style="color:#1a5276;">「{law_name}」</strong> '
+                f'<span style="color:#2c3e50;font-weight:500;">{article}</span>'
+            )
+
+        text = re.sub(
+            r'「(.+?)」\s*(제\d+조(?:의\d+)?(?:\([^)]+\))?)',
+            _replace_law_ref,
+            text,
+        )
+    else:
+        # source_lookup 없으면 기존 스타일링
+        text = re.sub(r'「(.+?)」', r'<strong style="color:#1a5276;">「\1」</strong>', text)
+
+    # 나머지 제N조 강조 (이미 처리되지 않은 것)
     text = re.sub(
-        r'(제\d+조(?:의\d+)?(?:\([^)]+\))?(?:제\d+항)?(?:제\d+호)?)',
+        r'(?<!">)(제\d+조(?:의\d+)?(?:\([^)]+\))?(?:제\d+항)?(?:제\d+호)?)',
         r'<span style="color:#2c3e50;font-weight:500;">\1</span>',
         text,
     )
@@ -216,6 +296,10 @@ def _render_sources_card(sources: List[dict]) -> str:
         ".sr-modal-body { padding:20px; overflow-y:auto;\n"
         "  max-height:calc(80vh - 60px); font-size:13px;\n"
         "  line-height:1.8; color:#333; white-space:pre-wrap; }\n"
+        ".sr-inline-ref { color:#2980b9; cursor:pointer;\n"
+        "  text-decoration:underline dotted; font-weight:500; }\n"
+        ".sr-inline-ref:hover { color:#1a5276;\n"
+        "  text-decoration:underline solid; }\n"
         "</style>"
     )
 

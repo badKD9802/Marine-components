@@ -73,6 +73,15 @@ JSON 형식으로 답변:
 {{"references": [{{"law_name": "법령명", "article": "제N조"}}, ...]}}
 references가 없으면 빈 배열: {{"references": []}}"""
 
+CROSS_REFERENCE_RELEVANCE_PROMPT = """원래 질문: {query}
+
+다음 교차 참조 조문들이 발견되었습니다.
+이 중 원래 질문에 답변하는 데 관련이 있는 조문만 번호로 선택하세요.
+
+{numbered_refs}
+
+관련 있는 번호만 쉼표로 구분하여 답변 (예: 1, 3). 없으면 "없음":"""
+
 # detail_level별 지시사항
 DETAIL_INSTRUCTIONS = {
     "brief": "- 핵심 내용만 3문장 이내로 간결하게 답변하세요.",
