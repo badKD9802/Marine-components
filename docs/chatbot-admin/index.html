@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 챗봇 관리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #003366;
+            --primary-light: #e6f2ff;
+            --accent: #0099cc;
+            --success: #28a745;
+            --warning: #ff9800;
+            --error: #dc3545;
+            --text-dark: #1a1a1a;
+            --text-regular: #333;
+            --text-light: #666;
+            --text-muted: #999;
+            --bg-white: #fff;
+            --bg-gray: #f8f9fa;
+            --border: #e9ecef;
+            --gradient: linear-gradient(135deg, #003366 0%, #0099cc 100%);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Noto Sans KR','Segoe UI',sans-serif; background:var(--bg-gray); color:var(--text-regular); min-height:100vh; }
+
+        /* 로그인 */
+        .login-container { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg-gray); }
+        .login-box { background:white; padding:40px; border-radius:16px; box-shadow:var(--shadow-md); text-align:center; width:360px; }
+        .login-box h1 { font-size:1.4rem; color:var(--primary); margin-bottom:8px; }
+        .login-box p { font-size:0.85rem; color:var(--text-muted); margin-bottom:24px; }
+        .login-box input { width:100%; padding:12px 16px; border:1px solid var(--border); border-radius:8px; font-size:0.95rem; margin-bottom:12px; }
+        .login-box .error { color:var(--error); font-size:0.82rem; min-height:20px; margin-bottom:8px; }
+
+        /* 헤더 */
+        .header { background:var(--gradient); color:white; padding:14px 24px; display:flex; justify-content:space-between; align-items:center; }
+        .header h1 { font-size:1.1rem; font-weight:600; }
+
+        /* 대시보드 */
+        .dashboard { display:none; }
+        .main { max-width:1200px; margin:0 auto; padding:24px; }
+
+        /* 버튼 */
+        .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-size:0.88rem; font-weight:500; transition:all 0.15s; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:hover { opacity:0.9; }
+        .btn-accent { background:var(--accent); color:white; }
+        .btn-ghost { background:transparent; color:var(--text-regular); border:1px solid var(--border); }
+        .btn-ghost:hover { background:var(--bg-gray); }
+        .btn-sm { padding:6px 12px; font-size:0.8rem; }
+        .btn-danger { color:var(--error); }
+        .logout-btn { background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:6px 16px; border-radius:6px; cursor:pointer; font-size:0.82rem; }
+
+        /* 카드 */
+        .card { background:white; border:1px solid var(--border); border-radius:10px; padding:20px; }
+        .stat-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:24px; }
+        .stat-card { text-align:center; }
+        .stat-card .label { font-size:0.78rem; color:var(--text-muted); margin-bottom:8px; }
+        .stat-card .value { font-size:1.8rem; font-weight:700; color:var(--text-dark); }
+
+        /* 테이블 */
+        .log-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+        .log-table th { padding:10px 8px; color:var(--text-muted); font-weight:600; text-align:left; border-bottom:2px solid var(--border); }
+        .log-table td { padding:10px 8px; border-bottom:1px solid var(--border); }
+        .log-table .truncate { max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .tool-badge { display:inline-block; background:var(--bg-gray); padding:2px 6px; border-radius:4px; font-size:0.72rem; margin:1px; }
+
+        /* 차트 */
+        .chart-container { display:flex; align-items:flex-end; gap:8px; height:160px; padding:0 10px; }
+        .chart-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
+        .chart-bar { width:100%; max-width:48px; background:var(--primary); border-radius:6px 6px 0 0; min-height:4px; transition:height 0.3s; }
+        .chart-count { font-size:0.78rem; font-weight:600; }
+        .chart-label { font-size:0.7rem; color:var(--text-muted); }
+
+        /* 프로그레스 바 */
+        .progress-track { background:var(--bg-gray); border-radius:4px; height:8px; overflow:hidden; }
+        .progress-fill { background:var(--primary); height:100%; border-radius:4px; transition:width 0.3s; }
+
+        .empty { padding:40px; text-align:center; color:var(--text-muted); }
+
+        /* 세션 그룹 */
+        .session-group { margin-bottom:4px; }
+        .session-header { display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--primary-light); border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:500; }
+        .session-header:hover { background:#daeaf7; }
+        .session-header .arrow { transition:transform 0.2s; font-size:0.7rem; }
+        .session-header .arrow.open { transform:rotate(90deg); }
+        .session-body { display:none; padding:0 0 0 20px; }
+        .session-body.open { display:block; }
+    </style>
+</head>
+<body>
+    <!-- 로그인 -->
+    <div id="loginView" class="login-container">
+        <div class="login-box">
+            <h1>AI Chatbot Admin</h1>
+            <p>챗봇 사용 현황 관리 대시보드</p>
+            <input type="password" id="pwInput" placeholder="관리자 비밀번호" />
+            <div class="error" id="loginError"></div>
+            <button class="btn btn-accent" style="width:100%" onclick="handleLogin()">로그인</button>
+        </div>
+    </div>
+
+    <!-- 대시보드 -->
+    <div id="dashboardView" class="dashboard">
+        <div class="header">
+            <h1>AI Chatbot Dashboard</h1>
+            <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+        </div>
+
+        <div class="main">
+            <!-- 통계 카드 -->
+            <div class="stat-cards">
+                <div class="card stat-card">
+                    <div class="label">오늘</div>
+                    <div class="value" id="sToday">-</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="label">이번 주</div>
+                    <div class="value" id="sWeek">-</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="label">이번 달</div>
+                    <div class="value" id="sMonth">-</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="label">고유 방문자 (30일)</div>
+                    <div class="value" id="sVisitors">-</div>
+                </div>
+            </div>
+
+            <!-- 일별 차트 -->
+            <div class="card" style="margin-bottom:24px;">
+                <h3 style="margin:0 0 16px;font-size:1rem;">일별 사용량 (최근 7일)</h3>
+                <div class="chart-container" id="dailyChart">
+                    <div class="empty">데이터 로드 중...</div>
+                </div>
+            </div>
+
+            <!-- 인기 도구 -->
+            <div class="card" style="margin-bottom:24px;">
+                <h3 style="margin:0 0 16px;font-size:1rem;">인기 도구 TOP 5</h3>
+                <div id="topTools"><div class="empty">로드 중...</div></div>
+            </div>
+
+            <!-- 최근 대화 -->
+            <div class="card" style="margin-bottom:24px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h3 style="margin:0;font-size:1rem;">최근 대화</h3>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <select id="daysFilter" onchange="loadLogs()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;">
+                            <option value="7">최근 7일</option>
+                            <option value="14">최근 14일</option>
+                            <option value="30" selected>최근 30일</option>
+                        </select>
+                        <button class="btn btn-ghost btn-sm" onclick="loadLogs()">새로고침</button>
+                    </div>
+                </div>
+                <div id="logArea" style="overflow-x:auto;"></div>
+            </div>
+
+            <!-- 로그 관리 -->
+            <div class="card">
+                <h3 style="margin:0 0 16px;font-size:1rem;">로그 관리</h3>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-ghost" onclick="deleteLogs(30)">30일 이전 삭제</button>
+                    <button class="btn btn-ghost btn-danger" onclick="deleteAllLogs()">전체 삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ---- Config ----
+    const API_BASE = 'https://marine-parts-production-60a3.up.railway.app';
+    let token = sessionStorage.getItem('chatbot_admin_token') || '';
+
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    async function api(path, opts = {}) {
+        const res = await fetch(API_BASE + path, {
+            ...opts,
+            headers: { ...(opts.headers || {}), 'Authorization': 'Bearer ' + token },
+        });
+        if (res.status === 401) { handleLogout(); throw new Error('인증 만료'); }
+        return res;
+    }
+
+    // ---- Auth ----
+    function handleLogin() {
+        const pw = document.getElementById('pwInput').value;
+        fetch(API_BASE + '/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pw }),
+        })
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        .then(data => {
+            token = data.token;
+            sessionStorage.setItem('chatbot_admin_token', token);
+            document.getElementById('loginError').textContent = '';
+            showDashboard();
+        })
+        .catch(() => {
+            document.getElementById('loginError').textContent = '비밀번호가 올바르지 않습니다';
+        });
+    }
+
+    function handleLogout() {
+        token = '';
+        sessionStorage.removeItem('chatbot_admin_token');
+        document.getElementById('loginView').style.display = 'flex';
+        document.getElementById('dashboardView').style.display = 'none';
+    }
+
+    function showDashboard() {
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('dashboardView').style.display = 'block';
+        loadStats();
+        loadLogs();
+    }
+
+    // ---- Stats ----
+    async function loadStats() {
+        try {
+            const data = await (await api('/admin/chat-logs/stats')).json();
+            document.getElementById('sToday').textContent = data.today || 0;
+            document.getElementById('sWeek').textContent = data.this_week || 0;
+            document.getElementById('sMonth').textContent = data.this_month || 0;
+            document.getElementById('sVisitors').textContent = data.unique_visitors || 0;
+            renderChart(data.daily || []);
+            renderTools(data.top_tools || []);
+        } catch (e) { console.error('통계 로드 실패:', e); }
+    }
+
+    function renderChart(daily) {
+        const el = document.getElementById('dailyChart');
+        if (!daily.length) { el.innerHTML = '<div class="empty">데이터 없음</div>'; return; }
+        const max = Math.max(...daily.map(d => d.count), 1);
+        const days = ['일','월','화','수','목','금','토'];
+        el.innerHTML = daily.map(d => {
+            const pct = (d.count / max) * 100;
+            const dt = new Date(d.date);
+            const label = `${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})`;
+            return `<div class="chart-bar-wrap">
+                <span class="chart-count">${d.count}</span>
+                <div class="chart-bar" style="height:${Math.max(pct,4)}%"></div>
+                <span class="chart-label">${label}</span>
+            </div>`;
+        }).join('');
+    }
+
+    function renderTools(tools) {
+        const el = document.getElementById('topTools');
+        if (!tools.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">사용된 도구 없음</div>'; return; }
+        const max = tools[0].count || 1;
+        el.innerHTML = tools.map(t => {
+            const pct = (t.count / max) * 100;
+            return `<div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:4px;">
+                    <span style="font-weight:500;">${esc(t.tool)}</span>
+                    <span style="color:var(--text-muted);">${t.count}회</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+            </div>`;
+        }).join('');
+    }
+
+    // ---- Logs ----
+    async function loadLogs() {
+        try {
+            const days = document.getElementById('daysFilter').value;
+            const logs = await (await api(`/admin/chat-logs?days=${days}&limit=200`)).json();
+            const el = document.getElementById('logArea');
+
+            if (!logs.length) { el.innerHTML = '<div class="empty">로그가 없습니다</div>'; return; }
+
+            // 세션별 그룹핑
+            const groups = {};
+            logs.forEach(l => {
+                const sid = l.session_id || 'unknown';
+                if (!groups[sid]) groups[sid] = [];
+                groups[sid].push(l);
+            });
+
+            let html = '';
+            for (const [sid, items] of Object.entries(groups)) {
+                const first = items[0];
+                const dt = first.created_at ? new Date(first.created_at) : null;
+                const timeStr = dt ? `${dt.getMonth()+1}/${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '';
+                const ip = first.ip_addr || '-';
+
+                html += `<div class="session-group">
+                    <div class="session-header" onclick="toggleSession(this)">
+                        <span class="arrow">&#9654;</span>
+                        <span style="color:var(--text-muted);font-size:0.78rem;">${esc(ip)}</span>
+                        <span style="color:var(--text-muted);font-size:0.78rem;">${timeStr}</span>
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(items[0].question)}</span>
+                        <span style="color:var(--text-muted);font-size:0.78rem;">${items.length}개 대화</span>
+                    </div>
+                    <div class="session-body">
+                        <table class="log-table">
+                            <thead><tr>
+                                <th>시간</th><th>질문</th><th>답변</th><th>도구</th><th>소요</th><th></th>
+                            </tr></thead>
+                            <tbody>`;
+
+                for (const log of items) {
+                    const ldt = log.created_at ? new Date(log.created_at) : null;
+                    const ltime = ldt ? `${String(ldt.getHours()).padStart(2,'0')}:${String(ldt.getMinutes()).padStart(2,'0')}` : '-';
+                    const tools = (log.tools_used || []).map(t => `<span class="tool-badge">${esc(t)}</span>`).join('');
+                    const dur = log.duration_ms ? `${(log.duration_ms / 1000).toFixed(1)}s` : '-';
+                    html += `<tr>
+                        <td style="white-space:nowrap;">${ltime}</td>
+                        <td class="truncate" title="${esc(log.question)}">${esc(log.question)}</td>
+                        <td class="truncate" style="color:var(--text-muted);" title="${esc(log.answer)}">${esc(log.answer)}</td>
+                        <td>${tools || '-'}</td>
+                        <td style="white-space:nowrap;">${dur}</td>
+                        <td><button class="btn btn-ghost btn-sm btn-danger" style="padding:3px 8px;font-size:0.72rem;" onclick="deleteOne(${log.id})">삭제</button></td>
+                    </tr>`;
+                }
+
+                html += `</tbody></table></div></div>`;
+            }
+
+            el.innerHTML = html;
+        } catch (e) { console.error('로그 로드 실패:', e); }
+    }
+
+    function toggleSession(header) {
+        const arrow = header.querySelector('.arrow');
+        const body = header.nextElementSibling;
+        arrow.classList.toggle('open');
+        body.classList.toggle('open');
+    }
+
+    // ---- Delete ----
+    async function deleteOne(id) {
+        if (!confirm('이 로그를 삭제하시겠습니까?')) return;
+        await api(`/admin/chat-logs/${id}`, { method: 'DELETE' });
+        loadLogs(); loadStats();
+    }
+
+    async function deleteLogs(days) {
+        if (!confirm(`${days}일 이전 로그를 삭제하시겠습니까?`)) return;
+        const res = await (await api(`/admin/chat-logs?before_days=${days}`, { method: 'DELETE' })).json();
+        alert(`${res.deleted}건 삭제 완료`);
+        loadLogs(); loadStats();
+    }
+
+    async function deleteAllLogs() {
+        if (!confirm('정말 모든 챗봇 로그를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+        const res = await (await api('/admin/chat-logs?all=true', { method: 'DELETE' })).json();
+        alert(`${res.deleted}건 삭제 완료`);
+        loadLogs(); loadStats();
+    }
+
+    // ---- Init ----
+    document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+    if (token) showDashboard();
+    </script>
+</body>
+</html>

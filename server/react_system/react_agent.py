@@ -345,6 +345,7 @@ class ReactAgent:
         tool_steps = []
         has_tool_calls = False
         executed_calls = set()  # (func_name, args_hash) 중복 방지
+        used_tool_names = set()  # 실제 사용된 도구 이름 수집
 
         logger.info("[ReactAgent] run() 시작 | 질문: %s | history 길이: %d | max_iterations: %d",
                     user_message[:80], len(history) if history else 0, self.max_iterations)
@@ -390,6 +391,7 @@ class ReactAgent:
                     "html_blocks": self._html_blocks,
                     "messages": messages[initial_length:],
                     "streamed": was_streamed,
+                    "tools_used": list(used_tool_names),
                 }
 
             # 도구 호출 감지
@@ -431,6 +433,7 @@ class ReactAgent:
             logger.info("[ReactAgent] 반복 %d: 도구 실행 시작 | 실행: %d, 스킵: %d", iteration + 1, len(filtered_calls), len(skipped_calls))
             tool_results = await self._execute_tool_calls(filtered_calls, executed_calls, tool_steps=tool_steps)
             logger.info("[ReactAgent] 반복 %d: 도구 실행 완료 | 결과 수: %d", iteration + 1, len(tool_results))
+            used_tool_names.update(tc.function.name for tc in filtered_calls)
 
             # Add tool results to messages
             for tool_call_id, result in tool_results:
@@ -449,6 +452,7 @@ class ReactAgent:
             "html_blocks": self._html_blocks,
             "messages": messages[initial_length:],
             "streamed": was_streamed,
+            "tools_used": list(used_tool_names),
         }
 
     @staticmethod

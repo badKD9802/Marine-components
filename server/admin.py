@@ -370,15 +370,25 @@ async def get_dashboard_stats(_=Depends(verify_token)):
         prompt_examples_count = await conn.fetchval("SELECT COUNT(*) FROM mail_prompt_examples")
         signatures_count = await conn.fetchval("SELECT COUNT(*) FROM mail_signatures")
 
-    # 견적문의 통계 (일반 DB)
+    # 견적문의 통계 + 챗봇 로그 통계 (일반 DB)
     total_inquiries = 0
     inquiries_today = 0
+    chat_total = 0
+    chat_today = 0
+    chat_this_week = 0
     if db.pool:
         async with db.pool.acquire() as conn:
             total_inquiries = await conn.fetchval("SELECT COUNT(*) FROM inquiries")
             inquiries_today = await conn.fetchval(
                 "SELECT COUNT(*) FROM inquiries WHERE created_at::date = CURRENT_DATE"
             )
+            chat_total = await conn.fetchval("SELECT COUNT(*) FROM chat_logs") or 0
+            chat_today = await conn.fetchval(
+                "SELECT COUNT(*) FROM chat_logs WHERE created_at::date = CURRENT_DATE"
+            ) or 0
+            chat_this_week = await conn.fetchval(
+                "SELECT COUNT(*) FROM chat_logs WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'"
+            ) or 0
 
     return {
         "documents": {
@@ -402,6 +412,11 @@ async def get_dashboard_stats(_=Depends(verify_token)):
         "settings": {
             "prompt_examples": prompt_examples_count,
             "signatures": signatures_count,
+        },
+        "chat_logs": {
+            "total": chat_total,
+            "today": chat_today,
+            "this_week": chat_this_week,
         },
     }
 
@@ -696,3 +711,119 @@ Translated text:"""
     except Exception as e:
         print(f"Translation error: {e}")
         raise HTTPException(status_code=500, detail=f"번역 실패: {str(e)}")
+
+
+# ============================================================
+#  AI 챗봇 로그
+# ============================================================
+
+@router.get("/chat-logs")
+async def get_chat_logs(days: int = 7, limit: int = 100, offset: int = 0,
+                        _=Depends(verify_token)):
+    """챗봇 사용 로그 목록 조회"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        rows = await conn.fetch("""
+            SELECT id, session_id, question, answer, tools_used,
+                   ip_addr, user_agent, duration_ms, created_at
+            FROM chat_logs
+            WHERE created_at >= CURRENT_DATE - ($1 || ' days')::INTERVAL
+            ORDER BY created_at DESC
+            LIMIT $2 OFFSET $3
+        """, str(days), limit, offset)
+
+    return [
+        {
+            "id": r["id"],
+            "session_id": r["session_id"],
+            "question": r["question"],
+            "answer": (r["answer"] or "")[:200],
+            "tools_used": r["tools_used"] or [],
+            "ip_addr": r["ip_addr"],
+            "duration_ms": r["duration_ms"],
+            "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+        }
+        for r in rows
+    ]
+
+
+@router.get("/chat-logs/stats")
+async def get_chat_log_stats(_=Depends(verify_token)):
+    """챗봇 로그 통계 요약"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        today = await conn.fetchval(
+            "SELECT COUNT(*) FROM chat_logs WHERE created_at::date = CURRENT_DATE"
+        ) or 0
+        this_week = await conn.fetchval(
+            "SELECT COUNT(*) FROM chat_logs WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'"
+        ) or 0
+        this_month = await conn.fetchval(
+            "SELECT COUNT(*) FROM chat_logs WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+        ) or 0
+        unique_visitors = await conn.fetchval(
+            "SELECT COUNT(DISTINCT ip_addr) FROM chat_logs WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+        ) or 0
+
+        # 인기 도구 TOP 5
+        tool_rows = await conn.fetch("""
+            SELECT tool, COUNT(*) as cnt
+            FROM chat_logs, UNNEST(tools_used) AS tool
+            WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY tool ORDER BY cnt DESC LIMIT 5
+        """)
+
+        # 일별 사용량 (최근 7일)
+        daily_rows = await conn.fetch("""
+            SELECT created_at::date AS day, COUNT(*) AS cnt
+            FROM chat_logs
+            WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
+            GROUP BY day ORDER BY day
+        """)
+
+    return {
+        "today": today,
+        "this_week": this_week,
+        "this_month": this_month,
+        "unique_visitors": unique_visitors,
+        "top_tools": [{"tool": r["tool"], "count": r["cnt"]} for r in tool_rows],
+        "daily": [{"date": r["day"].isoformat(), "count": r["cnt"]} for r in daily_rows],
+    }
+
+
+@router.delete("/chat-logs")
+async def delete_chat_logs(before_days: int = 30, all: bool = False,
+                           _=Depends(verify_token)):
+    """챗봇 로그 삭제"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        if all:
+            result = await conn.execute("DELETE FROM chat_logs")
+        else:
+            result = await conn.execute(
+                "DELETE FROM chat_logs WHERE created_at < CURRENT_DATE - ($1 || ' days')::INTERVAL",
+                str(before_days),
+            )
+
+    count = int(result.split()[-1]) if result else 0
+    return {"deleted": count}
+
+
+@router.delete("/chat-logs/{log_id}")
+async def delete_chat_log(log_id: int, _=Depends(verify_token)):
+    """챗봇 로그 개별 삭제"""
+    if not db.pool:
+        raise HTTPException(status_code=500, detail="DB 연결 없음")
+
+    async with db.pool.acquire() as conn:
+        result = await conn.execute("DELETE FROM chat_logs WHERE id = $1", log_id)
+
+    if result == "DELETE 0":
+        raise HTTPException(status_code=404, detail="로그를 찾을 수 없습니다")
+    return {"message": "삭제 완료"}

@@ -3,7 +3,8 @@ import asyncio
 import json
 import logging
 import os
-from fastapi import APIRouter, HTTPException
+import time
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -15,6 +16,7 @@ from react_system.auth_context import AuthContext
 from react_system.react_agent import ReactAgent
 from react_system.tool_registry import ToolRegistry
 from react_system.tool_definitions import TOOLS
+import db
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +48,10 @@ def get_llm_client() -> LLMClient:
 
 # --- SSE Streaming ---
 
-async def run_agent_stream(message: str, session_id: str, queue: asyncio.Queue):
+async def run_agent_stream(message: str, session_id: str, queue: asyncio.Queue,
+                           ip_addr: str = "", user_agent: str = ""):
     """ReAct 에이전트를 실행하고 결과를 SSE 큐로 전송."""
+    start_time = time.time()
     try:
         session = await session_manager.get(session_id)
         if not session:
@@ -79,12 +83,25 @@ async def run_agent_stream(message: str, session_id: str, queue: asyncio.Queue):
         history = await session_manager.get_history(session_id)
         result = await agent.run(message, history=history)
         answer = result.get("answer", "")
+        tools_used = result.get("tools_used", [])
 
         # 응답 저장
         await session_manager.append(session_id, "assistant", answer)
 
         # progress 마무리 (active 상태 남아있으면 completed로 전환)
         agent.finalize_progress()
+
+        # 챗봇 사용 로그 저장
+        duration_ms = int((time.time() - start_time) * 1000)
+        await db.insert_chat_log(
+            session_id=session_id,
+            question=message,
+            answer=answer[:2000],
+            tools_used=tools_used,
+            ip_addr=ip_addr,
+            user_agent=user_agent[:500],
+            duration_ms=duration_ms,
+        )
 
         # 완료 이벤트
         queue.put_nowait(("done", {
@@ -116,7 +133,7 @@ async def sse_generator(queue: asyncio.Queue):
 # --- Endpoints ---
 
 @router.post("/chat")
-async def chat_stream(request: ChatRequest):
+async def chat_stream(request: ChatRequest, raw_request: Request):
     """SSE 스트리밍으로 AI 챗봇 응답."""
     # 세션 자동 생성 (없는 session_id가 오면 새로 생성)
     if request.session_id:
@@ -129,8 +146,16 @@ async def chat_stream(request: ChatRequest):
     queue = asyncio.Queue()
     session_id = session["session_id"]
 
+    # IP / User-Agent 추출
+    ip_addr = raw_request.headers.get("x-forwarded-for", "").split(",")[0].strip() \
+        or raw_request.client.host if raw_request.client else ""
+    user_agent = raw_request.headers.get("user-agent", "")
+
     # 백그라운드에서 에이전트 실행
-    asyncio.create_task(run_agent_stream(request.message, session_id, queue))
+    asyncio.create_task(run_agent_stream(
+        request.message, session_id, queue,
+        ip_addr=ip_addr, user_agent=user_agent,
+    ))
 
     return StreamingResponse(
         sse_generator(queue),

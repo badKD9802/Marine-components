@@ -104,6 +104,21 @@ async def create_tables():
             );
         """)
 
+        # 챗봇 사용 로그 테이블
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS chat_logs (
+                id          SERIAL PRIMARY KEY,
+                session_id  TEXT NOT NULL,
+                question    TEXT NOT NULL,
+                answer      TEXT,
+                tools_used  TEXT[],
+                ip_addr     TEXT,
+                user_agent  TEXT,
+                duration_ms INTEGER,
+                created_at  TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
         # 챗봇 세션 테이블
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS chatbot_sessions (
@@ -419,3 +434,19 @@ async def get_products_for_ai_prompt():
             lines.append(f"- {ko_name} (Part No: {row['part_no']}, Brand: {row['brand']}): {row['price']}원 - {ko_desc}")
 
         return "\n".join(lines)
+
+
+async def insert_chat_log(session_id: str, question: str, answer: str,
+                          tools_used: list, ip_addr: str, user_agent: str,
+                          duration_ms: int):
+    """챗봇 사용 로그를 chat_logs 테이블에 삽입."""
+    if not pool:
+        return
+    try:
+        async with pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO chat_logs (session_id, question, answer, tools_used, ip_addr, user_agent, duration_ms)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+            """, session_id, question, answer, tools_used or [], ip_addr, user_agent, duration_ms)
+    except Exception as e:
+        print(f"chat_log 저장 실패: {e}", flush=True)
