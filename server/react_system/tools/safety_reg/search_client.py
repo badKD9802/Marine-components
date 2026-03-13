@@ -371,7 +371,7 @@ class SafetyRegSearchClient:
                 "doc_name": hit.doc_name,
                 "article_ref": hit.article_ref,
                 "source_url": hit.source_url,
-                "excerpt": hit.orig_text[:200] + "..." if len(hit.orig_text) > 200 else hit.orig_text,
+                "excerpt": hit.orig_text[:120] + "..." if len(hit.orig_text) > 120 else hit.orig_text,
                 "full_text": hit.orig_text,
             })
         return sources

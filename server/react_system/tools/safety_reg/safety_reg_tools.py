@@ -288,7 +288,7 @@ async def _expand_cross_references(
                     "doc_name": p.doc_name,
                     "article_ref": p.article_ref,
                     "source_url": p.source_url,
-                    "excerpt": p.orig_text[:200] + "..." if len(p.orig_text) > 200 else p.orig_text,
+                    "excerpt": p.orig_text[:120] + "..." if len(p.orig_text) > 120 else p.orig_text,
                     "full_text": p.orig_text,
                 })
 

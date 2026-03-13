@@ -267,7 +267,8 @@ def _render_sources_card(sources: List[dict]) -> str:
         "  color:#6c757d; line-height:1.6;\n"
         "  display:-webkit-box; -webkit-line-clamp:3;\n"
         "  -webkit-box-orient:vertical; overflow:hidden;\n"
-        "  white-space:pre-wrap;\n"
+        "  white-space:pre-wrap; word-break:break-all;\n"
+        "  max-height:4.8em;\n"
         "  border-top:1px solid #f0f0f0; }\n"
         ".sr-card-actions { padding:8px 12px 12px;\n"
         "  display:flex; gap:8px;\n"
@@ -487,7 +488,7 @@ def _build_filtered_sources(hits: List[SearchHit]) -> List[dict]:
             "doc_name": hit.doc_name,
             "article_ref": hit.article_ref,
             "source_url": hit.source_url,
-            "excerpt": hit.orig_text[:200] + "..." if len(hit.orig_text) > 200 else hit.orig_text,
+            "excerpt": hit.orig_text[:120] + "..." if len(hit.orig_text) > 120 else hit.orig_text,
             "full_text": hit.orig_text,
         })
     return sources
