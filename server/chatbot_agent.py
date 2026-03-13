@@ -83,6 +83,9 @@ async def run_agent_stream(message: str, session_id: str, queue: asyncio.Queue):
         # 응답 저장
         await session_manager.append(session_id, "assistant", answer)
 
+        # progress 마무리 (active 상태 남아있으면 completed로 전환)
+        agent.finalize_progress()
+
         # 완료 이벤트
         queue.put_nowait(("done", {
             "session_id": session_id,
