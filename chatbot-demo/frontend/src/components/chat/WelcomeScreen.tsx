@@ -73,7 +73,7 @@ export function WelcomeScreen() {
 
           {safetyOpen && (
             <div className="space-y-2 px-4 pb-4">
-              {SAFETY_REG_EXAMPLES.map((text) => (
+              {SAFETY_REG_EXAMPLES.slice(0, 3).map((text) => (
                 <button
                   key={text}
                   onClick={() => sendMessage(text)}
@@ -83,6 +83,9 @@ export function WelcomeScreen() {
                   {text}
                 </button>
               ))}
+              <p className="text-xs text-blue-400 dark:text-blue-500 pl-1">
+                ... 법령명, 조문번호 등으로 자유롭게 질문하세요
+              </p>
             </div>
           )}
         </div>
