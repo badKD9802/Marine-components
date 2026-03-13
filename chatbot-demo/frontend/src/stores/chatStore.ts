@@ -190,7 +190,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         const msgs = [...c.messages]
         const last = msgs[msgs.length - 1]
         if (!last || last.role !== 'assistant') return c
-        msgs[msgs.length - 1] = { ...last, isStreaming: false }
+        // progress step 중 active/running 남아있으면 completed로 전환
+        const parts = last.parts.map(part => {
+          if (part.type !== 'progress' || !part.steps) return part
+          const steps = part.steps.map(s =>
+            s.status === 'active' || s.status === 'running'
+              ? { ...s, status: 'completed' as const }
+              : s
+          )
+          return { ...part, steps }
+        })
+        msgs[msgs.length - 1] = { ...last, parts, isStreaming: false }
         return { ...c, messages: msgs }
       }),
     }))
