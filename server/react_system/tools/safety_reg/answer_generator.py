@@ -267,8 +267,6 @@ def _render_sources_card(sources: List[dict]) -> str:
         "  color:#6c757d; line-height:1.6;\n"
         "  display:-webkit-box; -webkit-line-clamp:3;\n"
         "  -webkit-box-orient:vertical; overflow:hidden;\n"
-        "  white-space:pre-wrap; word-break:break-all;\n"
-        "  max-height:4.8em;\n"
         "  border-top:1px solid #f0f0f0; }\n"
         ".sr-card-actions { padding:8px 12px 12px;\n"
         "  display:flex; gap:8px;\n"
