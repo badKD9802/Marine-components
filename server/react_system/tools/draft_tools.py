@@ -869,47 +869,56 @@ def _style_doc_symbols(content_escaped: str) -> str:
             styled_lines.append("<div>&nbsp;</div>")
             continue
 
+        # 로마숫자 대제목 (Ⅰ. Ⅱ. …): 15px, bold, 하단보더
         if _re.match(r"^(\u2160|\u2161|\u2162|\u2163|\u2164|\u2165|\u2166|\u2167|\u2168|\u2169)\.", stripped):
             styled_lines.append(
-                f'<div style="font-size:1.1em;font-weight:700;margin-top:14px;margin-bottom:4px;'
+                f'<div style="font-size:15px;font-weight:700;margin-top:14px;margin-bottom:4px;'
                 f'color:#1e40af;border-bottom:2px solid #7B8B3D;padding-bottom:4px;">{stripped}</div>'
             )
+        # 아라비아숫자 소제목 (1. 2. …): 14px, semibold
         elif _re.match(r"^\d+\.", stripped):
             styled_lines.append(
-                f'<div style="font-size:1.05em;font-weight:600;margin-top:10px;margin-bottom:2px;'
+                f'<div style="font-size:14px;font-weight:600;margin-top:10px;margin-bottom:2px;'
                 f'color:#1e3a5f;padding-left:0.6em;">{stripped}</div>'
             )
+        # 한글 소제목 (가. 나. …): 14px, semibold
         elif _re.match(r"^[가-힣]\.", stripped):
             styled_lines.append(
-                f'<div style="font-size:1.0em;font-weight:600;margin-top:6px;padding-left:1.2em;">{stripped}</div>'
+                f'<div style="font-size:14px;font-weight:600;margin-top:6px;padding-left:1.2em;">{stripped}</div>'
             )
+        # 소번호 (1) 2) …): 13px
         elif _re.match(r"^\d+\)", stripped):
             styled_lines.append(
-                f'<div style="font-size:0.97em;margin-left:1.8em;margin-top:2px;">{stripped}</div>'
+                f'<div style="font-size:13px;margin-left:1.8em;margin-top:2px;">{stripped}</div>'
             )
+        # 소번호 (가) 나) …): 13px
         elif _re.match(r"^[가-힣]\)", stripped):
             styled_lines.append(
-                f'<div style="font-size:0.93em;margin-left:3.0em;color:#374151;">{stripped}</div>'
+                f'<div style="font-size:13px;margin-left:3.0em;color:#374151;">{stripped}</div>'
             )
+        # □ 대항목: 14px, bold
         elif stripped.startswith("\u25a1"):
             styled_lines.append(
-                f'<div style="font-size:1.0em;font-weight:700;margin-top:8px;padding-left:1.0em;">{stripped}</div>'
+                f'<div style="font-size:14px;font-weight:700;margin-top:8px;padding-left:1.0em;">{stripped}</div>'
             )
+        # ○ 중항목: 13px
         elif stripped.startswith("\u25cb"):
             styled_lines.append(
-                f'<div style="font-size:0.97em;margin-left:1.8em;margin-top:2px;">{stripped}</div>'
+                f'<div style="font-size:13px;margin-left:1.8em;margin-top:2px;">{stripped}</div>'
             )
+        # ― – - 소항목: 13px
         elif (
             stripped.startswith("\u2015")
             or stripped.startswith("\u2013")
             or stripped.startswith("- ")
         ):
             styled_lines.append(
-                f'<div style="font-size:0.93em;margin-left:3.0em;color:#374151;">{stripped}</div>'
+                f'<div style="font-size:13px;margin-left:3.0em;color:#374151;">{stripped}</div>'
             )
+        # ※ 참고/비고: 13px, italic
         elif stripped.startswith("\u203b"):
             styled_lines.append(
-                f'<div style="font-size:0.9em;margin-left:1.2em;color:#6b7280;font-style:italic;'
+                f'<div style="font-size:13px;margin-left:1.2em;color:#6b7280;font-style:italic;'
                 f'margin-top:4px;">{stripped}</div>'
             )
         else:
@@ -986,7 +995,7 @@ def _build_public_doc_html(
       <span style="font-size:0.9em;font-weight:600;">{html_mod.escape(sender_dept or '기관명')}</span>
       <span style="font-size:0.8em;color:#94a3b8;margin-left:12px;">{html_mod.escape(today)}</span>
     </div>
-    <div id="{uid}" style="white-space:pre-wrap;padding:16px 20px;font-size:0.93em;line-height:1.75;color:#1e293b;">{content_escaped}</div>
+    <div id="{uid}" style="white-space:pre-wrap;padding:16px 20px;font-size:14px;line-height:1.75;color:#1e293b;">{content_escaped}</div>
     {footer_html}
   </div>
 </div>"""

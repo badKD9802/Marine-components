@@ -1,6 +1,7 @@
 'use client'
 
-import { Bot, Calendar, Search, Mail, FileText } from 'lucide-react'
+import { useState } from 'react'
+import { Bot, Calendar, Search, Mail, FileText, Shield, ChevronDown } from 'lucide-react'
 import { useSSEChat } from '@/hooks/useSSEChat'
 
 const EXAMPLE_QUESTIONS = [
@@ -10,8 +11,16 @@ const EXAMPLE_QUESTIONS = [
   { icon: FileText, text: '공공기관 문서 초안 작성하기', color: 'text-purple-500' },
 ]
 
+const SAFETY_REG_EXAMPLES = [
+  '산업안전보건법 안전관리자 선임 기준',
+  '중대재해처벌법 사업주 의무 알려줘',
+  '위험성평가 절차와 방법',
+  '산안법 제17조 내용',
+]
+
 export function WelcomeScreen() {
   const { sendMessage } = useSSEChat()
+  const [safetyOpen, setSafetyOpen] = useState(false)
 
   return (
     <div className="flex flex-1 items-center justify-center px-4">
@@ -37,6 +46,45 @@ export function WelcomeScreen() {
               {text}
             </button>
           ))}
+        </div>
+
+        {/* 안전 법령 검색 가이드 카드 */}
+        <div className="mt-4 rounded-xl border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20">
+          <button
+            onClick={() => setSafetyOpen(!safetyOpen)}
+            className="flex w-full items-center justify-between px-4 py-3 text-left"
+          >
+            <div className="flex items-center gap-3">
+              <Shield size={20} className="text-blue-500" />
+              <div>
+                <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                  안전 법령 검색
+                </span>
+                <span className="ml-2 text-xs text-blue-500 dark:text-blue-400">
+                  이렇게 질문하세요
+                </span>
+              </div>
+            </div>
+            <ChevronDown
+              size={18}
+              className={`text-blue-400 transition-transform duration-200 ${safetyOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {safetyOpen && (
+            <div className="space-y-2 px-4 pb-4">
+              {SAFETY_REG_EXAMPLES.map((text) => (
+                <button
+                  key={text}
+                  onClick={() => sendMessage(text)}
+                  className="flex w-full items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-all hover:border-blue-400 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-900/30 dark:text-gray-300 dark:hover:bg-blue-800/40"
+                >
+                  <span className="text-blue-400">{'>'}</span>
+                  {text}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
