@@ -2278,10 +2278,9 @@
         // ==================== INITIALIZATION ====================
         window.addEventListener('DOMContentLoaded', async function() {
             try {
-                await loadCategoryButtons();
-                await fetchProducts();
+                await Promise.all([loadCategoryButtons(), fetchProducts()]);
             } catch (e) {
-                console.warn('fetchProducts failed, using fallback:', e);
+                console.warn('초기 로드 실패, fallback 사용:', e);
             }
 
             loadInquiries();
