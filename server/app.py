@@ -19,6 +19,7 @@ print(f"[DEBUG] Python: {sys.version}", flush=True)
 print(f"[DEBUG] CWD: {os.getcwd()}", flush=True)
 
 print("[DEBUG] db 임포트 중...", flush=True)
+import db
 from db import init_db, close_db, init_vector_db, close_vector_db, get_all_products, get_product_by_id, create_product, get_products_for_ai_prompt
 print("[DEBUG] db 임포트 완료", flush=True)
 
