@@ -606,6 +606,16 @@ async def browse_safety_reg(doc_name: str = "", chunk_type: str = "parent", limi
         return {"error": str(e), "detail": traceback.format_exc()}
 
 
+@app.get("/api/categories")
+async def api_get_categories():
+    """공개 카테고리 목록 조회"""
+    if not db.pool:
+        return []
+    async with db.pool.acquire() as conn:
+        rows = await conn.fetch("SELECT code, name_ko, name_en FROM categories ORDER BY id")
+    return [dict(row) for row in rows]
+
+
 @app.get("/api/products")
 async def api_get_products(category: str = None, search: str = None):
     products = await get_all_products(category=category, search=search)

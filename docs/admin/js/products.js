@@ -496,7 +496,12 @@ async function saveProduct() {
             en: collectCompatibilityByLang('en'),
             cn: collectCompatibilityByLang('cn')
         },
-        category_name: {}
+        category_name: (function() {
+            var selectedCode = document.getElementById('productCategory').value;
+            var cat = allCategories.find(function(c) { return c.code === selectedCode; });
+            if (cat) return { ko: cat.name_ko || '', en: cat.name_en || '' };
+            return {};
+        })()
     };
 
     console.log('💾 [DEBUG] 저장할 데이터:', data);

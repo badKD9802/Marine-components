@@ -1379,12 +1379,9 @@
             <p class="section-subtitle" data-i18n="productSubtitle">전문가가 엄선한 고품질 해양 엔진 부품</p>
         </div>
 
-        <div class="filter-buttons animate-on-scroll">
+        <div class="filter-buttons animate-on-scroll" id="filterButtons">
             <button class="filter-btn active" onclick="filterByCategory('all')" data-i18n="filterAll">전체</button>
-            <button class="filter-btn" onclick="filterByCategory('bearing')" data-i18n="filterBearing">베어링</button>
-            <button class="filter-btn" onclick="filterByCategory('plunger')" data-i18n="filterPlunger">플런저</button>
-            <button class="filter-btn" onclick="filterByCategory('valve')" data-i18n="filterValve">밸브</button>
-            <button class="filter-btn" onclick="filterByCategory('etc')" data-i18n="filterEtc">기타</button>
+            <!-- 카테고리 버튼은 API에서 동적 로드 -->
         </div>
 
         <div class="search-count" id="searchCount"></div>
@@ -1915,6 +1912,36 @@
             return price + (lang === 'cn' ? '元' : '원');
         }
 
+        // ==================== CATEGORY LOADING ====================
+        var apiCategories = [];
+
+        async function loadCategoryButtons() {
+            try {
+                const res = await fetch(API_BASE + '/api/categories');
+                if (!res.ok) throw new Error('API error');
+                apiCategories = await res.json();
+            } catch (e) {
+                console.warn('카테고리 API 실패, 기본값 사용:', e.message);
+                apiCategories = [
+                    { code: 'bearing', name_ko: '베어링', name_en: 'Bearing' },
+                    { code: 'plunger', name_ko: '플런저', name_en: 'Plunger' },
+                    { code: 'valve', name_ko: '밸브', name_en: 'Valve' }
+                ];
+            }
+
+            const container = document.getElementById('filterButtons');
+            if (!container) return;
+
+            // "전체" 버튼 유지 + 카테고리 버튼 추가
+            var html = '<button class="filter-btn active" onclick="filterByCategory(\'all\')" data-i18n="filterAll">전체</button>';
+            apiCategories.forEach(function(cat) {
+                var label = currentLang === 'en' ? (cat.name_en || cat.name_ko) : cat.name_ko;
+                html += '<button class="filter-btn" onclick="filterByCategory(\'' + cat.code + '\')">' + label + '</button>';
+            });
+            html += '<button class="filter-btn" onclick="filterByCategory(\'etc\')" data-i18n="filterEtc">기타</button>';
+            container.innerHTML = html;
+        }
+
         // ==================== FILTERING ====================
         function filterProducts() {
             const keyword = document.getElementById('searchInput').value.toLowerCase();
@@ -1944,9 +1971,17 @@
         }
 
         function categorizeProduct(product) {
+            // DB에 저장된 category 값 우선 사용
+            if (product.category && product.category.trim() !== '') {
+                // apiCategories에 있는 코드인지 확인
+                var knownCodes = apiCategories.map(function(c) { return c.code; });
+                if (knownCodes.includes(product.category)) {
+                    return product.category;
+                }
+                return 'etc';
+            }
+            // category 값이 없는 경우 기존 키워드 매칭 폴백
             const name = product.name.ko.toLowerCase();
-            const partNo = product.partNo.toLowerCase();
-
             if (name.includes('베어링') || name.includes('bearing')) return 'bearing';
             if (name.includes('플런저') || name.includes('plunger')) return 'plunger';
             if (name.includes('밸브') || name.includes('valve')) return 'valve';
@@ -1971,6 +2006,16 @@
                 if (staticTranslations[lang][key]) {
                     element.placeholder = staticTranslations[lang][key];
                 }
+            });
+
+            // Re-render category buttons for new language
+            loadCategoryButtons().then(function() {
+                // Restore active state
+                document.querySelectorAll('.filter-btn').forEach(function(btn) {
+                    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + currentCategory + "'")) {
+                        btn.classList.add('active');
+                    }
+                });
             });
 
             // Re-render products
@@ -2233,6 +2278,7 @@
         // ==================== INITIALIZATION ====================
         window.addEventListener('DOMContentLoaded', async function() {
             try {
+                await loadCategoryButtons();
                 await fetchProducts();
             } catch (e) {
                 console.warn('fetchProducts failed, using fallback:', e);
