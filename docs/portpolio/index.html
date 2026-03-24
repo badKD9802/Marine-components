@@ -150,12 +150,35 @@
                 display: none !important;
             }
             body {
-                padding-top: 0;
+                padding-top: 0 !important;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             .hero {
                 background: linear-gradient(135deg, #eef0ff 0%, #f3f0ff 50%, #faf5ff 100%) !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+            }
+            .portfolio-banner {
+                display: block !important;
+                background: var(--primary) !important;
+                color: #fff !important;
+            }
+            .portfolio-banner a {
+                color: #fff !important;
+            }
+            .flow-horizontal {
+                flex-wrap: wrap !important;
+                overflow: visible !important;
+            }
+            .flow-step {
+                page-break-inside: avoid;
+            }
+            .main-project, .sub-section {
+                page-break-inside: avoid;
+            }
+            .detail-modal, .chatbot-container {
+                display: none !important;
             }
         }
 
@@ -325,12 +348,12 @@
             display: flex;
             align-items: center;
             gap: 0;
-            overflow-x: auto;
+            flex-wrap: wrap;
+            justify-content: center;
             padding: 20px 0;
-            scroll-behavior: smooth;
         }
         .flow-step {
-            min-width: 130px;
+            min-width: 110px;
             padding: 14px 12px;
             border-radius: 12px;
             text-align: center;
@@ -338,7 +361,7 @@
             font-weight: 600;
             color: white;
             position: relative;
-            flex-shrink: 0;
+            flex-shrink: 1;
             transition: all 0.3s;
             cursor: pointer;
         }
@@ -1695,6 +1718,11 @@
 
 <!-- Edit Toolbar -->
 
+<!-- ===== 포트폴리오 상세 배너 ===== -->
+<div class="portfolio-banner" style="background:var(--primary);color:#fff;text-align:center;padding:12px;width:100%;font-size:0.95rem;">
+    <a href="https://portfolio-production-ebdc.up.railway.app" target="_blank" style="color:#fff;text-decoration:none;font-weight:600;">📌 포트폴리오를 자세히 보려면 아래 링크를 방문해주세요</a>
+    <div style="font-size:0.8rem;margin-top:4px;opacity:0.85;">https://portfolio-production-ebdc.up.railway.app</div>
+</div>
 
 <!-- ===== HERO ===== -->
 <section class="hero">
@@ -1939,23 +1967,23 @@
                 </p>
 
                 <div class="flow-horizontal">
-                    <div class="flow-step fs-purple" style="min-width:140px;" data-detail="• 관리자 페이지에서 제조사, 모델, 부품번호, 가격, 상품정보, 호환규격 등을 입력
+                    <div class="flow-step fs-purple" style="min-width:110px;" data-detail="• 관리자 페이지에서 제조사, 모델, 부품번호, 가격, 상품정보, 호환규격 등을 입력
 • 이미지 업로드 함께 처리
 • React 기반 관리자 UI에서 폼 입력"><span class="step-num">STEP 1</span>상품 등록<br><small>관리자 페이지에서 상품 정보 입력</small></div>
                     <div class="flow-arrow">➔</div>
-                    <div class="flow-step fs-orange" style="min-width:140px;" data-detail="• name, description, specs, compatibility 필드를 {ko, en, cn} 구조로 저장
+                    <div class="flow-step fs-orange" style="min-width:110px;" data-detail="• name, description, specs, compatibility 필드를 {ko, en, cn} 구조로 저장
 • GPT 기반 자동 번역: 한국어 입력만으로 영어·중국어 동시 생성
 • PostgreSQL JSONB 타입으로 유연한 다국어 데이터 관리"><span class="step-num">STEP 2</span>JSONB 구조화<br><small>다국어(ko/en/cn) JSONB 자동 변환</small></div>
                     <div class="flow-arrow">➔</div>
-                    <div class="flow-step fs-pink" style="min-width:140px;" data-detail="• 모델: OpenAI text-embedding-3-small (1536차원)
+                    <div class="flow-step fs-pink" style="min-width:110px;" data-detail="• 모델: OpenAI text-embedding-3-small (1536차원)
 • 상품명 + 설명 + 스펙을 결합한 텍스트를 벡터로 변환
 • 상품 등록/수정 시 자동 실행"><span class="step-num">STEP 3</span>Embedding<br><small>OpenAI text-embedding-3-small (1536d)</small></div>
                     <div class="flow-arrow">➔</div>
-                    <div class="flow-step fs-teal" style="min-width:140px;" data-detail="• PostgreSQL pgvector에 벡터 + 원본 텍스트 저장
+                    <div class="flow-step fs-teal" style="min-width:110px;" data-detail="• PostgreSQL pgvector에 벡터 + 원본 텍스트 저장
 • 코사인 유사도 검색용 인덱스 자동 생성
 • 등록 즉시 AI 상담사가 검색 가능"><span class="step-num">STEP 4</span>pgvector 적재<br><small>벡터 + 메타데이터 자동 저장</small></div>
                     <div class="flow-arrow">➔</div>
-                    <div class="flow-step fs-green" style="min-width:140px;" data-detail="• 고객 질문 → pgvector에서 Top-K 유사도 검색
+                    <div class="flow-step fs-green" style="min-width:110px;" data-detail="• 고객 질문 → pgvector에서 Top-K 유사도 검색
 • 검색된 상품 정보를 Gemini 2.5 Flash에 전달
 • 한국어/영어/중국어 다국어 답변 생성"><span class="step-num">STEP 5</span>AI 상담사 응답<br><small>유사도 검색 → Gemini 답변 생성</small></div>
                 </div>
@@ -2017,6 +2045,9 @@
                 <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:0.85rem;">
                     <a href="https://chatbot-agentic-ai-production.up.railway.app/" target="_blank" style="color: var(--accent); text-decoration: none; padding: 8px 16px; background: white; border-radius: 8px; border: 1px solid var(--accent); transition: 0.2s; cursor: default;">
                         🤖 AI 챗봇 데모
+                    </a>
+                    <a href="https://attu-production-ba97.up.railway.app/" target="_blank" style="color: var(--accent); text-decoration: none; padding: 8px 16px; background: white; border-radius: 8px; border: 1px solid var(--accent); transition: 0.2s; cursor: default;">
+                        🗄️ 안전법령 Milvus
                     </a>
                 </div>
             </div>
