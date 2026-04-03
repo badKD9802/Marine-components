@@ -109,3 +109,5 @@ openpyxl
 lxml
 aiohttp
 pymilvus>=2.4.0
+python-hwpx>=2.9.0
+python-pptx>=1.0.0
