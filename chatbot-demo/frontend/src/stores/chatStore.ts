@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Conversation, Message, MessagePart, ProgressStep, QuickButton } from '@/types/message'
+import type { Conversation, Message, MessagePart, ProgressStep, QuickButton, TemplateCandidate, ExampleDoc } from '@/types/message'
 
 interface ChatState {
   conversations: Conversation[]
@@ -19,6 +19,8 @@ interface ChatState {
   setProgress: (steps: ProgressStep[]) => void
   addHtmlBlock: (html: string) => void
   setButtons: (buttons: QuickButton[]) => void
+  setTemplateCandidates: (candidates: TemplateCandidate[]) => void
+  setExamples: (templateTitle: string, examples: ExampleDoc[]) => void
   finalizeMessage: (fullAnswer?: string) => void
   setStreaming: (streaming: boolean) => void
 }
@@ -176,6 +178,36 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (!last || last.role !== 'assistant') return c
 
         const parts = [...last.parts, { type: 'buttons' as const, buttons }]
+        msgs[msgs.length - 1] = { ...last, parts }
+        return { ...c, messages: msgs }
+      }),
+    }))
+  },
+
+  setTemplateCandidates: (candidates: TemplateCandidate[]) => {
+    set(state => ({
+      conversations: state.conversations.map(c => {
+        if (c.id !== state.activeConversationId) return c
+        const msgs = [...c.messages]
+        const last = msgs[msgs.length - 1]
+        if (!last || last.role !== 'assistant') return c
+
+        const parts = [...last.parts, { type: 'template_selector' as const, templateCandidates: candidates }]
+        msgs[msgs.length - 1] = { ...last, parts }
+        return { ...c, messages: msgs }
+      }),
+    }))
+  },
+
+  setExamples: (templateTitle: string, examples: ExampleDoc[]) => {
+    set(state => ({
+      conversations: state.conversations.map(c => {
+        if (c.id !== state.activeConversationId) return c
+        const msgs = [...c.messages]
+        const last = msgs[msgs.length - 1]
+        if (!last || last.role !== 'assistant') return c
+
+        const parts = [...last.parts, { type: 'example_selector' as const, templateTitle, examples }]
         msgs[msgs.length - 1] = { ...last, parts }
         return { ...c, messages: msgs }
       }),

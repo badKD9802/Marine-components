@@ -3,7 +3,7 @@
 import { useCallback } from 'react'
 import { useChatStore } from '@/stores/chatStore'
 import { parseSSE } from '@/lib/sse-parser'
-import type { ProgressStep, QuickButton } from '@/types/message'
+import type { ProgressStep, QuickButton, TemplateCandidate, ExampleDoc } from '@/types/message'
 
 const API_BASE = '/api/chat/stream'
 
@@ -17,6 +17,8 @@ export function useSSEChat() {
     setProgress,
     addHtmlBlock,
     setButtons,
+    setTemplateCandidates,
+    setExamples,
     finalizeMessage,
     setStreaming,
     createConversation,
@@ -25,6 +27,8 @@ export function useSSEChat() {
   const sendMessage = useCallback(
     async (message: string) => {
       if (isStreaming) return
+      const trimmed = message.trim()
+      if (!trimmed || trimmed.length > 5000) return
 
       let sessionId = activeConversationId
       if (!sessionId) {
@@ -64,7 +68,6 @@ export function useSSEChat() {
                 appendToken(data.content || '')
                 break
               case 'progress':
-                console.log('[SSE] progress event:', JSON.stringify(data))
                 if (Array.isArray(data.steps)) {
                   setProgress(data.steps as ProgressStep[])
                 } else if (Array.isArray(data)) {
@@ -83,6 +86,19 @@ export function useSSEChat() {
                   setButtons(data as QuickButton[])
                 }
                 break
+              case 'template_selector':
+                if (Array.isArray(data.candidates)) {
+                  setTemplateCandidates(data.candidates as TemplateCandidate[])
+                }
+                break
+              case 'example_selector':
+                if (Array.isArray(data.examples)) {
+                  setExamples(
+                    (data.template_title || '') as string,
+                    data.examples as ExampleDoc[],
+                  )
+                }
+                break
               case 'done':
                 finalizeMessage(data.answer)
                 break
@@ -91,12 +107,11 @@ export function useSSEChat() {
                 finalizeMessage()
                 break
             }
-          } catch (parseErr) {
-            console.warn('SSE parse error:', parseErr)
+          } catch {
+            // SSE 파싱 실패 — 무시하고 다음 이벤트 처리
           }
         }
-      } catch (err) {
-        console.error('SSE connection error:', err)
+      } catch {
         appendToken('\n\n연결 오류가 발생했습니다. 다시 시도해주세요.')
         finalizeMessage()
       } finally {
@@ -114,6 +129,8 @@ export function useSSEChat() {
       setProgress,
       addHtmlBlock,
       setButtons,
+      setTemplateCandidates,
+      setExamples,
       finalizeMessage,
       setStreaming,
       createConversation,

@@ -4,6 +4,9 @@ import { ProgressSteps } from '../message-parts/ProgressSteps'
 import { HtmlBlock } from '../message-parts/HtmlBlock'
 import { MarkdownContent } from '../message-parts/MarkdownContent'
 import { QuickReplyButtons } from '../message-parts/QuickReplyButtons'
+import { TemplateSelector } from '../message-parts/TemplateSelector'
+import { ExampleSelector } from '../message-parts/ExampleSelector'
+import { DocumentPreview } from '../message-parts/DocumentPreview'
 
 export function AssistantMessage({ message }: { message: Message }) {
   return (
@@ -38,6 +41,20 @@ export function AssistantMessage({ message }: { message: Message }) {
                   )
                 case 'buttons':
                   return <QuickReplyButtons key={i} buttons={part.buttons || []} />
+                case 'template_selector':
+                  return <TemplateSelector key={i} candidates={part.templateCandidates || []} />
+                case 'example_selector':
+                  return (
+                    <ExampleSelector
+                      key={i}
+                      templateTitle={part.templateTitle || ''}
+                      examples={part.examples || []}
+                    />
+                  )
+                case 'document_preview':
+                  return part.documentPreview ? (
+                    <DocumentPreview key={i} {...part.documentPreview} />
+                  ) : null
                 default:
                   return null
               }
