@@ -4,6 +4,7 @@ import asyncio
 
 from react_system.tools import (
     approval_tools,
+    document_orchestrator,
     draft_tools,
     employee_tools,
     excel_tools,
@@ -16,6 +17,8 @@ from react_system.tools import (
     translate_tools,
     user_tools,
 )
+from react_system.template_search import search_templates as _search_templates
+from react_system.template_upload import upload_example as _upload_example
 try:
     from react_system.tools.safety_reg import safety_reg_tools
 except Exception as _e:
@@ -24,11 +27,26 @@ except Exception as _e:
     safety_reg_tools = None
 
 
+# ─── 래퍼: template_search / template_upload는 _auth 대신 user_id를 받음 ───
+
+
+async def _search_templates_wrapper(query: str, category: str = None, limit: int = 10, _auth=None, **kwargs) -> dict:
+    """search_templates를 ReAct 도구 시그니처에 맞게 래핑. _auth에서 user_id를 추출한다."""
+    user_id = getattr(_auth, "user_id", None) if _auth else None
+    return await _search_templates(query=query, user_id=user_id, category=category, limit=limit)
+
+
+async def _upload_example_wrapper(content: str, template_id: str = "", title: str = "", category: str = "", _auth=None, **kwargs) -> dict:
+    """upload_example를 ReAct 도구 시그니처에 맞게 래핑. _auth에서 user_id를 추출한다."""
+    user_id = getattr(_auth, "user_id", None) if _auth else None
+    return await _upload_example(content=content, template_id=template_id, title=title, category=category, user_id=user_id)
+
+
 class ToolRegistry:
     """Registry that maps function names to their implementations."""
 
     def __init__(self, auth=None):
-        """Initialize the registry with all 27 tools (21 + 5 + 1 generic table).
+        """Initialize the registry with all 30 tools (27 + 3 document generation).
 
         Args:
             auth: AuthContext instance (SLO 인증 결과). None이면 더미 데이터 모드.
@@ -84,6 +102,10 @@ class ToolRegistry:
             "get_weekly_summary": summary_tools.get_weekly_summary,
             # Safety regulation RAG tools (1) ⭐ NEW - 안전법령 검색
             **({"search_safety_regulations": safety_reg_tools.search_safety_regulations} if safety_reg_tools else {}),
+            # Document generation tools (3) ⭐ NEW - 양식 기반 문서 생성
+            "generate_document": document_orchestrator.generate_document,
+            "search_document_templates": _search_templates_wrapper,
+            "upload_document_example": _upload_example_wrapper,
         }
 
     async def dispatch(self, function_name, arguments):

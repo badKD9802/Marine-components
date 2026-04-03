@@ -1,4 +1,4 @@
-"""OpenAI function calling schemas for KAMCO tools (21개 - RAG + 번역 + HTML포맷(달력+표) 추가)."""
+"""OpenAI function calling schemas for KAMCO tools (36개 - RAG + 번역 + HTML포맷 + 문서생성 추가)."""
 
 TOOLS = [
     # 1. Schedule Management (4 tools)
@@ -1214,6 +1214,104 @@ format_data_as_excel(title="월별 매출 현황", data=data, file_name="월별_
                     },
                 },
                 "required": ["query"],
+            },
+        },
+    },
+    # ============================================================
+    # 문서 생성 도구 (3개) ⭐ NEW - 양식 기반 문서 자동 생성
+    # ============================================================
+    # 1. 문서 생성
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_document",
+            "description": "사용자의 요청에 따라 문서를 생성합니다. 양식(template)과 참고문서를 기반으로 HWP, PPT, Excel 형식의 문서를 자동 생성합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_request": {
+                        "type": "string",
+                        "description": "사용자의 문서 생성 요청 (예: '예산 집행 현황 보고서 작성해줘')",
+                    },
+                    "template_id": {
+                        "type": "string",
+                        "description": "사용할 양식 ID (없으면 양식 추천)",
+                    },
+                    "reference_content": {
+                        "type": "string",
+                        "description": "참고할 문서 내용",
+                    },
+                    "example_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "참고할 예시 ID 목록 (없으면 전체 예시 사용)",
+                    },
+                    "output_formats": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": ["hwpx", "pptx", "xlsx"],
+                        },
+                        "description": "출력 형식 (기본: ['hwpx'])",
+                    },
+                },
+                "required": ["user_request"],
+            },
+        },
+    },
+    # 2. 양식 검색
+    {
+        "type": "function",
+        "function": {
+            "name": "search_document_templates",
+            "description": "문서 양식을 검색합니다. 키워드로 검색하거나 카테고리별로 브라우징합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "검색 키워드 (예: '예산 보고서', '회의록')",
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "카테고리 필터 (예: '예산/회계', '인사/복무')",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "결과 개수 (기본: 10)",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    # 3. 예시 업로드
+    {
+        "type": "function",
+        "function": {
+            "name": "upload_document_example",
+            "description": "잘 작성된 예시 문서를 업로드합니다. 특정 양식에 연결하여 향후 문서 생성 시 참고자료로 활용합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "description": "예시 문서 내용",
+                    },
+                    "template_id": {
+                        "type": "string",
+                        "description": "연결할 양식 ID",
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "예시 문서 제목",
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "카테고리",
+                    },
+                },
+                "required": ["content"],
             },
         },
     },
