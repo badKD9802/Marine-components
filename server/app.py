@@ -39,6 +39,14 @@ print("[DEBUG] inquiry 임포트 중...", flush=True)
 from inquiry import router as inquiry_router
 print("[DEBUG] inquiry 임포트 완료", flush=True)
 
+print("[DEBUG] document_api 임포트 중...", flush=True)
+try:
+    from document_api import router as document_api_router
+    print("[DEBUG] document_api 임포트 완료", flush=True)
+except Exception as e:
+    document_api_router = None
+    print(f"[DEBUG] document_api 임포트 실패: {e}", flush=True)
+
 print("[DEBUG] rag 임포트 중...", flush=True)
 from rag import search_similar_chunks
 print("[DEBUG] rag 임포트 완료", flush=True)
@@ -72,6 +80,14 @@ async def lifespan(app):
     print("[DEBUG-LIFESPAN] init_vector_db 시작...", flush=True)
     await init_vector_db()
     print("[DEBUG-LIFESPAN] init_vector_db 완료", flush=True)
+
+    # 문서 생성 테이블 초기화
+    try:
+        from react_system.document_db import create_document_tables
+        await create_document_tables()
+        print("[DEBUG-LIFESPAN] document_tables 생성 완료", flush=True)
+    except Exception as e:
+        print(f"[DEBUG-LIFESPAN] document_tables 생성 실패: {e}", flush=True)
 
     print("[DEBUG-LIFESPAN] cleanup_old_conversations 시작...", flush=True)
     await cleanup_old_conversations()
@@ -135,6 +151,11 @@ if chatbot_router:
     print("[DEBUG]   chatbot_router 등록 완료", flush=True)
 else:
     print("[DEBUG]   chatbot_router 미등록 (import 실패)", flush=True)
+if document_api_router:
+    app.include_router(document_api_router)
+    print("[DEBUG]   document_api_router 등록 완료", flush=True)
+else:
+    print("[DEBUG]   document_api_router 미등록 (import 실패)", flush=True)
 print("[DEBUG] === 라우터 등록 완료 ===", flush=True)
 
 
