@@ -47,6 +47,14 @@ except Exception as e:
     document_api_router = None
     print(f"[DEBUG] document_api 임포트 실패: {e}", flush=True)
 
+print("[DEBUG] template_admin_api 임포트 중...", flush=True)
+try:
+    from template_admin_api import router as template_admin_router
+    print("[DEBUG] template_admin_api 임포트 완료", flush=True)
+except Exception as e:
+    template_admin_router = None
+    print(f"[DEBUG] template_admin_api 임포트 실패: {e}", flush=True)
+
 print("[DEBUG] rag 임포트 중...", flush=True)
 from rag import search_similar_chunks
 print("[DEBUG] rag 임포트 완료", flush=True)
@@ -156,6 +164,11 @@ if document_api_router:
     print("[DEBUG]   document_api_router 등록 완료", flush=True)
 else:
     print("[DEBUG]   document_api_router 미등록 (import 실패)", flush=True)
+if template_admin_router:
+    app.include_router(template_admin_router)
+    print("[DEBUG]   template_admin_router 등록 완료", flush=True)
+else:
+    print("[DEBUG]   template_admin_router 미등록 (import 실패)", flush=True)
 print("[DEBUG] === 라우터 등록 완료 ===", flush=True)
 
 
